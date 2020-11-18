@@ -1,0 +1,78 @@
+@* @model Model *@
+@{
+    ViewData["Title"] = "Call";
+}
+
+@section scripts {
+    <script>
+        navigator.mediaDevices.getUserMedia(
+            {audio: true, video: true}
+        )
+        .then(stream => 
+        {
+            myWebcam = document.getElementById("myWebcam")
+            myWebcam.srcObject = stream;
+            myWebcam.play();
+        })/*
+        .then(() =>
+        {
+            console.log("starting loop");
+
+            // Start FPS count loop
+            if (this._enableFramerateCounter)
+                this._RefreshLoop();
+
+            // Start frame capture loop
+            setInterval(this._callbackFunction, this._maxFramerate);
+            // this.loop();
+        })*/
+        .catch(err =>
+        {
+            console.log(err);
+        })
+     
+        function muteMySound() {
+            myWebcam = document.getElementById("myWebcam");
+            bMute = document.getElementById("muteButton");
+            if(myWebcam.muted === false){
+                bMute.value = "Geluid afspelen";
+                myWebcam.muted = true;
+            }
+            else {
+                bMute.value = "Demp geluid";
+                myWebcam.muted = false;
+            }
+        }
+
+        function muteMyVideo() {
+            myWebcam = document.getElementById("myWebcam");
+            canvas = document.getElementById("noImage");
+            bPause = document.getElementById("pauseButton");
+
+            if(myWebcam.hidden === false){
+                bPause.value = "Zet camera aan";
+                myWebcam.hidden = true;
+                canvas.hidden = false;
+            }
+            else {
+                bPause.value = "Zet camera uit";
+                myWebcam.hidden = false;
+                canvas.hidden = true;
+            }
+        }
+    </script>
+}
+
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Hieronder is je webcam beeld te zien.</p>
+    <div>
+        <video id="myWebcam" width="640" height="480"> </video>
+        <canvas id="noImage" width="640" height="480" hidden> </canvas>
+    </div>
+    <div>
+        <input id="muteButton" value="Demp geluid" type="button" onclick="muteMySound()"/>
+        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteMyVideo()"/>
+    </div>
+</div>
