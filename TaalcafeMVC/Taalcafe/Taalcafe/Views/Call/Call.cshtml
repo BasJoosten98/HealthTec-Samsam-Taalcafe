@@ -4,60 +4,222 @@
 }
 
 @section scripts {
+    <script src="~/js/signalr/dist/browser/signalr.js"> </script>
     <script>
-        navigator.mediaDevices.getUserMedia(
-            {audio: true, video: true}
-        )
-        .then(stream => 
-        {
-            myWebcam = document.getElementById("myWebcam")
-            myWebcam.srcObject = stream;
-            myWebcam.play();
-        })/*
-        .then(() =>
-        {
-            console.log("starting loop");
+        "use strict";
 
-            // Start FPS count loop
-            if (this._enableFramerateCounter)
-                this._RefreshLoop();
+        // Zorgen dat dezelfde definitie voor de methodes gebruikt kunnen worden ongeacht de browser
+        // navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+        window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+        window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
+        window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition 
+        || window.msSpeechRecognition || window.oSpeechRecognition;
 
-            // Start frame capture loop
-            setInterval(this._callbackFunction, this._maxFramerate);
-            // this.loop();
-        })*/
-        .catch(err =>
-        {
-            console.log(err);
-        })
-     
-        function muteMySound() {
-            myWebcam = document.getElementById("myWebcam");
-            bMute = document.getElementById("muteButton");
-            if(myWebcam.muted === false){
-                bMute.value = "Geluid afspelen";
-                myWebcam.muted = true;
+        const mediaConstraints = {
+            audio: { 
+                echoCancellation: true,
+                noiseSuppression: true
+            }, 
+            video: {
+                facingMode: {ideal: "user"}
             }
-            else {
-                bMute.value = "Demp geluid";
-                myWebcam.muted = false;
+        };
+
+        const localVideo = document.getElementById("localVideo");
+        var localVideoStream = null;
+        
+        /*
+        var config = {
+            wssHost: 'wss://wotpal.club'
+            // wssHost: 'wss://example.com/myWebSocket'
+        };
+        let wsc = new WebSocket(config.wssHost);
+        */
+
+        const hubUrl = document.location.pathname + 'ConnectionHub';
+        let wsConn = new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl, signalR.HttpTransportType.Websockets)
+            // Logging levels from most to least:
+            // Trace, Debug, Information, Warning, Error, Critical, None
+            .configureLogging(signalR.LogLevel.Trace)
+            .build();
+
+        var peerconn = null;
+        const peerConnCfg = {'iceServers': [
+            {'url': 'stun:stun.services.mozilla.com'}, 
+            {'url': 'stun:stun.l.google.com:19302'}
+        ]};
+
+
+        navigator.mediaDevices.getUserMedia(mediaConstraints)
+            .then(stream => {
+                localVideoStream = stream;
+                localVideo.srcObject = stream;
+                localVideo.play();
+            })/*
+            .then(() => {
+                console.log("starting loop");
+
+                // Start FPS count loop
+                if (this._enableFramerateCounter)
+                    this._RefreshLoop();
+
+                // Start frame capture loop
+                setInterval(this._callbackFunction, this._maxFramerate);
+                // this.loop();
+            })*/
+            .catch(err => {
+                console.error("Access to microphone and/or webcam denied.", err);
+            });
+
+        
+        $(document).ready(function () {
+            initializeSignalR();
+
+            initializeUserMedia();
+        });
+
+
+        // Initialize communication session with ConnectionHub
+        const initializeSignalR = () => {
+            wsConn.start()
+                .then( () => { 
+                    console.log("SignalR: Connected"); 
+                    //askUsername();
+                    document.getElementById("videoCallButton").disabled = false;
+                })
+                .catch(err => console.log(err));
+        };
+
+
+        // Prompt for local webcam and microphone media streams 
+        const initializeUserMedia = () => {
+            navigator.mediaDevices.getUserMedia(mediaConstraints)
+                .then(stream => {
+                    localVideoStream = stream;
+                    localVideo.srcObject = stream;
+                    localVideo.play();
+                    document.getElementById("muteButton").disabled = false;
+                    document.getElementById("pauseButton").disabled = false;
+                })/*
+                .then(() => {
+                    console.log("starting loop");
+
+                    // Start FPS count loop
+                    if (this._enableFramerateCounter)
+                        this._RefreshLoop();
+
+                    // Start frame capture loop
+                    setInterval(this._callbackFunction, this._maxFramerate);
+                    // this.loop();
+                })*/
+                .catch(err => {
+                    console.error("Access to microphone and/or webcam denied.", err);
+                });
+        }
+
+        
+        /*
+        // Create RTCPeerConnection and handlers
+        function prepareCall() {
+            peerConn = new RTCPeerConnection(peerConnCfg);
+            // send any ice candidates to the other peer
+            peerConn.onicecandidate = onIceCandidateHandler;
+            // once remote stream arrives, show it in the remote video element
+            peerConn.onaddstream = onAddStreamHandler;
+        };
+
+
+        // Call initiator
+        function initiateCall() {
+            prepareCall();
+            peerConn.addStream(localVideoStream);
+            createAndSendOffer();
+        };
+
+
+        function createAndSendOffer() {
+            peerConn.createOffer(
+                function (offer) {
+                var off = new RTCSessionDescription(offer);
+                peerConn.setLocalDescription(new RTCSessionDescription(off), 
+                    function() {
+                    wsc.send(JSON.stringify({"sdp": off }));
+                    }, 
+                    function(error) { console.log(error);}
+                );
+                }, 
+                function (error) { console.log(error);}
+            );
+        };
+
+
+        // Handler for found ICE candidates
+        function onIceCandidateHandler(evt) {
+            if (!evt || !evt.candidate) return;
+            wsc.send(JSON.stringify({"candidate": evt.candidate }));
+        };
+
+
+        // Handler for incoming videostreams
+        function onAddStreamHandler(evt) {
+            videoCallButton.setAttribute("onClick", "endCall()")
+            videoCallButton.value = "Stop videogesprek";
+            // set remote video stream as source for remote video HTML5 element
+            remoteVideo.src = URL.createObjectURL(evt.stream);
+        };
+
+
+        // End the video calling session
+        function endCall() {/*
+            peerConn.close();
+            peerConn = null;*\/
+            videoCallButton.setAttribute("onClick", "initiateCall()")
+            videoCallButton.value = "Start videogesprek";
+            /*
+            if (localVideoStream) {
+                localVideoStream.getTracks().forEach(function (track) {
+                track.stop();
+                });
+                localVideo.src = "";
+            }
+            if (remoteVideo) remoteVideo.src = "";*\/
+        };
+        */
+
+
+        // Mute sound of user microphone
+        function muteLocalSound() {
+            const sPause = document.getElementById("muteButton");
+
+            for(let i in localVideo.srcObject.getAudioTracks()) {
+                let track = localVideo.srcObject.getAudioTracks()[i]
+                if(track.enabled){
+                    sPause.value = "Microfoon aanzetten";
+                    track.enabled = false;
+                }
+                else {
+                    sPause.value = "Demp microfoon";
+                    track.enabled = true;
+                }
             }
         }
 
-        function muteMyVideo() {
-            myWebcam = document.getElementById("myWebcam");
-            canvas = document.getElementById("noImage");
-            bPause = document.getElementById("pauseButton");
+        // Stop showing the user webcam recording
+        function muteLocalVideo() {
+            const vPause = document.getElementById("pauseButton");
 
-            if(myWebcam.hidden === false){
-                bPause.value = "Zet camera aan";
-                myWebcam.hidden = true;
-                canvas.hidden = false;
-            }
-            else {
-                bPause.value = "Zet camera uit";
-                myWebcam.hidden = false;
-                canvas.hidden = true;
+            for(let i in localVideo.srcObject.getVideoTracks()) {
+                let track = localVideo.srcObject.getVideoTracks()[i]
+                if(track.enabled){
+                    vPause.value = "Zet camera aan";
+                    track.enabled = false;
+                }
+                else {
+                    vPause.value = "Zet camera uit";
+                    track.enabled = true;
+                }
             }
         }
     </script>
@@ -68,11 +230,12 @@
     <h1 class="display-4">Welcome</h1>
     <p>Hieronder is je webcam beeld te zien.</p>
     <div>
-        <video id="myWebcam" width="640" height="480"> </video>
-        <canvas id="noImage" width="640" height="480" hidden> </canvas>
+        <video id="remoteVideo"  width="640" height="480"> </video>
+        <video id="localVideo" width="640" height="480"> </video>
     </div>
     <div>
-        <input id="muteButton" value="Demp geluid" type="button" onclick="muteMySound()"/>
-        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteMyVideo()"/>
+        <input id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
+        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
+        <input id="videoCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
     </div>
 </div>
