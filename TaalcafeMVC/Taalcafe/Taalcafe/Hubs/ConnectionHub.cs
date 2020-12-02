@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Taalcafe.Models;
@@ -23,10 +22,15 @@ namespace Taalcafe.Hubs
             _CallOffers = callOffers;
         }
 
-        public async Task Join(string userName)
+        public async Task Join(string username)
         {
             // Add the new UserConnectionInfo
-            var uci = new UserConnectionInfo(userName, Context.ConnectionId);
+            var uci = new UserConnectionInfo
+            {
+                userName = username,
+                connectionId = Context.ConnectionId
+            };
+
             _Users.Add(uci);
 
             // Send the updated list to all clients
