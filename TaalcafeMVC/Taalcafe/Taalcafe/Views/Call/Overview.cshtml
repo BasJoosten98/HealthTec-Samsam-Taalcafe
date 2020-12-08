@@ -1,0 +1,33 @@
+@* @model Model *@
+@{
+    ViewData["Title"] = "Call Overview";
+}
+
+@section scripts {
+    <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
+    <script src="~/js/call_overview.js"> </script>
+}
+
+<div class="text-center">
+    <ul id="callList" class="list-group">
+        <li class="list-group-item">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-6">
+                        Duo
+                        <div class="row">
+                            <div class="col-6">
+                                Taalcoach
+                            </div>
+                            <div class="col-6">
+                                Nieuwe Nederlander
+                            </div>  
+                        </div>
+                    </div>
+                    <div class="col-3">Hulpvraag</div>
+                    <div class="col-3">knoppen hieronder</div>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
