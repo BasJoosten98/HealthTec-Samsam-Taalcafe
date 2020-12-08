@@ -25,13 +25,14 @@ var localVideoStream = null;
 var myUsername = null;
 var availableUsers = null;
 var connections = {}
+let askHelp = false;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
-    .configureLogging(signalR.LogLevel.Trace)
+    .configureLogging(signalR.LogLevel.Debug)
     .withAutomaticReconnect()
     .build();
 
@@ -67,7 +68,7 @@ function initializeSignalR() {
             getUsername()
         })
         .catch(err => console.log(err));
-};
+}
 
 
 // Prompt for local webcam and microphone media streams 
@@ -85,6 +86,16 @@ function initializeUserMedia() {
         });
 }
 
+/*
+function bindfunctions() {
+    $("#muteButton").click(muteLocalSound);
+    //$("#pauseButton").click(muteLocalVideo);
+    document.getElementById("pauseButton").on("click",() => { muteLocalVideo(); });
+    $("#startCallButton").click(initiateCall);
+    $("#stopCallButton").click(hangup);
+    $("#askHelpButton").click(toggleHelp);
+}
+*/
 
 // Create initial RTC session offer
 function initiateOffer(partnerClientId, stream) {
@@ -170,6 +181,11 @@ function callbackAddStream(connection, evt) {
 
     // Bind the remote stream to the partner video
     attachMediaStream(evt);
+
+    // enable askhelp button
+    askHelp = false;
+    document.getElementById("askHelpButton").value = "Vraag om hulp";
+    document.getElementById("askHelpButton").disabled = false;
 }
 
 
@@ -188,7 +204,7 @@ function setUsername(username) {
     wsConn.invoke("Join", username).catch(err => {
         console.error("Failed SignalR connection: Not able to connect to signaling server.", err);
     });
-};
+}
 
 
 // TODO get ID/name from current user
@@ -202,7 +218,7 @@ function generateRandomUsername() {
     console.log('SignalR: Generating random username...');
     let username = 'User' + Math.floor((Math.random() * 10000) + 1);
     setUsername(username);
-};
+}
 
 
 function getUser(username) {
@@ -221,7 +237,7 @@ function sendHubSignal(candidate, partnerClientId) {
     wsConn.invoke('sendSignal', candidate, partnerClientId).catch(err => {
             console.error("SignalR: something went wrong when sending signal:", err);
         });
-};
+}
 
 
 // Called upon receiving a signal from the other client via the ConnectionHub
@@ -302,6 +318,7 @@ function closeConnection(partnerClientId) {
     if (Object.keys(connections).length === 0) {
         document.getElementById("stopCallButton").disabled = true;
         document.getElementById("startCallButton").disabled = false;
+        document.getElementById("askHelpButton").disabled = true;
     }
 }
 
@@ -383,6 +400,27 @@ wsConn.on('updateUserList', (userList) => {
 });
 
 
+// update askHelp if other user in call pushes the button
+wsConn.on('updateActiveCalls', (callList) => {
+    console.log('SignalR: called updateActiveCalls' + JSON.stringify(callList));
+
+    for (let i in callList) {
+        let call = callList[i];
+        if ((call.users[0].userName == myUsername || call.users[1].userName == myUsername) && call.help != askHelp) {
+            if (askHelp === true) {
+                askHelp = false;
+                document.getElementById("askHelpButton").value = "Vraag om hulp";
+            }
+            else {
+                askHelp = true;
+                document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
+            }
+        }
+    }
+});
+
+
+
 // Notify the user that the client is trying to reconnect
 wsConn.onreconnecting(err => {
     console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
@@ -423,8 +461,8 @@ function initiateCall() {
             continue;
         }
         else if (!target && !u["inCall"]) {
-            target = u
-            console.log("Found user to call", target)
+            target = u;
+            console.log("Found user to call", target);
         }
     }
     
@@ -435,7 +473,21 @@ function initiateCall() {
 
     document.getElementById("stopCallButton").disabled = false;
     document.getElementById("startCallButton").disabled = true;
-    wsConn.invoke('callUser', target)
+    wsConn.invoke('callUser', target);
+}
+
+
+// ask for help or stop asking for help
+function toggleHelp() {
+    if (askHelp === true) {
+        askHelp = false;
+        document.getElementById("askHelpButton").value = "Vraag om hulp";
+    }
+    else {
+        askHelp = true;
+        document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
+    }
+    wsConn.invoke('askForHelp');
 }
 
 
@@ -455,7 +507,7 @@ function attachMediaStream(e) {
         remoteVideo.srcObject = e.stream;
         remoteVideo.play();
     }
-};
+}
 
 
 // Mute sound of user microphone

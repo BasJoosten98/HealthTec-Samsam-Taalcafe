@@ -5,7 +5,21 @@
 
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
-    <script src="~/js/call.js"> </script>
+    <script type="text/javascript" src="~/js/call.js"> </script>
+    @*
+    <script>
+        function toggleHelp() {
+            if (askHelp === true) {
+                askHelp = false;
+                document.getElementById("askHelpButton").value = "Vraag om hulp";
+            }
+            else {
+                askHelp = true;
+                document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
+            }
+            wsConn.invoke('askForHelp', askHelp);
+        }
+    </script>*@
 }
 
 
@@ -21,5 +35,6 @@
         <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
         <input id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
         <input id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+        <input id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()"/>
     </div>
 </div>
