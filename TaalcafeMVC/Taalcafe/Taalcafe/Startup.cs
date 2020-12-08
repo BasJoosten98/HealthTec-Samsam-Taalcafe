@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Taalcafe.Hubs;
+using Taalcafe.Models;
 
 namespace Taalcafe
 {
@@ -24,6 +26,23 @@ namespace Taalcafe
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            /*
+            services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
+            {
+                builder
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials()
+                    .WithOrigins("http://localhost:58413"); //https://localhost:5001
+            }));
+            */
+
+            services.AddSignalR();
+
+            services.AddSingleton<List<UserConnectionInfo>>();
+            services.AddSingleton<List<Call>>();
+            services.AddSingleton<List<CallOffer>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,11 +65,15 @@ namespace Taalcafe
 
             app.UseAuthorization();
 
+            //app.UseCors("CorsPolicy");
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                
+                endpoints.MapHub<ConnectionHub>("/connectionhub");
             });
         }
     }
