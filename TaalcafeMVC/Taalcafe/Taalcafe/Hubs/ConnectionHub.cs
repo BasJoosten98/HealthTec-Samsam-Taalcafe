@@ -132,6 +132,26 @@ namespace Taalcafe.Hubs
 
             // Update the user list, since these two are now in a call
             await SendUserListUpdate();
+
+            // Update the active calls list for coordinators, since a call has been added to the list
+            await SendCallListUpdate();
+        }
+
+        public async Task AskForHelp()
+        {
+            var user = _Users.SingleOrDefault(u => u.connectionId == Context.ConnectionId);
+            
+            Call currentCall = GetUserCall(user.connectionId);
+
+            if (currentCall.help == true) {
+                currentCall.help = false;
+            }
+            else
+            {
+                currentCall.help = true;
+            }
+
+            await SendCallListUpdate();
         }
 
         public async Task HangUp()
@@ -159,6 +179,9 @@ namespace Taalcafe.Hubs
                 if (currentCall.Users.Count < 2)
                 {
                     _Calls.Remove(currentCall);
+
+                    // And update the active calls list for coordinators
+                    await SendCallListUpdate();
                 }
             }
 
@@ -191,10 +214,19 @@ namespace Taalcafe.Hubs
             }
         }
 
+        public async Task GetCallList() {
+            await Clients.Client(Context.ConnectionId).UpdateActiveCalls(_Calls);
+        }
+
         private async Task SendUserListUpdate()
         {
             _Users.ForEach(u => u.inCall = (GetUserCall(u.connectionId) != null));
             await Clients.All.UpdateUserList(_Users);
+        }
+
+        private async Task SendCallListUpdate()
+        {
+            await Clients.All.UpdateActiveCalls(_Calls);
         }
 
         private Call GetUserCall(string connectionId)

@@ -7,6 +7,7 @@ namespace Taalcafe.Hubs
     public interface IConnectionHub
     {
         Task UpdateUserList(List<UserConnectionInfo> userList);
+        Task UpdateActiveCalls(List<Call> callList);
         Task CallAccepted(UserConnectionInfo acceptingUser);
         Task CallDeclined(UserConnectionInfo decliningUser, string reason);
         Task IncomingCall(UserConnectionInfo callingUser);

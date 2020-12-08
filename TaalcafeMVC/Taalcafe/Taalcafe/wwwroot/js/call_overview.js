@@ -24,15 +24,15 @@ const remoteVideo = document.getElementById("remoteVideo");
 var localVideoStream = null;
 var myUsername = null;
 var availableUsers = null;
+var activeCalls = null;
 var connections = {}
-let askHelp = false;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
-    .configureLogging(signalR.LogLevel.Debug)
+    .configureLogging(signalR.LogLevel.Trace)
     .withAutomaticReconnect()
     .build();
 
@@ -47,7 +47,7 @@ const peerConnCfg = {'iceServers': [
 $(document).ready(function () {
     initializeSignalR();
 
-    initializeUserMedia();
+    //initializeUserMedia();
 });
 
 
@@ -64,8 +64,9 @@ const errorHandler = (error) => {
 function initializeSignalR() {
     wsConn.start()
         .then( () => { 
-            console.log("SignalR: Connected"); 
-            getUsername()
+            console.log("SignalR: Connected");
+            //getUsername();
+            getActiveCalls();
         })
         .catch(err => console.log(err));
 }
@@ -86,16 +87,6 @@ function initializeUserMedia() {
         });
 }
 
-/*
-function bindfunctions() {
-    $("#muteButton").click(muteLocalSound);
-    //$("#pauseButton").click(muteLocalVideo);
-    document.getElementById("pauseButton").on("click",() => { muteLocalVideo(); });
-    $("#startCallButton").click(initiateCall);
-    $("#stopCallButton").click(hangup);
-    $("#askHelpButton").click(toggleHelp);
-}
-*/
 
 // Create initial RTC session offer
 function initiateOffer(partnerClientId, stream) {
@@ -181,17 +172,23 @@ function callbackAddStream(connection, evt) {
 
     // Bind the remote stream to the partner video
     attachMediaStream(evt);
-
-    // enable askhelp button
-    askHelp = false;
-    document.getElementById("askHelpButton").value = "Vraag om hulp";
-    document.getElementById("askHelpButton").disabled = false;
 }
 
 
 function callbackRemoveStream(connection, evt) {
     console.log('WebRTC: removing remote stream from partner window');
     remoteVideo.sourceObject = null;
+}
+
+
+// Ask for update on active calls
+function getActiveCalls() {
+    console.log("called getActiveCalls");
+    wsConn.invoke('getCallList').then( () => {
+        console.log("SignalR: Asked for callList update");
+    }).catch( (err) => {
+        console.error("SignalR: Failed to update active calls:", err);
+    });
 }
 
 
@@ -318,7 +315,6 @@ function closeConnection(partnerClientId) {
     if (Object.keys(connections).length === 0) {
         document.getElementById("stopCallButton").disabled = true;
         document.getElementById("startCallButton").disabled = false;
-        document.getElementById("askHelpButton").disabled = true;
     }
 }
 
@@ -330,7 +326,7 @@ function closeAllConnections() {
     }
 }
 
-
+/*
 // Hub Callback: Call accepted
 wsConn.on('callAccepted', (acceptingUser) => {
     console.log('SignalR: call accepted from: ' + JSON.stringify(acceptingUser) + '.  Initiating WebRTC call and offering my stream up...');
@@ -398,27 +394,58 @@ wsConn.on('updateUserList', (userList) => {
         document.getElementById("startCallButton").disabled = false;
     }
 });
+*/
 
-
-// update askHelp if other user in call pushes the button
+// Update the list of currently active calls
 wsConn.on('updateActiveCalls', (callList) => {
     console.log('SignalR: called updateActiveCalls' + JSON.stringify(callList));
+    activeCalls = callList;
+    $('#callList li.call').remove();
 
-    for (let i in callList) {
-        let call = callList[i];
-        if ((call.users[0].userName == myUsername || call.users[1].userName == myUsername) && call.help != askHelp) {
-            if (askHelp === true) {
-                askHelp = false;
-                document.getElementById("askHelpButton").value = "Vraag om hulp";
-            }
-            else {
-                askHelp = true;
-                document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
-            }
+    $.each(activeCalls, function (index) {
+        /* builds the following structure:
+
+        <li class="list-group-item call">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-3">coach</div>
+                    <div class="col-3">NN</div>
+                    <div class="col-3">Notification</div>
+                    <div class="col-3">Participate in call button</div>
+                </div>
+            </div>
+        </li>
+        */
+        let listString = '<li class="list-group-item call" data=\"\">'
+
+        if (callList[index].help) {
+            listString += '<div class="container-fluid alert-warning"><div class="row">';
+            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
+            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3">Handje omhoog gestoken</div>';
         }
+        else {
+            listString += '<div class="container-fluid"><div class="row">';
+            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
+            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3"></div>';
+        }
+        listString += '<div class="col-3">Deelnemen</div></div></div></li>';
+        $('#callList').append(listString);
+    });
+
+    if ($('#callList li').length === 1) {
+        /* builds the following structure:
+
+        <li class="list-group-item call">
+            <div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div>
+        </li>
+        */
+
+        //$('#callList').append('<li class="list-group-item call"><div class="container-fluid"><div class="row"><div class="col-12 alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></div></div></li>');
+        $('#callList').append('<li class="list-group-item call"><div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></li>');
     }
 });
-
 
 
 // Notify the user that the client is trying to reconnect
@@ -461,8 +488,8 @@ function initiateCall() {
             continue;
         }
         else if (!target && !u["inCall"]) {
-            target = u;
-            console.log("Found user to call", target);
+            target = u
+            console.log("Found user to call", target)
         }
     }
     
@@ -473,21 +500,7 @@ function initiateCall() {
 
     document.getElementById("stopCallButton").disabled = false;
     document.getElementById("startCallButton").disabled = true;
-    wsConn.invoke('callUser', target);
-}
-
-
-// ask for help or stop asking for help
-function toggleHelp() {
-    if (askHelp === true) {
-        askHelp = false;
-        document.getElementById("askHelpButton").value = "Vraag om hulp";
-    }
-    else {
-        askHelp = true;
-        document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
-    }
-    wsConn.invoke('askForHelp');
+    wsConn.invoke('callUser', target)
 }
 
 
