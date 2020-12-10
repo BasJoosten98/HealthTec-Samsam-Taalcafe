@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,6 +27,12 @@ namespace Taalcafe
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            //Fetching Connection string from APPSETTINGS.JSON  
+            var ConnectionString = Configuration.GetConnectionString("ConnectionString");
+
+            //Entity Framework  
+            //services.AddDbContext<EmployeeContext>(options => options.UseSqlServer(ConnectionString));
 
             /*
             services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>

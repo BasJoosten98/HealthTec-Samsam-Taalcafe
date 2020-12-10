@@ -1,8 +1,26 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+    <form class="align-items-center justify-content-center h-100">
+        <div class="form-group row justify-content-center align-items-center">
+            <label for="gebruikersnaam" class="col-sm-2 col-form-label col-form-label-lg">Gebruikersnaam</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control form-control-lg" id="colFormLabelLg" placeholder="Gebruikersnaam...">
+            </div>
+        </div>
+        <div class="form-group row justify-content-center align-items-center">
+            <label for="wachtwoord" class="col-sm-2 col-form-label col-form-label-lg">Wachtwoord</label>
+            <div class="col-sm-4">
+                <input type="password" class="form-control form-control-lg" id="colFormLabelLg" placeholder="Wachtwoord...">
+            </div>
+        </div>
+        <div class="form-group row justify-content-center align-items-center">
+            <button type="submit" class="btn btn-success justify-content-center col-sm-2">Login</button>
+            <div class="col-sm-4">
+                <label for="gegevens" class="col-form-label-sm col-form-label-lg">Inloggegevens kwijt?</label>
+            </div>
+        </div>
+    </form>
+
