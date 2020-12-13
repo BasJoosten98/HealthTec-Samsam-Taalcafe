@@ -65,11 +65,12 @@ namespace Taalcafe.Hubs
             }
 
             // And that they aren't already in a call
-            if (GetUserCall(targetUser.connectionId) != null)
+            /*if (GetUserCall(targetUser.connectionId) != null)
             {
+                
                 await Clients.Caller.CallDeclined(targetConnectionId, string.Format("{0} is already in a call.", targetUser.userName));
                 return;
-            }
+            }*/
 
             // They are here, so tell them someone wants to talk
             await Clients.Client(targetConnectionId.connectionId).IncomingCall(callingUser);
@@ -114,18 +115,27 @@ namespace Taalcafe.Hubs
             }
 
             // And finally... make sure the user hasn't accepted another call already
-            if (GetUserCall(targetUser.connectionId) != null)
+            if (GetUserCall(targetUser.connectionId) != null && GetUserCall(targetUser.connectionId) != GetUserCall(callingUser.connectionId))
             {
                 // And that they aren't already in a call
                 await Clients.Caller.CallDeclined(targetConnectionId, string.Format("{0} chose to accept someone elses call instead of yours :(", targetUser.userName));
                 return;
             }
+            else if (GetUserCall(callingUser.connectionId) != null) {
+                // check if the user who is calling already has been added to the existing call
+                // (because the connection process with the other user could already have passed this step)
+                if (GetUserCall(targetUser.connectionId) == null) {
+                    // add the calling user to the existing call
+                    GetUserCall(callingUser.connectionId).Users.Add(targetUser);
+                }
+            }
+            else {
+                // Remove all the other offers for the call initiator, in case they have multiple calls out
+                _CallOffers.RemoveAll(c => c.Caller.connectionId == targetUser.connectionId);
 
-            // Remove all the other offers for the call initiator, in case they have multiple calls out
-            _CallOffers.RemoveAll(c => c.Caller.connectionId == targetUser.connectionId);
-
-            // Create a new call to match these users up
-            _Calls.Add(new Call(new List<UserConnectionInfo> { callingUser, targetUser }));
+                // Create a new call to match these users up
+                _Calls.Add(new Call(new List<UserConnectionInfo> { callingUser, targetUser }));
+            }
 
             // Tell the original caller that the call was accepted
             await Clients.Client(targetConnectionId.connectionId).CallAccepted(callingUser);
@@ -179,10 +189,10 @@ namespace Taalcafe.Hubs
                 if (currentCall.Users.Count < 2)
                 {
                     _Calls.Remove(currentCall);
-
-                    // And update the active calls list for coordinators
-                    await SendCallListUpdate();
                 }
+
+                // And update the active calls list for coordinators
+                await SendCallListUpdate();
             }
 
             // Remove all offers initiating from the caller

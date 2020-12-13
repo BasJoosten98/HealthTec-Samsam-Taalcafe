@@ -7,27 +7,40 @@
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
     <script src="~/js/call_overview.js"> </script>
 }
-
-<div class="text-center">
-    <ul id="callList" class="list-group">
-        <li class="list-group-item">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-6">
-                        Duo
-                        <div class="row">
-                            <div class="col-6">
-                                Taalcoach
+<div>
+    <div class="text-center">
+        <ul id="callList" class="list-group">
+            <li class="list-group-item">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-6">
+                            Duo
+                            <div class="row">
+                                <div class="col-6">
+                                    Taalcoach
+                                </div>
+                                <div class="col-6">
+                                    Nieuwe Nederlander
+                                </div>  
                             </div>
-                            <div class="col-6">
-                                Nieuwe Nederlander
-                            </div>  
                         </div>
+                        <div class="col-3">Hulpvraag</div>
+                        <div class="col-3">knoppen hieronder</div>
                     </div>
-                    <div class="col-3">Hulpvraag</div>
-                    <div class="col-3">knoppen hieronder</div>
                 </div>
-            </div>
-        </li>
-    </ul>
+            </li>
+        </ul>
+    </div>
+    <div class="col-12">
+        <div class="row">
+            <video id="remoteVideo1"  width="640" height="480"> </video>
+            <video id="remoteVideo2"  width="640" height="480"> </video>
+            <video id="localVideo" width="640" height="480" muted> </video>
+        </div>
+    </div>
+    <div>
+        <input id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
+        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
+        <input id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+    </div>
 </div>

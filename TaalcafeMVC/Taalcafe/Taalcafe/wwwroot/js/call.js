@@ -20,7 +20,8 @@ const mediaConstraints = {
 };
 
 const localVideo = document.getElementById("localVideo");
-const remoteVideo = document.getElementById("remoteVideo");
+const remoteVideo1 = document.getElementById("remoteVideo1");
+const remoteVideo2 = document.getElementById("remoteVideo2");
 var localVideoStream = null;
 var myUsername = null;
 var availableUsers = null;
@@ -85,17 +86,6 @@ function initializeUserMedia() {
             console.error("Access to microphone and/or webcam denied.", err);
         });
 }
-
-/*
-function bindfunctions() {
-    $("#muteButton").click(muteLocalSound);
-    //$("#pauseButton").click(muteLocalVideo);
-    document.getElementById("pauseButton").on("click",() => { muteLocalVideo(); });
-    $("#startCallButton").click(initiateCall);
-    $("#stopCallButton").click(hangup);
-    $("#askHelpButton").click(toggleHelp);
-}
-*/
 
 // Create initial RTC session offer
 function initiateOffer(partnerClientId, stream) {
@@ -502,10 +492,15 @@ function hangup() {
 function attachMediaStream(e) {
     console.log(e);
 
-    if (remoteVideo.srcObject !== e.stream) {
-        console.log("attatching mediastream: ", e.stream);
-        remoteVideo.srcObject = e.stream;
-        remoteVideo.play();
+    if (remoteVideo1.srcObject !== e.stream && remoteVideo1.srcObject == null) {
+        console.log("attatching mediastream to video 1: ", e.stream);
+        remoteVideo1.srcObject = e.stream;
+        remoteVideo1.play();
+    }
+    else if (remoteVideo2.srcObject !== e.stream && remoteVideo2.srcObject == null) {
+        console.log("attatching mediastream to video 2: ", e.stream);
+        remoteVideo2.srcObject = e.stream;
+        remoteVideo2.play();
     }
 }
 

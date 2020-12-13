@@ -20,7 +20,8 @@ const mediaConstraints = {
 };
 
 const localVideo = document.getElementById("localVideo");
-const remoteVideo = document.getElementById("remoteVideo");
+const remoteVideo1 = document.getElementById("remoteVideo1");
+const remoteVideo2 = document.getElementById("remoteVideo2");
 var localVideoStream = null;
 var myUsername = null;
 var availableUsers = null;
@@ -47,7 +48,7 @@ const peerConnCfg = {'iceServers': [
 $(document).ready(function () {
     initializeSignalR();
 
-    //initializeUserMedia();
+    initializeUserMedia();
 });
 
 
@@ -314,7 +315,6 @@ function closeConnection(partnerClientId) {
 
     if (Object.keys(connections).length === 0) {
         document.getElementById("stopCallButton").disabled = true;
-        document.getElementById("startCallButton").disabled = false;
     }
 }
 
@@ -326,7 +326,7 @@ function closeAllConnections() {
     }
 }
 
-/*
+
 // Hub Callback: Call accepted
 wsConn.on('callAccepted', (acceptingUser) => {
     console.log('SignalR: call accepted from: ' + JSON.stringify(acceptingUser) + '.  Initiating WebRTC call and offering my stream up...');
@@ -337,13 +337,12 @@ wsConn.on('callAccepted', (acceptingUser) => {
 
 
 // Hub Callback: Call Declined
-wsConn.on('callDeclined', (declingingUser, reason) => {
+wsConn.on('callDeclined', (decliningUser, reason) => {
     console.log('SignalR: call declined from: ' + decliningUser["connectionId"]);
     console.log('For reason: ' + reason);
 
     // toggle buttons
     document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = false;
 });
 
 
@@ -366,7 +365,6 @@ wsConn.on('incomingCall', (callingUser) => {
 
     // toggle buttons
     document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
     
     // Decline the call
     //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
@@ -390,11 +388,8 @@ wsConn.on('callEnded', (signalingUser, signal) => {
 wsConn.on('updateUserList', (userList) => {
     console.log('SignalR: called updateUserList' + JSON.stringify(userList));
     availableUsers = userList;
-    if (availableUsers.length > 1 && !getUser(myUsername)["inCall"]) {
-        document.getElementById("startCallButton").disabled = false;
-    }
 });
-*/
+
 
 // Update the list of currently active calls
 wsConn.on('updateActiveCalls', (callList) => {
@@ -430,7 +425,14 @@ wsConn.on('updateActiveCalls', (callList) => {
             listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
             listString += '<div class="col-3"></div>';
         }
-        listString += '<div class="col-3">Deelnemen</div></div></div></li>';
+        listString += '<input class="col-3" value="Deelnemen" type="button" onclick="initiateCall(' + index + ')"';
+        if (callList[index].users.length > 2) {
+            // disable button if a coordinator already is in the call
+            listString += ' disabled></input></div></div></li>';
+        }
+        else {
+            listString += '></input></div></div></li>';
+        }
         $('#callList').append(listString);
     });
 
@@ -474,33 +476,31 @@ wsConn.onclose(err => {
 
 
 // Call random available user
-function initiateCall() {
-    let target = null;
-
-    for (let i in availableUsers) {
-        let u = availableUsers[i];
-        console.log(u);
-        if (u["userName"] == myUsername){
-            if (u["inCall"]){
-                console.log("You are already in a call");
-                return;
-            }
-            continue;
-        }
-        else if (!target && !u["inCall"]) {
-            target = u
-            console.log("Found user to call", target)
+function initiateCall(call) {
+    call = activeCalls[call];
+    if (localVideoStream === null) {
+        initializeUserMedia();
+        if (localVideoStream === null){
+            return;
         }
     }
-    
-    if (!target) {
-        console.log("No users available for starting a call");
-        return;
+
+    if (myUsername === null) {
+        getUsername();
+    }
+    else if (getUser(myUsername).inCall) {
+        hangup();
     }
 
+    console.log("Joining call:", call);
+    for (let i in call.users) {
+        let user = call.users[i];
+        if (call.users[i]["inCall"]) {
+            console.log("Calling user:", user);
+            wsConn.invoke('callUser', user);
+        }
+    }
     document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
-    wsConn.invoke('callUser', target)
 }
 
 
@@ -515,10 +515,15 @@ function hangup() {
 function attachMediaStream(e) {
     console.log(e);
 
-    if (remoteVideo.srcObject !== e.stream) {
-        console.log("attatching mediastream: ", e.stream);
-        remoteVideo.srcObject = e.stream;
-        remoteVideo.play();
+    if (remoteVideo1.srcObject !== e.stream && remoteVideo1.srcObject == null) {
+        console.log("attatching mediastream to video 1: ", e.stream);
+        remoteVideo1.srcObject = e.stream;
+        remoteVideo1.play();
+    }
+    else if (remoteVideo2.srcObject !== e.stream && remoteVideo2.srcObject == null) {
+        console.log("attatching mediastream to video 2: ", e.stream);
+        remoteVideo2.srcObject = e.stream;
+        remoteVideo2.play();
     }
 }
 
