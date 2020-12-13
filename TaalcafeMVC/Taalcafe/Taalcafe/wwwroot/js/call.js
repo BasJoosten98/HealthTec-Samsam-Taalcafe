@@ -502,9 +502,9 @@ function hangup() {
 
 // Attatch remote mediastream to video element
 function attachMediaStream(e, connectionId) {
-    let elementString = '<video id="' + connectionId  + '"> </video>';
+    let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="100%" height="auto"> </video></div>';
     $('#webcams').prepend(elementString);
-    let videoElement = document.getElementById(connectionId);
+    let videoElement = document.getElementById('Video' + connectionId);
     videoElement.srcObject = e.stream;
     videoElement.play();
 }

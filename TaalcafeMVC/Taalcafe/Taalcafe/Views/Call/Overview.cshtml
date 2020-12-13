@@ -7,6 +7,7 @@
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
     <script src="~/js/call_overview.js"> </script>
 }
+
 <div>
     <div class="text-center">
         <ul id="callList" class="list-group">
@@ -31,14 +32,34 @@
             </li>
         </ul>
     </div>
-    <div class="col-12">
-        <div id="webcams" class="row">
-            <video id="localVideo" width="640" height="480" muted> </video>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-10">
+                <div class="row no-gutters" id="webcams">
+                    
+                </div>
+                <div Class="row">
+                    <div class="btn-toolbar" role="toolbar" aria-label="Controls">
+                        <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
+                            <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
+                            <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Call/Hang up">
+                            <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="row">
+                    <h1>Thema</h1>
+                    <p>Hier komt de beschrijving van het thema te staan.</p>
+                </div>
+                <div class="row">
+                    <video id="localVideo" width="100%" height="auto" muted> </video>
+                </div>
+            </div>
         </div>
-    </div>
-    <div>
-        <input id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
-        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
-        <input id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
     </div>
 </div>
