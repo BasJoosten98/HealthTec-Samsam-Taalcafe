@@ -183,12 +183,17 @@ namespace Taalcafe.Hubs
                     await Clients.Client(user.connectionId).CallEnded(callingUser, string.Format("{0} has hung up.", callingUser.userName));
                 }
 
-                // Remove the call from the list if there is only one (or none) person left.  This should
-                // always trigger now, but will be useful when we implement conferencing.
+                // Remove the call from the list if there is only one (or none) person left, 
+                // else Notify all the users still in the call that a person left the call.
                 currentCall.Users.RemoveAll(u => u.connectionId == callingUser.connectionId);
                 if (currentCall.Users.Count < 2)
                 {
                     _Calls.Remove(currentCall);
+                }
+                else {
+                    foreach (var user in currentCall.Users.Where(u => u.connectionId != callingUser.connectionId)) {
+                        await Clients.Client(user.connectionId).UserLeft(callingUser);
+                    }
                 }
 
                 // And update the active calls list for coordinators

@@ -12,6 +12,7 @@ namespace Taalcafe.Hubs
         Task CallDeclined(UserConnectionInfo decliningUser, string reason);
         Task IncomingCall(UserConnectionInfo callingUser);
         Task ReceiveSignal(UserConnectionInfo signalingUser, string signal);
+        Task UserLeft(UserConnectionInfo leavingUser);
         Task CallEnded(UserConnectionInfo signalingUser, string signal);
     }
 }

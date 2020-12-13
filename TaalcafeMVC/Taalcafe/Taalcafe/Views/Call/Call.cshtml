@@ -9,19 +9,23 @@
 }
 
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Hieronder is je webcam beeld te zien.</p>
-    <div>
-        <video id="remoteVideo1"  width="640" height="480"> </video>
-        <video id="remoteVideo2"  width="640" height="480"> </video>
-        <video id="localVideo" width="640" height="480" muted> </video>
+<div class="container-fluid">
+    <div class="col-10">
+        <div class="row" id="webcams">
+            
+        </div>
+        <div Class="row">
+            <div class="col-12">
+                <input id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
+                <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
+                <input id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
+                <input id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+                <input id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()"/>
+            </div>
+        </div>
     </div>
-    <div>
-        <input id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
-        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
-        <input id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
-        <input id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
-        <input id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()"/>
+    <div class="col-2">
+        <video id="localVideo" width="100%" height="auto" muted> </video>
     </div>
+    
 </div>

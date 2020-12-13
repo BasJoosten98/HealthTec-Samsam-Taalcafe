@@ -20,8 +20,6 @@ const mediaConstraints = {
 };
 
 const localVideo = document.getElementById("localVideo");
-const remoteVideo1 = document.getElementById("remoteVideo1");
-const remoteVideo2 = document.getElementById("remoteVideo2");
 var localVideoStream = null;
 var myUsername = null;
 var availableUsers = null;
@@ -33,7 +31,7 @@ let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
-    .configureLogging(signalR.LogLevel.Trace)
+    .configureLogging(signalR.LogLevel.Debug)
     .withAutomaticReconnect()
     .build();
 
@@ -143,8 +141,8 @@ function initializeConnection(partnerClientId) {
 
     connection.onicecandidate = evt => callbackIceCandidate(evt, connection, partnerClientId); // ICE Candidate Callback
     //connection.onnegotiationneeded = evt => console.log("WebRTC: Negotiation needed.. Event: ", evt); // Negotiation Needed Callback
-    connection.onaddstream = evt => callbackAddStream(connection, evt); // Add stream handler callback
-    connection.onremovestream = evt => callbackRemoveStream(connection, evt); // Remove stream handler callback
+    connection.onaddstream = evt => callbackAddStream(connection, evt, partnerClientId); // Add stream handler callback
+    connection.onremovestream = evt => callbackRemoveStream(connection, evt, partnerClientId); // Remove stream handler callback
 
     connections[partnerClientId] = connection; // Store away the connection based on username
     //console.log(connection);
@@ -168,17 +166,20 @@ function callbackIceCandidate(evt, connection, partnerClientId) {
 }
 
 
-function callbackAddStream(connection, evt) {
+function callbackAddStream(connection, evt, connectionId) {
     console.log('WebRTC: called callbackAddStream');
 
     // Bind the remote stream to the partner video
-    attachMediaStream(evt);
+    attachMediaStream(evt, connectionId);
 }
 
 
-function callbackRemoveStream(connection, evt) {
+function callbackRemoveStream(connection, evt, connectionId) {
     console.log('WebRTC: removing remote stream from partner window');
-    remoteVideo.sourceObject = null;
+    let videoElement = document.getElementById(connectionId);
+    if (videoElement != null){
+        videoElement.remove();
+    }
 }
 
 
@@ -313,6 +314,8 @@ function closeConnection(partnerClientId) {
         delete connections[partnerClientId]; // Remove the property
     }
 
+    callbackRemoveStream(null, null, partnerClientId);
+
     if (Object.keys(connections).length === 0) {
         document.getElementById("stopCallButton").disabled = true;
     }
@@ -368,6 +371,15 @@ wsConn.on('incomingCall', (callingUser) => {
     
     // Decline the call
     //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+});
+
+
+// Hub Callback: User left call
+wsConn.on('userLeft', (leavingUser) => {
+    // let the user know someone left the call
+    console.log('SignalR: User: ' + leavingUser.userName + ' has left the call.');
+
+    closeConnection(leavingUser.connectionId);
 });
 
 
@@ -511,20 +523,13 @@ function hangup() {
 }
 
 
-// Attatch remote mediastream to video element
-function attachMediaStream(e) {
-    console.log(e);
-
-    if (remoteVideo1.srcObject !== e.stream && remoteVideo1.srcObject == null) {
-        console.log("attatching mediastream to video 1: ", e.stream);
-        remoteVideo1.srcObject = e.stream;
-        remoteVideo1.play();
-    }
-    else if (remoteVideo2.srcObject !== e.stream && remoteVideo2.srcObject == null) {
-        console.log("attatching mediastream to video 2: ", e.stream);
-        remoteVideo2.srcObject = e.stream;
-        remoteVideo2.play();
-    }
+// Attach remote mediastream to video element
+function attachMediaStream(e, connectionId) {
+    let elementString = '<video id="' + connectionId  + '"> </video>';
+    $('#webcams').prepend(elementString);
+    let videoElement = document.getElementById(connectionId);
+    videoElement.srcObject = e.stream;
+    videoElement.play();
 }
 
 
