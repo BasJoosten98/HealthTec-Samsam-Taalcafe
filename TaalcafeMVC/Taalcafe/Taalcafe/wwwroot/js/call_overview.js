@@ -23,8 +23,8 @@ const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
 var myUsername = null;
 var availableUsers = null;
+var activeCalls = null;
 var connections = {}
-let askHelp = false;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
@@ -63,8 +63,9 @@ const errorHandler = (error) => {
 function initializeSignalR() {
     wsConn.start()
         .then( () => { 
-            console.log("SignalR: Connected"); 
-            getUsername()
+            console.log("SignalR: Connected");
+            //getUsername();
+            getActiveCalls();
         })
         .catch(err => console.log(err));
 }
@@ -84,6 +85,7 @@ function initializeUserMedia() {
             console.error("Access to microphone and/or webcam denied.", err);
         });
 }
+
 
 // Create initial RTC session offer
 function initiateOffer(partnerClientId, stream) {
@@ -164,16 +166,11 @@ function callbackIceCandidate(evt, connection, partnerClientId) {
 }
 
 
-function callbackAddStream(connection, evt, partnerClientId) {
+function callbackAddStream(connection, evt, connectionId) {
     console.log('WebRTC: called callbackAddStream');
 
     // Bind the remote stream to the partner video
-    attachMediaStream(evt, partnerClientId);
-
-    // enable askhelp button
-    askHelp = false;
-    document.getElementById("askHelpButton").value = "Vraag om hulp";
-    document.getElementById("askHelpButton").disabled = false;
+    attachMediaStream(evt, connectionId);
 }
 
 
@@ -183,6 +180,17 @@ function callbackRemoveStream(connection, evt, connectionId) {
     if (videoElement != null){
         videoElement.remove();
     }
+}
+
+
+// Ask for update on active calls
+function getActiveCalls() {
+    console.log("called getActiveCalls");
+    wsConn.invoke('getCallList').then( () => {
+        console.log("SignalR: Asked for callList update");
+    }).catch( (err) => {
+        console.error("SignalR: Failed to update active calls:", err);
+    });
 }
 
 
@@ -310,8 +318,6 @@ function closeConnection(partnerClientId) {
 
     if (Object.keys(connections).length === 0) {
         document.getElementById("stopCallButton").disabled = true;
-        document.getElementById("startCallButton").disabled = false;
-        document.getElementById("askHelpButton").disabled = true;
     }
 }
 
@@ -334,13 +340,12 @@ wsConn.on('callAccepted', (acceptingUser) => {
 
 
 // Hub Callback: Call Declined
-wsConn.on('callDeclined', (declingingUser, reason) => {
+wsConn.on('callDeclined', (decliningUser, reason) => {
     console.log('SignalR: call declined from: ' + decliningUser["connectionId"]);
     console.log('For reason: ' + reason);
 
     // toggle buttons
     document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = false;
 });
 
 
@@ -363,7 +368,6 @@ wsConn.on('incomingCall', (callingUser) => {
 
     // toggle buttons
     document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
     
     // Decline the call
     //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
@@ -396,31 +400,66 @@ wsConn.on('callEnded', (signalingUser, signal) => {
 wsConn.on('updateUserList', (userList) => {
     console.log('SignalR: called updateUserList' + JSON.stringify(userList));
     availableUsers = userList;
-    if (availableUsers.length > 1 && !getUser(myUsername)["inCall"]) {
-        document.getElementById("startCallButton").disabled = false;
-    }
 });
 
 
-// update askHelp if other user in call pushes the button
+// Update the list of currently active calls
 wsConn.on('updateActiveCalls', (callList) => {
     console.log('SignalR: called updateActiveCalls' + JSON.stringify(callList));
+    activeCalls = callList;
+    $('#callList li.call').remove();
 
-    for (let i in callList) {
-        let call = callList[i];
-        if ((call.users[0].userName == myUsername || call.users[1].userName == myUsername) && call.help != askHelp) {
-            if (askHelp === true) {
-                askHelp = false;
-                document.getElementById("askHelpButton").value = "Vraag om hulp";
-            }
-            else {
-                askHelp = true;
-                document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
-            }
+    $.each(activeCalls, function (index) {
+        /* builds the following structure:
+
+        <li class="list-group-item call">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-3">coach</div>
+                    <div class="col-3">NN</div>
+                    <div class="col-3">Notification</div>
+                    <div class="col-3">Participate in call button</div>
+                </div>
+            </div>
+        </li>
+        */
+        let listString = '<li class="list-group-item call" data=\"\">'
+
+        if (callList[index].help) {
+            listString += '<div class="container-fluid alert-warning"><div class="row">';
+            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
+            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3">Handje omhoog gestoken</div>';
         }
+        else {
+            listString += '<div class="container-fluid"><div class="row">';
+            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
+            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3"></div>';
+        }
+        listString += '<input class="col-3" value="Deelnemen" type="button" onclick="initiateCall(' + index + ')"';
+        if (callList[index].users.length > 2) {
+            // disable button if a coordinator already is in the call
+            listString += ' disabled></input></div></div></li>';
+        }
+        else {
+            listString += '></input></div></div></li>';
+        }
+        $('#callList').append(listString);
+    });
+
+    if ($('#callList li').length === 1) {
+        /* builds the following structure:
+
+        <li class="list-group-item call">
+            <div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div>
+        </li>
+        */
+
+        //$('#callList').append('<li class="list-group-item call"><div class="container-fluid"><div class="row"><div class="col-12 alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></div></div></li>');
+        $('#callList').append('<li class="list-group-item call"><div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></li>');
     }
 });
-
 
 
 // Notify the user that the client is trying to reconnect
@@ -449,47 +488,31 @@ wsConn.onclose(err => {
 
 
 // Call random available user
-function initiateCall() {
-    let target = null;
-
-    for (let i in availableUsers) {
-        let u = availableUsers[i];
-        console.log(u);
-        if (u["userName"] == myUsername){
-            if (u["inCall"]){
-                console.log("You are already in a call");
-                return;
-            }
-            continue;
-        }
-        else if (!target && !u["inCall"]) {
-            target = u;
-            console.log("Found user to call", target);
+function initiateCall(call) {
+    call = activeCalls[call];
+    if (localVideoStream === null) {
+        initializeUserMedia();
+        if (localVideoStream === null){
+            return;
         }
     }
-    
-    if (!target) {
-        console.log("No users available for starting a call");
-        return;
+
+    if (myUsername === null) {
+        getUsername();
+    }
+    else if (getUser(myUsername).inCall) {
+        hangup();
     }
 
+    console.log("Joining call:", call);
+    for (let i in call.users) {
+        let user = call.users[i];
+        if (call.users[i]["inCall"]) {
+            console.log("Calling user:", user);
+            wsConn.invoke('callUser', user);
+        }
+    }
     document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
-    wsConn.invoke('callUser', target);
-}
-
-
-// ask for help or stop asking for help
-function toggleHelp() {
-    if (askHelp === true) {
-        askHelp = false;
-        document.getElementById("askHelpButton").value = "Vraag om hulp";
-    }
-    else {
-        askHelp = true;
-        document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
-    }
-    wsConn.invoke('askForHelp');
 }
 
 
@@ -500,7 +523,7 @@ function hangup() {
 }
 
 
-// Attatch remote mediastream to video element
+// Attach remote mediastream to video element
 function attachMediaStream(e, connectionId) {
     let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="100%" height="auto"> </video></div>';
     $('#webcams').prepend(elementString);

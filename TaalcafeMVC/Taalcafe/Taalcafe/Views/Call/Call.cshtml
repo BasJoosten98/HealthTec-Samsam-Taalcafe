@@ -5,21 +5,40 @@
 
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
-    <script src="~/js/call.js"> </script>
+    <script type="text/javascript" src="~/js/call.js"> </script>
 }
 
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Hieronder is je webcam beeld te zien.</p>
-    <div>
-        <video id="remoteVideo"  width="640" height="480"> </video>
-        <video id="localVideo" width="640" height="480" muted> </video>
-    </div>
-    <div>
-        <input id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
-        <input id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
-        <input id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
-        <input id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-10">
+            <div class="row no-gutters" id="webcams">
+                
+            </div>
+            <div Class="row">
+                <div class="btn-toolbar" role="toolbar" aria-label="Controls">
+                    <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
+                        <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
+                        <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
+                    </div>
+                    <div class="btn-group mr-2" role="group" aria-label="Call/Hang up">
+                        <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
+                        <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+                    </div>
+                    <div class="btn-group" role="group" aria-label="Ask help">
+                        <input class="btn btn-secondary" id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="row">
+                <h1>Thema</h1>
+                <p>Hier komt de beschrijving van het thema te staan.</p>
+            </div>
+            <div class="row align-items-end">
+                <video id="localVideo" width="100%" height="auto" muted> </video>
+            </div>
+        </div>
     </div>
 </div>
