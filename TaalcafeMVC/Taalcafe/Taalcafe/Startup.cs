@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +26,19 @@ namespace Taalcafe
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddSession(options => {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);//You can set Time   
+            });
             services.AddControllersWithViews();
+
+            
+
+            //Fetching Connection string from APPSETTINGS.JSON  
+            var ConnectionString = Configuration.GetConnectionString("ConnectionString");
+
+            //Entity Framework  
+            //services.AddDbContext<EmployeeContext>(options => options.UseSqlServer(ConnectionString));
 
             /*
             services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
@@ -63,6 +76,7 @@ namespace Taalcafe
 
             app.UseRouting();
 
+            app.UseSession();
             app.UseAuthorization();
 
             //app.UseCors("CorsPolicy");

@@ -1,0 +1,17 @@
+﻿
+.bg-taalcafe {
+    background-color: #f6b172 !important;
+}
+
+img {
+    width: 20%;
+}
+.navbar {
+    position: relative;
+}
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 15%;
+}
