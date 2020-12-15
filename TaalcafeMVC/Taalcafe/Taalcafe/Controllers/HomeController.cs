@@ -45,7 +45,7 @@ namespace Taalcafe.Controllers
                 {
                     //ViewBag.message = "Success";
                     //return View("~/Views/Home/Index.cshtml", model);
-                    return RedirectToAction("NextSession", "Call");
+                    return RedirectToAction("NextSession", "Call", new { id = myUser.GebruikerId});
                 }
                 else    //User was not found
                 {

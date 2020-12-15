@@ -20,18 +20,23 @@ namespace Taalcafe.Controllers
             _logger = logger; 
         }
 
-        public IActionResult NextSession()
+        public IActionResult NextSession(int? id)
         {
             Instantiate();
             var nextSession = context.Sessies.SingleOrDefault(s => s.Datum >= DateTime.Today);
             ViewBag.session = nextSession;
+            
+            ViewData["user"] = id;
             return View();
         }
 
-        public IActionResult Call()
+        public IActionResult Call(int? id)
         {
             Instantiate();
             var couples = context.SessiePartners.Where(c => c.Sessie.Datum == DateTime.Today);
+
+            //ViewData["user"] = context.Gebruikers.SingleOrDefault(g => g.Id == id);
+            ViewBag.user = id;
             return View(couples.ToList());
         }
 

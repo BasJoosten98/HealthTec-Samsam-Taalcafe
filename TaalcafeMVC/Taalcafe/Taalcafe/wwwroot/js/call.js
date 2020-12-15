@@ -200,7 +200,14 @@ function setUsername(username) {
 
 // TODO get ID/name from current user
 function getUsername() {
-    generateRandomUsername();
+    let username = UsernameFromModel().toString();
+    if (username == null) {
+        console.warn("Username is empty.");
+        setUsername(generateRandomUsername());
+    }
+    else {
+        setUsername(username);
+    }
 }
 
 
@@ -208,7 +215,7 @@ function getUsername() {
 function generateRandomUsername() {
     console.log('SignalR: Generating random username...');
     let username = 'User' + Math.floor((Math.random() * 10000) + 1);
-    setUsername(username);
+    return username;
 }
 
 
@@ -219,6 +226,37 @@ function getUser(username) {
         }
     }
     console.error("Couldn't find client:", username, "in list of available users")
+}
+
+
+// finds the Id of the assigned partner to the user
+function FindPartnerId() {
+    let couples = getModel();
+
+    for (let i in couples) {
+        let c = couples[i];
+        if (c.taalcoachId == myUsername) {
+            return c.cursistId;
+        }
+        else if (c.cursistId == myUsername) {
+            return c.taalcoachId;
+        }
+    }
+
+    return null;
+}
+
+
+// Finds the connectionstring of the partner in the list of connected users
+function FindPartner(id) {
+    for (let i in availableUsers){
+        let u = availableUsers[i];
+        if (u["userName"] == id) {
+            return u;
+        }
+    }
+
+    return null;
 }
 
 
@@ -451,21 +489,28 @@ wsConn.onclose(err => {
 // Call random available user
 function initiateCall() {
     let target = null;
+    let partner = FindPartnerId();
 
-    for (let i in availableUsers) {
-        let u = availableUsers[i];
-        console.log(u);
-        if (u["userName"] == myUsername){
-            if (u["inCall"]){
-                console.log("You are already in a call");
-                return;
+    if (partner == null) {
+        console.log("No assigned partner found, trying to find a random partner.");
+        for (let i in availableUsers) {
+            let u = availableUsers[i];
+            console.log(u);
+            if (u["userName"] == myUsername){
+                if (u["inCall"]){
+                    console.log("You are already in a call");
+                    return;
+                }
+                continue;
             }
-            continue;
+            else if (!target && !u["inCall"]) {
+                target = u;
+                console.log("Found user to call", target);
+            }
         }
-        else if (!target && !u["inCall"]) {
-            target = u;
-            console.log("Found user to call", target);
-        }
+    }
+    else {
+        target = FindPartner(partner);
     }
     
     if (!target) {
