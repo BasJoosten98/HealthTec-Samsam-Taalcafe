@@ -33,16 +33,17 @@ namespace Taalcafe.Controllers
         public IActionResult Call(int? id)
         {
             Instantiate();
-            var couples = context.SessiePartners.Where(c => c.Sessie.Datum == DateTime.Today);
+            var Thema = context.Sessies.SingleOrDefault(s => s.Datum == DateTime.Today).Thema;
 
-            //ViewData["user"] = context.Gebruikers.SingleOrDefault(g => g.Id == id);
             ViewBag.user = id;
-            return View(couples.ToList());
+            ViewBag.couple = context.SessiePartners.SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
+            return View(Thema);
         }
 
         public IActionResult Overview()
         {
-            return View();
+            Instantiate();
+            return View(context.Gebruikers.ToList());
         }
 
         private void Instantiate()

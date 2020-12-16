@@ -25,6 +25,7 @@ var myUsername = null;
 var availableUsers = null;
 var activeCalls = null;
 var connections = {}
+var model = null;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
@@ -44,6 +45,8 @@ const peerConnCfg = {'iceServers': [
 
 // Triggers when the page is done loading
 $(document).ready(function () {
+    model = getModel();
+
     initializeSignalR();
 
     initializeUserMedia();
@@ -64,7 +67,7 @@ function initializeSignalR() {
     wsConn.start()
         .then( () => { 
             console.log("SignalR: Connected");
-            //getUsername();
+            getUsername();
             getActiveCalls();
         })
         .catch(err => console.log(err));
@@ -230,6 +233,17 @@ function getUser(username) {
 }
 
 
+function getUserFromModel(id) {
+    for (let u in model) {
+        if (model[u].id == id) {
+            return model[u];
+        }
+    }
+    console.warn("Couldn't find user with ID ", id, "because it doesn't exist.");
+    return id;
+}
+
+
 function sendHubSignal(candidate, partnerClientId) {
     console.log('candidate', candidate);
     console.log('SignalR: called sendhubsignal ');
@@ -364,13 +378,13 @@ wsConn.on('incomingCall', (callingUser) => {
     console.log('Accepting calling session...');
 
     // Accept the call
-    wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
+    //wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
 
     // toggle buttons
     document.getElementById("stopCallButton").disabled = false;
     
     // Decline the call
-    //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+    wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
 });
 
 
@@ -427,14 +441,14 @@ wsConn.on('updateActiveCalls', (callList) => {
 
         if (callList[index].help) {
             listString += '<div class="container-fluid alert-warning"><div class="row">';
-            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
-            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[0].userName).naam + '</div>';
+            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[1].userName).naam + '</div>';
             listString += '<div class="col-3">Handje omhoog gestoken</div>';
         }
         else {
             listString += '<div class="container-fluid"><div class="row">';
-            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
-            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[0].userName).naam + '</div>';
+            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[1].userName).naam + '</div>';
             listString += '<div class="col-3"></div>';
         }
         listString += '<input class="col-3" value="Deelnemen" type="button" onclick="initiateCall(' + index + ')"';
@@ -455,8 +469,6 @@ wsConn.on('updateActiveCalls', (callList) => {
             <div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div>
         </li>
         */
-
-        //$('#callList').append('<li class="list-group-item call"><div class="container-fluid"><div class="row"><div class="col-12 alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></div></div></li>');
         $('#callList').append('<li class="list-group-item call"><div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></li>');
     }
 });
@@ -497,10 +509,7 @@ function initiateCall(call) {
         }
     }
 
-    if (myUsername === null) {
-        getUsername();
-    }
-    else if (getUser(myUsername).inCall) {
+    if (getUser(myUsername).inCall) {
         hangup();
     }
 

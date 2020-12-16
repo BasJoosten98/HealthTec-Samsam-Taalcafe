@@ -1,4 +1,4 @@
-@* @model Model *@
+@model List<Taalcafe.Models.DB.Gebruiker>
 @{
     ViewData["Title"] = "Call Overview";
 }
@@ -6,6 +6,11 @@
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
     <script src="~/js/call_overview.js"> </script>
+    <script>
+        function getModel() {
+            return @Html.Raw(Json.Serialize(Model));
+        }
+    </script>
 }
 
 <div>

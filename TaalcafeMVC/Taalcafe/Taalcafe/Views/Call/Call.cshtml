@@ -1,4 +1,4 @@
-@model List<Taalcafe.Models.DB.SessiePartner>
+@model Taalcafe.Models.DB.Thema
 @{
     ViewData["Title"] = "Call";
 }
@@ -6,13 +6,13 @@
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
     <script type="text/javascript" src="~/js/call.js"> </script>
-    <script>
-        function UsernameFromModel() {
+    <script>        
+        function UsernameFromViewBag() {
             return @Html.Raw(Json.Serialize(@ViewBag.user));
         }
 
-        function getModel() {
-            return @Html.Raw(Json.Serialize(Model));
+        function CoupleFromViewBag() {
+            return @Html.Raw(Json.Serialize(@ViewBag.couple));
         }
     </script>
 }
@@ -42,8 +42,20 @@
         </div>
         <div class="col-2">
             <div class="row">
-                <h1>Thema</h1>
-                <p>Hier komt de beschrijving van het thema te staan.</p>
+                @*<h1>Thema: @Html.DisplayNameFor(model => model.Naam)</h1>
+                <p>Hier komt de beschrijving van het thema te staan.
+                    @Html.DisplayNameFor(model => model.Beschrijving)
+                </p>
+                <h2>Afbeeldingen</h2>
+                @foreach (var item in Model.Afbeeldingen)
+                {
+                    <img src="@item"/>
+                }
+                <h2>Vragen</h2>
+                @foreach (var item in Model.Vragen)
+                {
+                    <p>@Html.DisplayFor(modelItem => item)</p>
+                }*@
             </div>
             <div class="row align-items-end">
                 <video id="localVideo" width="100%" height="auto" muted> </video>
