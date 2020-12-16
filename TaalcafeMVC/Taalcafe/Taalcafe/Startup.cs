@@ -31,6 +31,11 @@ namespace Taalcafe
                 options.IdleTimeout = TimeSpan.FromMinutes(30);//You can set Time   
             });
             services.AddControllersWithViews();
+            /*
+            services.AddControllersWithViews()
+                .AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            );*/
 
             
 

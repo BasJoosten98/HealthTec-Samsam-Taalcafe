@@ -33,11 +33,40 @@ namespace Taalcafe.Controllers
         public IActionResult Call(int? id)
         {
             Instantiate();
-            var Thema = context.Sessies.SingleOrDefault(s => s.Datum == DateTime.Today).Thema;
+            SessiePartner sessiePartner = context.SessiePartners.SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
+            if (sessiePartner != null)
+            {
+                Thema thema = sessiePartner.Sessie.Thema;
+                int partnerId;
+                string username;
+                string partnerName;
 
-            ViewBag.user = id;
-            ViewBag.couple = context.SessiePartners.SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
-            return View(Thema);
+                if (sessiePartner.TaalcoachId == id)
+                {
+                    username = sessiePartner.Taalcoach.Naam;
+                    partnerId = sessiePartner.CursistId;
+                    partnerName = sessiePartner.Cursist.Naam;
+                }
+                else {
+                    username = sessiePartner.Cursist.Naam;
+                    partnerId = sessiePartner.TaalcoachId;
+                    partnerName = sessiePartner.Taalcoach.Naam;
+                }
+
+                /*
+                var couple = new SessiePartner();
+                couple.CursistId = sessiePartner.CursistId;
+                couple.TaalcoachId = sessiePartner.TaalcoachId;
+                ViewBag.user = id;
+                ViewBag.couple = couple;
+                */
+            
+                CallSessionViewModel viewModel = new CallSessionViewModel(thema.Naam, thema.Beschrijving, (int) id, partnerId, username, partnerName, thema.Afbeeldingen, thema.Vragen);
+                
+                return View(viewModel);
+            }
+            
+            return RedirectToAction("Index", "Home");
         }
 
         public IActionResult Overview()

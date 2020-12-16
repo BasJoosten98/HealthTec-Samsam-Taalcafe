@@ -21,8 +21,8 @@ const mediaConstraints = {
 
 const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
-var myUsername = null;
-var partner = null;
+
+var model = null;
 var availableUsers = null;
 var connections = {}
 let askHelp = false;
@@ -45,6 +45,8 @@ const peerConnCfg = {'iceServers': [
 
 // Triggers when the page is done loading
 $(document).ready(function () {
+    model = getModel();
+
     initializeSignalR();
 
     initializeUserMedia();
@@ -190,7 +192,7 @@ function callbackRemoveStream(connection, evt, connectionId) {
 // Sets the username of the client
 function setUsername(username) {
     console.log('SignalR: setting username to', username, "...");
-    myUsername = username;
+    model.gebruikerId = username;
 
     // Send the name of this client to the Hub to make it's existence known to other clients
     wsConn.invoke("Join", username).catch(err => {
@@ -201,7 +203,7 @@ function setUsername(username) {
 
 // TODO get ID/name from current user
 function getUsername() {
-    let username = UsernameFromViewBag().toString();
+    let username = model.gebruikerId.toString();
     if (username == null) {
         console.warn("Username is empty.");
         setUsername(generateRandomUsername());
@@ -227,25 +229,6 @@ function getUser(username) {
         }
     }
     console.error("Couldn't find client:", username, "in list of available users")
-}
-
-
-// finds the Id of the assigned partner to the user
-function FindPartnerId() {
-    let couple = CoupleFromViewBag();
-
-    if (!couple) {
-        return null;
-    }
-    else if (couple.taalcoachId == myUsername) {
-        return couple.cursistId;
-    }
-    else if (couple.cursistId == myUsername) {
-        return couple.taalcoachId;
-    }
-    
-    console.error("The supplied couple does not contain the id of the current user.");
-    return null;
 }
 
 
@@ -436,7 +419,7 @@ wsConn.on('callEnded', (signalingUser, signal) => {
 wsConn.on('updateUserList', (userList) => {
     console.log('SignalR: called updateUserList' + JSON.stringify(userList));
     availableUsers = userList;
-    if (availableUsers.length > 1 && !getUser(myUsername)["inCall"]) {
+    if (availableUsers.length > 1 && !getUser(model.gebruikerId)["inCall"]) {
         document.getElementById("startCallButton").disabled = false;
         initiateCall();
     }
@@ -449,7 +432,7 @@ wsConn.on('updateActiveCalls', (callList) => {
 
     for (let i in callList) {
         let call = callList[i];
-        if ((call.users[0].userName == myUsername || call.users[1].userName == myUsername) && call.help != askHelp) {
+        if ((call.users[0].userName == model.gebruikerId || call.users[1].userName == model.gebruikerId) && call.help != askHelp) {
             if (askHelp === true) {
                 askHelp = false;
                 document.getElementById("askHelpButton").value = "Vraag om hulp";
@@ -490,18 +473,10 @@ wsConn.onclose(err => {
 
 // Call random available user
 function initiateCall() {
-    if (!partner) {
-        partner = FindPartnerId();
-        if (!partner) {
-            console.log("No assigned partner found.");
-            return;
-        }
-    }
-
-    let target = FindPartner(partner);
+    let target = FindPartner(model.partnerId);
     
     if (!target) {
-        console.log("No users available for starting a call");
+        console.log("Partner is not online.");
         return;
     }
 

@@ -1,4 +1,4 @@
-@model Taalcafe.Models.DB.Thema
+@model Taalcafe.Models.CallSessionViewModel
 @{
     ViewData["Title"] = "Call";
 }
@@ -6,14 +6,18 @@
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
     <script type="text/javascript" src="~/js/call.js"> </script>
-    <script>        
+    <script>
+        function getModel() {
+            return @Html.Raw(Json.Serialize(@Model));
+        }
+        /*
         function UsernameFromViewBag() {
             return @Html.Raw(Json.Serialize(@ViewBag.user));
         }
 
         function CoupleFromViewBag() {
             return @Html.Raw(Json.Serialize(@ViewBag.couple));
-        }
+        }*/
     </script>
 }
 
