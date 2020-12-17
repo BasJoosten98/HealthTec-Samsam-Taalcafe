@@ -31,7 +31,12 @@ namespace Taalcafe.Hubs
                 connectionId = Context.ConnectionId
             };
 
-            _Users.Add(uci);
+            if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId) == null) {
+                _Users.Add(uci);
+            }
+            else {
+                _Users.ForEach(u => u.userName = (u.connectionId == uci.connectionId ? uci.userName : u.userName));
+            }
 
             // Send the updated list to all clients
             await SendUserListUpdate();
