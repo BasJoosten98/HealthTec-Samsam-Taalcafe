@@ -10,14 +10,6 @@
         function getModel() {
             return @Html.Raw(Json.Serialize(@Model));
         }
-        /*
-        function UsernameFromViewBag() {
-            return @Html.Raw(Json.Serialize(@ViewBag.user));
-        }
-
-        function CoupleFromViewBag() {
-            return @Html.Raw(Json.Serialize(@ViewBag.couple));
-        }*/
     </script>
 }
 
@@ -35,7 +27,7 @@
                         <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
                     </div>
                     <div class="btn-group mr-2" role="group" aria-label="Call/Hang up">
-                        <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled/>
+                        <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled hidden/>
                         <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
                     </div>
                     <div class="btn-group" role="group" aria-label="Ask help">
@@ -46,20 +38,25 @@
         </div>
         <div class="col-2">
             <div class="row">
-                @*<h1>Thema: @Html.DisplayNameFor(model => model.Naam)</h1>
-                <p>Hier komt de beschrijving van het thema te staan.
-                    @Html.DisplayNameFor(model => model.Beschrijving)
-                </p>
+                <h1>Thema van deze sessie: @Html.DisplayName(Model.thema)</h1>
+                <p>@Html.DisplayName(Model.beschrijving)</p>
                 <h2>Afbeeldingen</h2>
-                @foreach (var item in Model.Afbeeldingen)
+                @if (Model.Afbeeldingen.Count() > 0) 
                 {
-                    <img src="@item"/>
+                    foreach (var item in Model.Afbeeldingen)
+                    {
+                        <img src="@item"/>
+                    }
+                }
+                else 
+                {
+                    <p>Er zijn geen afbeeldingen beschikbaar over dit thema.</p>
                 }
                 <h2>Vragen</h2>
                 @foreach (var item in Model.Vragen)
                 {
                     <p>@Html.DisplayFor(modelItem => item)</p>
-                }*@
+                }
             </div>
             <div class="row align-items-end">
                 <video id="localVideo" width="100%" height="auto" muted> </video>

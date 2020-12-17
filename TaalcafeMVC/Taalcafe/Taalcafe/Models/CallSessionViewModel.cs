@@ -24,13 +24,17 @@ namespace Taalcafe.Models
             this.partnerNaam = partnerNaam;
             this.Afbeeldingen = new List<string>();
             this.Vragen = new List<string>();
-
-            foreach (string item in afbeeldingen.Split("~")) {
-                this.Afbeeldingen.Add(item);
+            
+            if (afbeeldingen != null) {
+                foreach (string item in afbeeldingen.Split("~")) {
+                    this.Afbeeldingen.Add(item);
+                }
             }
-
-            foreach (string item in vragen.Split("~")) {
-                this.Vragen.Add(item);
+            
+            if (vragen != null) {
+                foreach (string item in vragen.Split("~")) {
+                    this.Vragen.Add(item);
+                }
             }
         }
     }

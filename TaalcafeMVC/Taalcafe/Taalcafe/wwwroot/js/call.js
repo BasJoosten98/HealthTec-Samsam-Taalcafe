@@ -26,6 +26,7 @@ var model = null;
 var availableUsers = null;
 var connections = {}
 let askHelp = false;
+let dontcall = false;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
@@ -381,15 +382,18 @@ wsConn.on('incomingCall', (callingUser) => {
     console.log('SignalR: incoming call from: ' + JSON.stringify(callingUser));
     console.log('Accepting calling session...');
 
-    // Accept the call
-    wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
+    if (dontcall) {
+        // Decline the call
+        wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+    }
+    else {
+        // Accept the call
+        wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
 
-    // toggle buttons
-    document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
-    
-    // Decline the call
-    //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+        // toggle buttons
+        document.getElementById("stopCallButton").disabled = false;
+        document.getElementById("startCallButton").disabled = true;
+    }
 });
 
 
@@ -473,16 +477,18 @@ wsConn.onclose(err => {
 
 // Call random available user
 function initiateCall() {
-    let target = FindPartner(model.partnerId);
+    if (!dontcall) {
+        let target = FindPartner(model.partnerId);
     
-    if (!target) {
-        console.log("Partner is not online.");
-        return;
+        if (!target) {
+            console.log("Partner is not online.");
+            return;
+        }
+    
+        document.getElementById("stopCallButton").disabled = false;
+        document.getElementById("startCallButton").disabled = true;
+        wsConn.invoke('callUser', target);
     }
-
-    document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
-    wsConn.invoke('callUser', target);
 }
 
 
@@ -502,6 +508,7 @@ function toggleHelp() {
 
 // Close the current calling sessions
 function hangup() {
+    dontcall = true;
     wsConn.invoke('hangUp');
     closeAllConnections();
 }

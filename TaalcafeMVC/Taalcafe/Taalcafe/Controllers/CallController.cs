@@ -36,32 +36,20 @@ namespace Taalcafe.Controllers
             SessiePartner sessiePartner = context.SessiePartners.SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
             if (sessiePartner != null)
             {
-                Thema thema = sessiePartner.Sessie.Thema;
-                int partnerId;
-                string username;
-                string partnerName;
+                Sessie sessie = context.Sessies.SingleOrDefault(s => s.Id == sessiePartner.SessieId);
+                Thema thema = context.Themas.SingleOrDefault(t => t.Id == sessie.ThemaId);
+                Gebruiker user = context.Gebruikers.SingleOrDefault(g => g.Id == id);
+                Gebruiker partner;
 
                 if (sessiePartner.TaalcoachId == id)
                 {
-                    username = sessiePartner.Taalcoach.Naam;
-                    partnerId = sessiePartner.CursistId;
-                    partnerName = sessiePartner.Cursist.Naam;
+                    partner = context.Gebruikers.SingleOrDefault(g => g.Id == sessiePartner.CursistId);
                 }
                 else {
-                    username = sessiePartner.Cursist.Naam;
-                    partnerId = sessiePartner.TaalcoachId;
-                    partnerName = sessiePartner.Taalcoach.Naam;
+                    partner = context.Gebruikers.SingleOrDefault(g => g.Id == sessiePartner.TaalcoachId);
                 }
-
-                /*
-                var couple = new SessiePartner();
-                couple.CursistId = sessiePartner.CursistId;
-                couple.TaalcoachId = sessiePartner.TaalcoachId;
-                ViewBag.user = id;
-                ViewBag.couple = couple;
-                */
             
-                CallSessionViewModel viewModel = new CallSessionViewModel(thema.Naam, thema.Beschrijving, (int) id, partnerId, username, partnerName, thema.Afbeeldingen, thema.Vragen);
+                CallSessionViewModel viewModel = new CallSessionViewModel(thema.Naam, thema.Beschrijving, (int) id, partner.Id, user.Naam, partner.Naam, thema.Afbeeldingen, thema.Vragen);
                 
                 return View(viewModel);
             }
