@@ -35,23 +35,38 @@ namespace Taalcafe.Controllers
         public IActionResult Call(int? id)
         {
             Instantiate();
-            SessiePartner sessiePartner = context.SessiePartners.SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
+            SessiePartner sessiePartner = context.SessiePartners
+                .Include(c => c.Taalcoach)
+                .Include(c => c.Cursist)
+                .Include(c => c.Sessie)
+                    .ThenInclude(s => s.Thema)
+                .SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
+
             if (sessiePartner != null)
             {
-                Sessie sessie = context.Sessies.SingleOrDefault(s => s.Id == sessiePartner.SessieId);
-                Thema thema = context.Themas.SingleOrDefault(t => t.Id == sessie.ThemaId);
-                Gebruiker user = context.Gebruikers.SingleOrDefault(g => g.Id == id);
+                Gebruiker user;
                 Gebruiker partner;
 
                 if (sessiePartner.TaalcoachId == id)
                 {
-                    partner = context.Gebruikers.SingleOrDefault(g => g.Id == sessiePartner.CursistId);
+                    user = sessiePartner.Taalcoach;
+                    partner = sessiePartner.Cursist;
                 }
                 else {
-                    partner = context.Gebruikers.SingleOrDefault(g => g.Id == sessiePartner.TaalcoachId);
+                    user = sessiePartner.Cursist;
+                    partner = sessiePartner.Taalcoach;
                 }
             
-                CallSessionViewModel viewModel = new CallSessionViewModel(thema.Naam, thema.Beschrijving, (int) id, partner.Id, user.Naam, partner.Naam, thema.Afbeeldingen, thema.Vragen);
+                CallSessionViewModel viewModel = new CallSessionViewModel(
+                    sessiePartner.Sessie.Thema.Naam,
+                    sessiePartner.Sessie.Thema.Beschrijving,
+                    (int) id,
+                    partner.Id,
+                    user.Naam,
+                    partner.Naam,
+                    sessiePartner.Sessie.Thema.Afbeeldingen,
+                    sessiePartner.Sessie.Thema.Vragen
+                );
                 
                 return View(viewModel);
             }
