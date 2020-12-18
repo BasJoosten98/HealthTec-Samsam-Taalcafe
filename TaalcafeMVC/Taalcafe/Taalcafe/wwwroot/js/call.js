@@ -380,13 +380,14 @@ wsConn.on('receiveSignal', (signalingUser, signal) => {
 // Hub Callback: Incoming Call
 wsConn.on('incomingCall', (callingUser) => {
     console.log('SignalR: incoming call from: ' + JSON.stringify(callingUser));
-    console.log('Accepting calling session...');
-
+    
     if (dontcall) {
+        console.log('Declining calling session.');
         // Decline the call
         wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
     }
     else {
+        console.log('Accepting calling session...');
         // Accept the call
         wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
 

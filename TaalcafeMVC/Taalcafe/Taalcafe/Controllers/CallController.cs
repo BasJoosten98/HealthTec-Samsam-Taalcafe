@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Taalcafe.Models.DB;
 using Taalcafe.Models;
+using Taalcafe.Models.DB;
+using Taalcafe.Models.ViewModels;
 
 namespace Taalcafe.Controllers
 {
@@ -60,7 +62,20 @@ namespace Taalcafe.Controllers
         public IActionResult Overview()
         {
             Instantiate();
-            return View(context.Gebruikers.ToList());
+            CallOverviewModel model = new CallOverviewModel() { Gebruikers = new List<Gebruiker>() };
+            var gebruikers = context.Gebruikers.Include(g => g.Account);
+            foreach (Gebruiker g in gebruikers) {
+                model.Gebruikers.Add(new Gebruiker() {
+                    Id = g.Id,
+                    Naam = g.Naam,
+                    Email = g.Email,
+                    Telefoon = g.Telefoon,
+                    Niveau = g.Niveau,
+                    Account = new Account() { Type = g.Account.Type }
+                });
+            }
+            model.Thema = context.Themas.FirstOrDefault(t => t.Sessies.FirstOrDefault(s => s.Thema == t).Datum == DateTime.Today);
+            return View(model);
         }
 
         private void Instantiate()

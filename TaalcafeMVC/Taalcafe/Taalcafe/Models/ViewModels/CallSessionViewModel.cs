@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Taalcafe.Models
+namespace Taalcafe.Models.ViewModels
 {
     public class CallSessionViewModel
     {

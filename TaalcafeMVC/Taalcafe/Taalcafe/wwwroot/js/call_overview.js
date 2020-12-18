@@ -45,7 +45,8 @@ const peerConnCfg = {'iceServers': [
 
 // Triggers when the page is done loading
 $(document).ready(function () {
-    model = getModel();
+    model = getModel().gebruikers;
+    console.log(model);
 
     initializeSignalR();
 
@@ -204,7 +205,7 @@ function setUsername(username) {
 
     // Send the name of this client to the Hub to make it's existence known to other clients
     wsConn.invoke("Join", username).catch(err => {
-        console.error("Failed SignalR connection: Not able to connect to signaling server.", err);
+        console.error("Failed SignalR connection: Not able to join the signaling server.", err);
     });
 }
 
@@ -239,7 +240,7 @@ function getUserFromModel(id) {
             return model[u];
         }
     }
-    console.warn("Couldn't find user with ID ", id, "because it doesn't exist.");
+    console.warn("Couldn't find user with ID", id, "because it doesn't exist.");
     return id;
 }
 
@@ -437,18 +438,33 @@ wsConn.on('updateActiveCalls', (callList) => {
             </div>
         </li>
         */
-        let listString = '<li class="list-group-item call" data=\"\">'
+        let taalcoach = null;
+        let cursist = null;
+
+        let user1 = getUserFromModel(callList[index].users[0].userName);
+        let user2 = getUserFromModel(callList[index].users[1].userName)
+
+        if (user1.account.type.toLowerCase() == "taalcoach") {
+            taalcoach = user1;
+            cursist = user2;
+        }
+        else {
+            taalcoach = user2;
+            cursist = user1;
+        }
+
+        let listString = '<li class="list-group-item call">'
 
         if (callList[index].help) {
             listString += '<div class="container-fluid alert-warning"><div class="row">';
-            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[0].userName).naam + '</div>';
-            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[1].userName).naam + '</div>';
+            listString += '<div class="col-3">' + taalcoach.naam + '</div>';
+            listString += '<div class="col-3">' + cursist.naam + '</div>';
             listString += '<div class="col-3">Handje omhoog gestoken</div>';
         }
         else {
             listString += '<div class="container-fluid"><div class="row">';
-            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[0].userName).naam + '</div>';
-            listString += '<div class="col-3">' + getUserFromModel(callList[index].users[1].userName).naam + '</div>';
+            listString += '<div class="col-3">' + taalcoach.naam + '</div>';
+            listString += '<div class="col-3">' + cursist.naam + '</div>';
             listString += '<div class="col-3"></div>';
         }
         listString += '<input class="col-3" value="Deelnemen" type="button" onclick="initiateCall(' + index + ')"';

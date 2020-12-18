@@ -1,4 +1,4 @@
-@model Taalcafe.Models.CallSessionViewModel
+@model Taalcafe.Models.ViewModels.CallSessionViewModel
 @{
     ViewData["Title"] = "Call";
 }
@@ -58,7 +58,7 @@
                     <p>@Html.DisplayFor(modelItem => item)</p>
                 }
             </div>
-            <div class="row align-items-end">
+            <div class="row">
                 <video id="localVideo" width="100%" height="auto" muted> </video>
             </div>
         </div>
