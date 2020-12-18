@@ -1,0 +1,48 @@
+@model List<Taalcafe.Models.DB.Thema>
+@{
+    ViewData["Title"] = "Thema overzicht";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-9">
+            <h1>Thema's</h1>
+        </div>
+        <div class="col-3">
+            Thema toevoegen
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-9">
+                                <b>Thema</b>
+                            </div>
+                            <div class="col-3">
+                                <b>Bewerken</b>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                @foreach (var item in Model)
+                {
+                    <li class="list-group-item">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-9">
+                                    @Html.DisplayName(item.Naam)
+                                </div>
+                                <div class="col-3">
+                                    Bewerken
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
