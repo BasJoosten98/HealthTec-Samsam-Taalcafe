@@ -31,9 +31,13 @@ namespace Taalcafe
             services.AddSession(options => {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);//You can set Time   
             });
-            services.AddControllersWithViews();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie();
+            /*
+            services.AddControllersWithViews()
+                .AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            );*/
 
 
             //Fetching Connection string from APPSETTINGS.JSON  

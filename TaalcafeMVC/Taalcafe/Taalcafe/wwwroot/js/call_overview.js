@@ -25,6 +25,7 @@ var myUsername = null;
 var availableUsers = null;
 var activeCalls = null;
 var connections = {}
+var model = null;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
@@ -44,6 +45,9 @@ const peerConnCfg = {'iceServers': [
 
 // Triggers when the page is done loading
 $(document).ready(function () {
+    model = getModel().gebruikers;
+    console.log(model);
+
     initializeSignalR();
 
     initializeUserMedia();
@@ -64,7 +68,7 @@ function initializeSignalR() {
     wsConn.start()
         .then( () => { 
             console.log("SignalR: Connected");
-            //getUsername();
+            getUsername();
             getActiveCalls();
         })
         .catch(err => console.log(err));
@@ -201,7 +205,7 @@ function setUsername(username) {
 
     // Send the name of this client to the Hub to make it's existence known to other clients
     wsConn.invoke("Join", username).catch(err => {
-        console.error("Failed SignalR connection: Not able to connect to signaling server.", err);
+        console.error("Failed SignalR connection: Not able to join the signaling server.", err);
     });
 }
 
@@ -227,6 +231,17 @@ function getUser(username) {
         }
     }
     console.error("Couldn't find client:", username, "in list of available users")
+}
+
+
+function getUserFromModel(id) {
+    for (let u in model) {
+        if (model[u].id == id) {
+            return model[u];
+        }
+    }
+    console.warn("Couldn't find user with ID", id, "because it doesn't exist.");
+    return id;
 }
 
 
@@ -364,13 +379,13 @@ wsConn.on('incomingCall', (callingUser) => {
     console.log('Accepting calling session...');
 
     // Accept the call
-    wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
+    //wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
 
     // toggle buttons
     document.getElementById("stopCallButton").disabled = false;
     
     // Decline the call
-    //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+    wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
 });
 
 
@@ -423,18 +438,33 @@ wsConn.on('updateActiveCalls', (callList) => {
             </div>
         </li>
         */
-        let listString = '<li class="list-group-item call" data=\"\">'
+        let taalcoach = null;
+        let cursist = null;
+
+        let user1 = getUserFromModel(callList[index].users[0].userName);
+        let user2 = getUserFromModel(callList[index].users[1].userName)
+
+        if (user1.account.type.toLowerCase() == "taalcoach") {
+            taalcoach = user1;
+            cursist = user2;
+        }
+        else {
+            taalcoach = user2;
+            cursist = user1;
+        }
+
+        let listString = '<li class="list-group-item call">'
 
         if (callList[index].help) {
             listString += '<div class="container-fluid alert-warning"><div class="row">';
-            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
-            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3">' + taalcoach.naam + '</div>';
+            listString += '<div class="col-3">' + cursist.naam + '</div>';
             listString += '<div class="col-3">Handje omhoog gestoken</div>';
         }
         else {
             listString += '<div class="container-fluid"><div class="row">';
-            listString += '<div class="col-3">' + callList[index].users[0].userName + '</div>';
-            listString += '<div class="col-3">' + callList[index].users[1].userName + '</div>';
+            listString += '<div class="col-3">' + taalcoach.naam + '</div>';
+            listString += '<div class="col-3">' + cursist.naam + '</div>';
             listString += '<div class="col-3"></div>';
         }
         listString += '<input class="col-3" value="Deelnemen" type="button" onclick="initiateCall(' + index + ')"';
@@ -455,8 +485,6 @@ wsConn.on('updateActiveCalls', (callList) => {
             <div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div>
         </li>
         */
-
-        //$('#callList').append('<li class="list-group-item call"><div class="container-fluid"><div class="row"><div class="col-12 alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></div></div></li>');
         $('#callList').append('<li class="list-group-item call"><div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></li>');
     }
 });
@@ -497,10 +525,7 @@ function initiateCall(call) {
         }
     }
 
-    if (myUsername === null) {
-        getUsername();
-    }
-    else if (getUser(myUsername).inCall) {
+    if (getUser(myUsername).inCall) {
         hangup();
     }
 

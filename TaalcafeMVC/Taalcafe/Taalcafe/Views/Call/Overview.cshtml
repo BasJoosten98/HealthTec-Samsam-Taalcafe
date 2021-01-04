@@ -1,4 +1,4 @@
-@* @model Model *@
+@model Taalcafe.Models.ViewModels.CallOverviewModel
 @{
     ViewData["Title"] = "Call Overview";
 }
@@ -6,6 +6,11 @@
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
     <script src="~/js/call_overview.js"> </script>
+    <script>
+        function getModel() {
+            return @Html.Raw(Json.Serialize(Model));
+        }
+    </script>
 }
 
 <div>
@@ -53,8 +58,32 @@
             </div>
             <div class="col-2">
                 <div class="row">
-                    <h1>Thema</h1>
-                    <p>Hier komt de beschrijving van het thema te staan.</p>
+                    <h1>Thema van deze sessie: @Html.DisplayName(Model.Thema.Naam)</h1>
+                    <p>@Html.DisplayName(Model.Thema.Beschrijving)</p>
+                    <h2>Afbeeldingen</h2>
+                    @if (Model.Thema.Afbeeldingen != null)
+                    {
+                        foreach (var item in Model.Thema.Afbeeldingen.Split("~"))
+                        {
+                            <img src="@item"/>
+                        }
+                    }
+                    else 
+                    {
+                        <p>Er zijn geen afbeeldingen beschikbaar over dit thema.</p>
+                    }
+                    <h2>Vragen</h2>
+                    @if (Model.Thema.Vragen != null)
+                    {
+                        foreach (var item in Model.Thema.Vragen.Split("~"))
+                        {
+                            <p>@Html.DisplayFor(modelItem => item)</p>
+                        }
+                    }
+                    else 
+                    {
+                        <p>Er zijn geen vragen beschikbaar over dit thema.</p>
+                    }
                 </div>
                 <div class="row">
                     <video id="localVideo" width="100%" height="auto" muted> </video>

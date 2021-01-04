@@ -1,0 +1,37 @@
+@*@model Taalcafe.Models.DB.Sessie*@
+@{
+    ViewData["Title"] = "NextSession";
+}
+
+
+<div class="text-centered">
+    @{ 
+        if (ViewBag.session == null) {
+            <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
+        }
+        else if (ViewBag.session.Datum == DateTime.Today) {
+            <h1>Het taalcafé is begonnen!</h1>
+            @*<div class="form-group">
+                <a asp-controller="Call" asp-action="Call">
+                    <input class="btn btn-success" type="button" value="Deelnemen"/>
+                </a>
+            </div>*@
+            <div class="btn btn-success" type="button" value="Deelnemen">
+                @Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })
+            </div>
+        }
+        else {
+            <h1>Het taalcafé is momenteel niet bezig.</h1>
+            <p>
+                De volgende sessie van het taalcafé staat gepland op @ViewBag.session.Datum.
+                Klik op de onderstaande knop om je aan te melden voor de volgende sessie. 
+            </p>
+            <input class="btn btn-success" value="Ik meld me aan!" type="button"/>
+            <p>
+                Tot dan!
+            </p>
+        }
+
+    }
+    
+</div>

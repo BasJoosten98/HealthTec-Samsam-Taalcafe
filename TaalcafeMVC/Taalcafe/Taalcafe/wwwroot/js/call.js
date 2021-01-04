@@ -21,10 +21,12 @@ const mediaConstraints = {
 
 const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
-var myUsername = null;
+
+var model = null;
 var availableUsers = null;
 var connections = {}
 let askHelp = false;
+let dontcall = false;
 
 const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
 let wsConn = new signalR.HubConnectionBuilder()
@@ -44,6 +46,8 @@ const peerConnCfg = {'iceServers': [
 
 // Triggers when the page is done loading
 $(document).ready(function () {
+    model = getModel();
+
     initializeSignalR();
 
     initializeUserMedia();
@@ -188,8 +192,8 @@ function callbackRemoveStream(connection, evt, connectionId) {
 
 // Sets the username of the client
 function setUsername(username) {
-    console.log('SignalR: setting username to ' + username + "...");
-    myUsername = username;
+    console.log('SignalR: setting username to', username, "...");
+    model.gebruikerId = username;
 
     // Send the name of this client to the Hub to make it's existence known to other clients
     wsConn.invoke("Join", username).catch(err => {
@@ -200,7 +204,14 @@ function setUsername(username) {
 
 // TODO get ID/name from current user
 function getUsername() {
-    generateRandomUsername();
+    let username = model.gebruikerId.toString();
+    if (username == null) {
+        console.warn("Username is empty.");
+        setUsername(generateRandomUsername());
+    }
+    else {
+        setUsername(username);
+    }
 }
 
 
@@ -208,7 +219,7 @@ function getUsername() {
 function generateRandomUsername() {
     console.log('SignalR: Generating random username...');
     let username = 'User' + Math.floor((Math.random() * 10000) + 1);
-    setUsername(username);
+    return username;
 }
 
 
@@ -219,6 +230,19 @@ function getUser(username) {
         }
     }
     console.error("Couldn't find client:", username, "in list of available users")
+}
+
+
+// Finds the connectionstring of the partner in the list of connected users
+function FindPartner(id) {
+    for (let i in availableUsers){
+        let u = availableUsers[i];
+        if (u["userName"] == id) {
+            return u;
+        }
+    }
+
+    return null;
 }
 
 
@@ -356,17 +380,21 @@ wsConn.on('receiveSignal', (signalingUser, signal) => {
 // Hub Callback: Incoming Call
 wsConn.on('incomingCall', (callingUser) => {
     console.log('SignalR: incoming call from: ' + JSON.stringify(callingUser));
-    console.log('Accepting calling session...');
-
-    // Accept the call
-    wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
-
-    // toggle buttons
-    document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
     
-    // Decline the call
-    //wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+    if (dontcall) {
+        console.log('Declining calling session.');
+        // Decline the call
+        wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+    }
+    else {
+        console.log('Accepting calling session...');
+        // Accept the call
+        wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
+
+        // toggle buttons
+        document.getElementById("stopCallButton").disabled = false;
+        document.getElementById("startCallButton").disabled = true;
+    }
 });
 
 
@@ -396,8 +424,9 @@ wsConn.on('callEnded', (signalingUser, signal) => {
 wsConn.on('updateUserList', (userList) => {
     console.log('SignalR: called updateUserList' + JSON.stringify(userList));
     availableUsers = userList;
-    if (availableUsers.length > 1 && !getUser(myUsername)["inCall"]) {
+    if (availableUsers.length > 1 && !getUser(model.gebruikerId)["inCall"]) {
         document.getElementById("startCallButton").disabled = false;
+        initiateCall();
     }
 });
 
@@ -408,7 +437,7 @@ wsConn.on('updateActiveCalls', (callList) => {
 
     for (let i in callList) {
         let call = callList[i];
-        if ((call.users[0].userName == myUsername || call.users[1].userName == myUsername) && call.help != askHelp) {
+        if ((call.users[0].userName == model.gebruikerId || call.users[1].userName == model.gebruikerId) && call.help != askHelp) {
             if (askHelp === true) {
                 askHelp = false;
                 document.getElementById("askHelpButton").value = "Vraag om hulp";
@@ -420,7 +449,6 @@ wsConn.on('updateActiveCalls', (callList) => {
         }
     }
 });
-
 
 
 // Notify the user that the client is trying to reconnect
@@ -450,32 +478,18 @@ wsConn.onclose(err => {
 
 // Call random available user
 function initiateCall() {
-    let target = null;
-
-    for (let i in availableUsers) {
-        let u = availableUsers[i];
-        console.log(u);
-        if (u["userName"] == myUsername){
-            if (u["inCall"]){
-                console.log("You are already in a call");
-                return;
-            }
-            continue;
-        }
-        else if (!target && !u["inCall"]) {
-            target = u;
-            console.log("Found user to call", target);
-        }
-    }
+    if (!dontcall) {
+        let target = FindPartner(model.partnerId);
     
-    if (!target) {
-        console.log("No users available for starting a call");
-        return;
+        if (!target) {
+            console.log("Partner is not online.");
+            return;
+        }
+    
+        document.getElementById("stopCallButton").disabled = false;
+        document.getElementById("startCallButton").disabled = true;
+        wsConn.invoke('callUser', target);
     }
-
-    document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = true;
-    wsConn.invoke('callUser', target);
 }
 
 
@@ -495,6 +509,7 @@ function toggleHelp() {
 
 // Close the current calling sessions
 function hangup() {
+    dontcall = true;
     wsConn.invoke('hangUp');
     closeAllConnections();
 }
