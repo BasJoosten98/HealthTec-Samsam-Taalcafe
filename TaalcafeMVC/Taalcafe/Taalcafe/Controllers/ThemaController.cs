@@ -28,6 +28,28 @@ namespace Taalcafe.Controllers
             return View(themas);
         }
 
+        // GET: Thema/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Thema/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create([Bind("Id","Naam","Beschrijving","Afbeeldingen","Vragen")] Thema thema) {
+
+            if (ModelState.IsValid)
+            {
+                Instantiate();
+                context.Themas.Add(thema);
+                context.SaveChanges();
+                return RedirectToAction("Index");
+            }
+
+            return View(thema);
+        }
+
         private void Instantiate()
         {
             context = new dbi380705_taalcafeContext();

@@ -1,0 +1,131 @@
+@model Taalcafe.Models.DB.Thema
+@{
+    ViewData["Title"] = "Thema aanmaken";
+}
+
+@section scripts {
+    <script>
+        const vragen = document.getElementById("Vragen");
+        const vraagBox = document.getElementById("vraagBox");
+        var vragenLijst = [];
+
+        function AddVraag() {
+            if (vraagBox.value.includes('~')){
+                return;
+            }
+
+            if (vragenLijst.length === 0) {
+                vragen.value = vraagBox.value;    
+            }
+            else {
+                vragen.value = vragen.value + "~" + vraagBox.value;
+            }
+            vragenLijst.push(vraagBox.value);
+            vraagBox.value = "";
+
+            RenderVragenLijst();
+        }
+
+        function RemoveVraag(index) {
+            vragenLijst.splice(index, 1);
+
+            vragen.value = null;
+            for (i in vragenLijst) {
+                vragen.value += "~" + vragenLijst[i];
+            }
+            vragen.value = vragen.value.substring(1);
+
+            RenderVragenLijst();
+        }
+
+        function RenderVragenLijst() {
+            $('#vragenLijst li.vraag').remove();
+
+            $.each(vragenLijst, function (index) {
+                /* creates the following structure to fill the list with questions:
+
+                <li class="list-group-item vraag">
+                    <div class="row">
+                        <div class="col-3">
+                            <input class="btn btn-danger" type="button" onclick="RemoveVraag(index)" value="Verwijderen"></input>
+                        </div>
+                        <div class="col"> vraag </div>
+                    </div>
+                </li>
+                */
+
+                let listString = '<li class="list-group-item vraag"><div class="row"><div class="col-3">'
+                listString += '<input class="btn btn-danger" type="button" onclick="RemoveVraag(' + index.toString() + ')" value="Verwijderen"></input></div>';
+                listString += '<div class="col">' + vragenLijst[index] + '</div>';
+                listString += '</div></li>';
+
+                $('#vragenLijst').append(listString);
+            });
+        }
+    </script>
+}
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>Thema</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Naam, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Naam, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Naam, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Beschrijving, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Beschrijving, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Beschrijving, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+
+        @*TODO: Afbeeldingen toevoegen*@
+        @*
+        <div class="form-group">
+            @Html.HiddenFor(model => model.Afbeeldingen)
+            @Html.LabelFor(model => model.Afbeeldingen, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @*<input class="form-control" type="text" id="vraagBox">*\@
+                @Html.ValidationMessageFor(model => model.Afbeeldingen, "", new { @class = "text-danger" })
+                <input class="btn btn-secondary" type="button" onclick="" value="Toevoegen"></input>
+                <ul class="list-group" id="AfbeeldingenLijst"> </ul>
+            </div>            
+        </div>
+        *@
+
+
+        
+        <div class="form-group">
+            @Html.HiddenFor(model => model.Vragen)
+            @Html.LabelFor(model => model.Vragen, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                <input class="form-control" type="text" id="vraagBox">
+                @Html.ValidationMessageFor(model => model.Vragen, "", new { @class = "text-danger" })
+                <input class="btn btn-secondary" type="button" onclick="AddVraag()" value="Toevoegen"></input>
+                <ul class="list-group" id="vragenLijst"> </ul>
+            </div>            
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Thema opslaan" class="btn btn-success" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Terug naar thema overzicht", "Index")
+</div>
