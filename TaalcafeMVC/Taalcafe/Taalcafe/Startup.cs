@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,8 +32,9 @@ namespace Taalcafe
                 options.IdleTimeout = TimeSpan.FromMinutes(30);//You can set Time   
             });
             services.AddControllersWithViews();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie();
 
-            
 
             //Fetching Connection string from APPSETTINGS.JSON  
             var ConnectionString = Configuration.GetConnectionString("ConnectionString");
@@ -80,6 +82,8 @@ namespace Taalcafe
             app.UseAuthorization();
 
             //app.UseCors("CorsPolicy");
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

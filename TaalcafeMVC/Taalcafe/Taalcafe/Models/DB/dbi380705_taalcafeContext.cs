@@ -80,8 +80,6 @@ namespace Taalcafe.Models.DB
                     .IsRequired()
                     .HasMaxLength(50);
 
-                entity.Property(e => e.Inlogcode).HasMaxLength(50);
-
                 entity.Property(e => e.Naam)
                     .IsRequired()
                     .HasMaxLength(50);

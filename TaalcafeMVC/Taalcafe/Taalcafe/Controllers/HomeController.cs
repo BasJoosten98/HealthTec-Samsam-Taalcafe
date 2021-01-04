@@ -12,10 +12,11 @@ namespace Taalcafe.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private dbi380705_taalcafeContext context; 
+        private dbi380705_taalcafeContext _context; 
 
         public HomeController(ILogger<HomeController> logger)
         {
+            _context = new dbi380705_taalcafeContext();
             _logger = logger;
         }
 
@@ -32,19 +33,18 @@ namespace Taalcafe.Controllers
         [HttpPost]
         public ActionResult Login(AccountViewModel model)
         {
-            Instantiate();
             if (ModelState.IsValid)
             {
                 //The ".FirstOrDefault()" method will return either the first matched
                 //result or null
-                var myUser = context.Accounts
+                var myUser = _context.Accounts
                     .FirstOrDefault(u => u.Gebruikersnaam == model.Gebruikersnaam
                                  && u.Wachtwoord == model.Wachtwoord);
 
                 if (myUser != null)    //User was found
                 {
                     ViewBag.message = "Success";
-                    return View("~/Views/Home/Index.cshtml", model);
+                    return RedirectToAction("Index", "Gebruikers");
                 }
                 else    //User was not found
                 {
@@ -54,11 +54,6 @@ namespace Taalcafe.Controllers
             }
 
             return View();
-        }
-
-        private void Instantiate()
-        {
-            context = new dbi380705_taalcafeContext();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

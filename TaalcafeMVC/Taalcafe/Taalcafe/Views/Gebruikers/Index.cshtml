@@ -1,0 +1,54 @@
+﻿@model IEnumerable<Taalcafe.Models.DB.Gebruiker>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="row justify-content-center">
+    <div class="col-md-auto w-75">
+        <div class="d-inline-block align-middle col-md-12 pl-0">
+            <h3 class="d-inline-block align-middle float-left">Overzicht gebruikers</h3>
+        </div>
+        <div class="table-responsive-md">
+            <table class="table-borderless w-100 text-center justify-content-center">
+                <thead>
+                    <tr class="d-flex">
+                        <th class="col-md-4 align-middle table-secondary border border-white align-middle">
+                            <label class="mt-3">@Html.DisplayNameFor(model => model.Naam) </label>
+                        </th>
+                        <th class="col-md-4 align-middle table-secondary border border-white">
+                            <label class="mt-3">@Html.DisplayNameFor(model => model.Account.Type)</label>
+                        </th>
+                        <th class="col-md-2 align-middle table-secondary border border-white">
+                            <label class="mt-3"> @Html.DisplayNameFor(model => model.Niveau)</label>
+                        </th>
+                        <th class="col-md-2">
+                            <a class="btn btn-success ml-0" asp-action="Create">Gebruiker toevoegen</a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="d-flex">
+                            <td class="col-md-4 align-middle table-active border border-white">
+                                <label class="mt-3">@Html.DisplayFor(modelItem => item.Naam)</label>
+                            </td>
+                            <td class="col-md-4 align-middle table-active border border-white">
+                                <label class="mt-3">@Html.DisplayFor(modelItem => item.Account.Type)</label>
+                            </td>
+                            <td class="col-md-2 align-middle table-active border border-white">
+                                <label class="mt-3">@Html.DisplayFor(modelItem => item.Niveau)</label>
+                            </td>
+                            <td class="col-md-2">
+                                <a asp-action="Details" class="btn btn-success" asp-route-id="@item.Id">Gebruiker Weergeven</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

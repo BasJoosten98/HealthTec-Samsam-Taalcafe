@@ -15,3 +15,8 @@ img {
     margin-right: auto;
     width: 15%;
 }
+
+.table-grey {
+    background-color: #a9a9a9 !important;
+    color: #a9a9a9 !important;
+}
