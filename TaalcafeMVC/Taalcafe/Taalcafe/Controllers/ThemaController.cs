@@ -50,6 +50,67 @@ namespace Taalcafe.Controllers
             return View(thema);
         }
 
+        // GET: Thema/Edit
+        public IActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Instantiate();
+            Thema thema = context.Themas.Find(id);
+            if (thema == null){
+                return NotFound();
+            }
+
+            return View(thema);
+        }
+
+        // POST: Thema/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit([Bind("Id","Naam","Beschrijving","Afbeeldingen","Vragen")] Thema thema) {
+
+            if (ModelState.IsValid)
+            {
+                Instantiate();
+                context.Entry(thema).State = EntityState.Modified;
+                context.SaveChanges();
+                return RedirectToAction("Index");
+            }
+
+            return View(thema);
+        }
+
+        // GET: Thema/Delete
+        public IActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Instantiate();
+            Thema thema = context.Themas.Find(id);
+            if (thema == null){
+                return NotFound();
+            }
+
+            return View(thema);
+        }
+
+        // POST: Thema/Delete
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id) {
+            Instantiate();
+            Thema thema = context.Themas.Find(id);
+            context.Themas.Remove(thema);
+            context.SaveChanges();
+            return RedirectToAction("Index");
+        }
+
         private void Instantiate()
         {
             context = new dbi380705_taalcafeContext();

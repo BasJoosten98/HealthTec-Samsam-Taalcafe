@@ -1,0 +1,66 @@
+@model Taalcafe.Models.DB.Thema
+@{
+    ViewData["Title"] = "Thema verwijderen";
+}
+
+<h2>Thema verwijderen</h2>
+
+<h3>Weet u zeker dat u dit thema wilt verwijderen?</h3>
+<div>
+    <h4>Thema</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Naam)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Naam)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Beschrijving)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Beschrijving)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Afbeeldingen)
+        </dt>
+
+        <dd>
+            @*TODO: Afbeeldingen weergeven*@
+            <p class="text-warning">Afbeeldingen kunnen nog niet weergeven worden</p>
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Vragen)
+        </dt>
+
+        <dd>
+            <ul class="list-group">
+                    @for(var i = 0;  i < Model.Vragen.Split("~").Count(); i++)
+                    {
+                        <li class="list-group-item">
+                            <div class="col">@Model.Vragen.Split("~")[i]</div>
+                        </li>
+                    }
+                </ul>
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Thema verwijderen" class="btn btn-danger" />
+        </div>
+        <div class="form-actions no-color">
+            @Html.ActionLink("Terug naar bewerken", "Edit", new { id=Model.Id }) |
+            @Html.ActionLink("Terug naar overzicht", "Index")
+        </div>
+    }
+</div>

@@ -36,7 +36,7 @@
                                     @Html.DisplayName(item.Naam)
                                 </div>
                                 <div class="col-3">
-                                    Bewerken
+                                    @Html.ActionLink("Bewerken","Edit", new { id=item.Id })
                                 </div>
                             </div>
                         </div>
