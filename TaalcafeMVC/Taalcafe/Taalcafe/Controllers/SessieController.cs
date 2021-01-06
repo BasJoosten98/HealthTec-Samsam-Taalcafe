@@ -89,6 +89,43 @@ namespace Taalcafe.Controllers
             return View(sessie);
         }
 
+        // GET: Sessie/Delete
+        public IActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Instantiate();
+            Sessie sessie = context.Sessies
+                .Include(s => s.Thema)
+                .Include(s => s.SessiePartners).ThenInclude(p => p.Taalcoach)
+                .Include(s => s.SessiePartners).ThenInclude(p => p.Cursist)
+                .SingleOrDefault(s => s.Id == id);
+            if (sessie == null){
+                return NotFound();
+            }
+
+            return View(sessie);
+        }
+
+        // POST: Sessie/Delete
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id) {
+            Instantiate();
+            Sessie sessie = context.Sessies
+                .Include(s => s.SessiePartners)
+                .SingleOrDefault(s => s.Id == id);
+            
+            context.SessiePartners.RemoveRange(sessie.SessiePartners);
+            context.Sessies.Remove(sessie);
+            context.SaveChanges();
+            
+            return RedirectToAction("Index");
+        }
+
 
         private void Instantiate()
         {
