@@ -126,6 +126,74 @@ namespace Taalcafe.Controllers
             return RedirectToAction("Index");
         }
 
+        // GET: Sessie/Couples
+        public IActionResult Couples(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Instantiate();
+            Sessie sessie = context.Sessies
+                .Include(s => s.SessiePartners)
+                .SingleOrDefault(s => s.Id == id);
+
+            if (sessie == null){
+                return NotFound();
+            }
+
+            /*
+            ViewBag.sessie = sessie;
+            
+            List<SessiePartner> duos = context.SessiePartners
+                .Include(d => d.Sessie)
+                .Include(d => d.Taalcoach)
+                .Include(d => d.Cursist)
+                .Where(d => d.SessieId == sessie.Id)
+                .ToList();
+            */
+            
+            List<Gebruiker> taalcoaches = context.Gebruikers
+                .Include(g => g.Account)
+                .Where(g => g.Account.Type.ToLower() == "taalcoach" || g.Account.Type == "coordinator")
+                .ToList();
+            
+            List<Gebruiker> cursisten = context.Gebruikers
+                .Include(g => g.Account)
+                .Where(g => g.Account.Type.ToLower() == "cursist")
+                .ToList();
+
+            ViewBag.Taalcoaches = new SelectList(taalcoaches, "Id", "Naam");
+            ViewBag.Cursisten = new SelectList(cursisten, "Id", "Naam");
+
+            return View(sessie);
+        }
+
+        // POST: Sessie/Couples
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Couples([Bind("Id,Items")] Sessie sessie)
+        {
+            if (ModelState.IsValid)
+            {
+                Instantiate();
+                context.Entry(sessie).State = EntityState.Modified;
+                context.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            return View(sessie);
+        }
+
+        // POST: Sessie/AddDuo
+        // For rendering partial view into Sessie/Couples
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddDuo([Bind("SessiePartners")] Sessie sessie)
+        {
+            sessie.SessiePartners.Add(new SessiePartner());
+            return PartialView("SessiePartner", sessie);
+        }
 
         private void Instantiate()
         {
