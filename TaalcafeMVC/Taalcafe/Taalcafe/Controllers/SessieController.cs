@@ -136,36 +136,16 @@ namespace Taalcafe.Controllers
 
             Instantiate();
             Sessie sessie = context.Sessies
-                .Include(s => s.SessiePartners)
+                .Include(s => s.SessiePartners).ThenInclude(p => p.Taalcoach)
+                .Include(s => s.SessiePartners).ThenInclude(p => p.Cursist)
                 .SingleOrDefault(s => s.Id == id);
 
             if (sessie == null){
                 return NotFound();
             }
 
-            /*
-            ViewBag.sessie = sessie;
-            
-            List<SessiePartner> duos = context.SessiePartners
-                .Include(d => d.Sessie)
-                .Include(d => d.Taalcoach)
-                .Include(d => d.Cursist)
-                .Where(d => d.SessieId == sessie.Id)
-                .ToList();
-            */
-            
-            List<Gebruiker> taalcoaches = context.Gebruikers
-                .Include(g => g.Account)
-                .Where(g => g.Account.Type.ToLower() == "taalcoach" || g.Account.Type == "coordinator")
-                .ToList();
-            
-            List<Gebruiker> cursisten = context.Gebruikers
-                .Include(g => g.Account)
-                .Where(g => g.Account.Type.ToLower() == "cursist")
-                .ToList();
-
-            ViewBag.Taalcoaches = new SelectList(taalcoaches, "Id", "Naam");
-            ViewBag.Cursisten = new SelectList(cursisten, "Id", "Naam");
+            ViewBag.Taalcoaches = GetTaalcoachSelectList();
+            ViewBag.Cursisten = GetCursistSelectList();
 
             return View(sessie);
         }
@@ -173,31 +153,106 @@ namespace Taalcafe.Controllers
         // POST: Sessie/Couples
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Couples([Bind("Id,Items")] Sessie sessie)
+        public IActionResult Couples([Bind("Id","Datum","ThemaId","SessiePartners")] Sessie sessie)
         {
+            //TODO: proper model validation for both Sessie and SessiePartner
             if (ModelState.IsValid)
             {
                 Instantiate();
+
+                foreach (SessiePartner p in context.SessiePartners) {
+                    if (p.SessieId == sessie.Id) {
+                        context.SessiePartners.Remove(p);
+                    }
+                }
+
+                for (int i = 0; i < sessie.SessiePartners.Count(); i++)
+                {
+                    SessiePartner p = sessie.SessiePartners.ElementAt(i);
+
+                    if (sessie.SessiePartners.Where(s => s.TaalcoachId == p.TaalcoachId).Count() > 1
+                        || sessie.SessiePartners.Where(s => s.CursistId == p.CursistId).Count() > 1)
+                    {
+                        // invalid input, a user was used in multiple inputs
+                        ViewBag.Taalcoaches = GetTaalcoachSelectList();
+                        ViewBag.Cursisten = GetCursistSelectList();
+                        ViewBag.invalid = true;
+
+                        return View(sessie);
+                    }
+                }
+
+                for (int i = 0; i < sessie.SessiePartners.Count(); i++)
+                {
+                    SessiePartner p = sessie.SessiePartners.ElementAt(i);
+
+                    if (p.CursistId == 0 || p.TaalcoachId == 0) {
+                        sessie.SessiePartners.Remove(p);
+                        i -= 1;
+                        continue;
+                    }
+
+                    context.SessiePartners.Add(p);
+                }
+
                 context.Entry(sessie).State = EntityState.Modified;
                 context.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(sessie);
         }
-
+        
         // POST: Sessie/AddDuo
         // For rendering partial view into Sessie/Couples
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AddDuo([Bind("SessiePartners")] Sessie sessie)
-        {
+        public ActionResult AddDuo([Bind("Id,SessiePartners")] Sessie sessie)
+        {            
+            ViewBag.Taalcoaches = GetTaalcoachSelectList();
+            ViewBag.Cursisten = GetCursistSelectList();
+
             sessie.SessiePartners.Add(new SessiePartner());
-            return PartialView("SessiePartner", sessie);
+            return PartialView("SessiePartners", sessie);
         }
+        
 
         private void Instantiate()
         {
             context = new dbi380705_taalcafeContext();
+        }
+
+        private SelectList GetCursistSelectList() 
+        {
+            Instantiate();
+
+            List<Gebruiker> cursisten = context.Gebruikers
+                .Include(g => g.Account)
+                .Where(g => g.Account.Type.ToLower() == "cursist")
+                .ToList();
+
+            cursisten.Add(new Gebruiker() {
+                Id = 0,
+                Naam = "Selecteer een Cursist"
+            });
+
+            return new SelectList(cursisten, "Id", "Naam");
+        }
+
+        private SelectList GetTaalcoachSelectList() 
+        {
+            Instantiate();
+
+            List<Gebruiker> taalcoaches = context.Gebruikers
+                .Include(g => g.Account)
+                .Where(g => g.Account.Type.ToLower() == "taalcoach" || g.Account.Type == "coordinator")
+                .ToList();
+
+            taalcoaches.Add(new Gebruiker() {
+                Id = 0,
+                Naam = "Selecteer een Taalcoach"
+            });
+
+            return new SelectList(taalcoaches, "Id", "Naam");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -5,6 +5,7 @@
 
 @section Scripts{
     <script>
+        // Request and add the partial view for SessiePartners to the form.        
         function AddDuo() {
             $.ajax({
                 async: true,
@@ -12,9 +13,16 @@
                 type: "POST",
                 url: '/Sessie/AddDuo',
                 success: function (partialView) {
-                    console.log("partialView: "+partialView);
+                    //console.log("partialView: "+partialView);
                     $('#Duos').html(partialView);
+                },
+                error: function (reqObj, status, err) {
+                    console.log(reqObj);
+                    console.log(reqObj.responseText)
+                    console.log(status);
+                    console.log(err);
                 }
+                
             });
         }
     </script>
@@ -24,16 +32,26 @@
     <div class="row">
         <h1>Duo's</h1>
     </div>
+    
     <div class="row">
+        
         <form asp-action="Couples" id="form">
             @Html.AntiForgeryToken()
 
             @Html.ValidationSummary()
 
             @Html.HiddenFor(model => model.Id)
+            @Html.HiddenFor(model => model.Datum)
+            @Html.HiddenFor(model => model.ThemaId)
 
             <div class="row">
                 Sessie op @Html.DisplayFor(model => model.Datum).
+            </div>
+            <div class="row">
+                @if (ViewBag.invalid == true)
+                {
+                    @Html.ValidationMessageFor(model => model.SessiePartners, "Een gebruiker is bij meerdere duo's ingedeeld.", new { @class = "text-danger" })
+                }
             </div>
             <div class="row" id="Duos">
                 @Html.EditorFor(model => model.SessiePartners)
@@ -43,104 +61,5 @@
                 <input class="btn btn-success" type="submit" id="submit" value="Duo's opslaan" />
             </div>
         </form>
-           
-        @*
-        <div class="col-12">
-            <ul class="list-group">
-                <li class="list-group-item">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-1">
-                                <b>Duo</b>
-                            </div>
-                            <div class="col-4">
-                                <b>Taalcoach</b>
-                            </div>
-                            <div class="col-4">
-                                <b>Nieuwe Nederlander</b>
-                            </div>
-                            <div class="col-3">
-                                <b>Verwijderen</b>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                @{var count = 0;}
-                @foreach (var item in Model)
-                {
-                    count += 1;
-
-                    <li class="list-group-item">
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-1">
-                                    @count
-                                </div>
-                                <div class="col-4">
-                                    @Html.DisplayFor(ModelItem => item.Taalcoach.Naam)
-                                </div>
-                                <div class="col-4">
-                                    @Html.DisplayFor(modelItem => item.Cursist.Naam)
-                                </div>
-                                <div class="col-3">
-                                    @Html.ActionLink("Verwijderen","Delete", new { taalcoachid=item.TaalcoachId, cursistid=item.CursistId })
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                }
-            </ul>
-
-            @using (Html.BeginForm())
-            {
-                @Html.AntiForgeryToken()
-                @Html.HiddenFor(model => model)
-
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-1">
-                                    <b>Duo</b>
-                                </div>
-                                <div class="col-4">
-                                    <b>Taalcoach</b>
-                                </div>
-                                <div class="col-4">
-                                    <b>Nieuwe Nederlander</b>
-                                </div>
-                                <div class="col-3">
-                                    <b>Verwijderen</b>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="list-group-item">
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-1">
-                                </div>
-                                <div class="col-4">
-                                    @Html.DropDownList("Taalcoaches", null, htmlAttributes: new { @class = "form-control" })
-                                </div>
-                                <div class="col-4">
-                                    @Html.DropDownList("Cursisten", null, htmlAttributes: new { @class = "form-control" })
-                                </div>
-                                <div class="col-3">
-                                    <input class="btn btn-success" type="button" onclick="AddDuo()" value="Duo Toevoegen"></input>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-                <div class="form-group">
-                    <div class="col-md-offset-2 col-md-10">
-                        <input type="submit" value="Duo's opslaan" class="btn btn-success" />
-                    </div>
-                </div>
-            }
-        </div>
-        *@
     </div>
-    
 </div>
