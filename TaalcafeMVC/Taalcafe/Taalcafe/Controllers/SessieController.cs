@@ -25,7 +25,13 @@ namespace Taalcafe.Controllers
         public IActionResult Index()
         {
             Instantiate();
-            var Sessies = context.Sessies.Include(s => s.Thema).ToList();
+
+            var Sessies = context.Sessies
+                .Include(s => s.Thema)
+                .Where(s => s.Datum >= DateTime.Now.Date)
+                .OrderBy(s => s.Datum)
+                .ToList();
+
             return View(Sessies);
         }
 
