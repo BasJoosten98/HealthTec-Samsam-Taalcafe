@@ -24,11 +24,19 @@ namespace Taalcafe.Controllers
         public IActionResult NextSession(int? id)
         {
             Instantiate();
+
+            var Sessies = context.Sessies
+                .Where(s => s.Datum >= DateTime.Today)
+                .OrderBy(s => s.Datum)
+                .ToList();
+
+            /*
             var nextSession = context.Sessies.SingleOrDefault(s => s.Datum >= DateTime.Today);
             ViewBag.session = nextSession;
-            
+            */
+
             ViewData["user"] = id;
-            return View();
+            return View(Sessies.FirstOrDefault());
         }
 
         public IActionResult Call(int? id)

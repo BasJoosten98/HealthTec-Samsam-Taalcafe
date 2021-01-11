@@ -1,0 +1,69 @@
+@model List<Taalcafe.Models.DB.Sessie>
+@{
+    ViewData["Title"] = "Sessie overzicht";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-9">
+            <h1>Sessie's</h1>
+        </div>
+        <div class="col-3">
+            @Html.ActionLink("Sessie aanmaken","Create")
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-2">
+                                <b>Datum</b>
+                            </div>
+                            <div class="col-2">
+                                <b>Tijd</b>
+                            </div>
+                            <div class="col-2">
+                                <b>Duur</b>
+                            </div>
+                            <div class="col-3">
+                                <b>Thema</b>
+                            </div>
+                            <div class="col-3">
+                                <b>Bewerken</b>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                @foreach (var item in Model)
+                {
+                    if (item.Datum.Value.Add(item.Duur.Value) >= DateTime.Now) {
+                        <li class="list-group-item">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-2">
+                                        @item.Datum.Value.ToShortDateString()
+                                    </div>
+                                    <div class="col-2">
+                                        @item.Datum.Value.ToString("HH:mm")
+                                    </div>
+                                    <div class="col-2">
+                                        @item.Duur.Value.ToString(@"h\:mm")
+                                    </div>
+                                    <div class="col-3">
+                                        @Html.DisplayFor(modelItem => item.Thema.Naam)
+                                    </div>
+                                    <div class="col-3">
+                                        @Html.ActionLink("Sessiepartners toewijzen", "Couples", new { id=item.Id }) |
+                                        @Html.ActionLink("Bewerken","Edit", new { id=item.Id })
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+</div>
