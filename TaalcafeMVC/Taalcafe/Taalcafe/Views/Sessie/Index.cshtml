@@ -25,7 +25,7 @@
                                 <b>Tijd</b>
                             </div>
                             <div class="col-2">
-                                <b>duur</b>
+                                <b>Duur</b>
                             </div>
                             <div class="col-3">
                                 <b>Thema</b>
@@ -38,25 +38,30 @@
                 </li>
                 @foreach (var item in Model)
                 {
-                    <li class="list-group-item">
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-4">
-                                    @Html.ValueFor(modelItem => item.Datum)
-                                </div>
-                                <div class="col-2">
-                                    @Html.ValueFor(modelItem => item.Duur)
-                                </div>
-                                <div class="col-3">
-                                    @Html.DisplayFor(modelItem => item.Thema.Naam)
-                                </div>
-                                <div class="col-3">
-                                    @Html.ActionLink("Sessiepartners toewijzen", "Couples", new { id=item.Id }) |
-                                    @Html.ActionLink("Bewerken","Edit", new { id=item.Id })
+                    if (item.Datum.Value.Add(item.Duur.Value) > DateTime.Now) {
+                        <li class="list-group-item">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-2">
+                                        @item.Datum.Value.ToShortDateString()
+                                    </div>
+                                    <div class="col-2">
+                                        @item.Datum.Value.ToString("HH:mm")
+                                    </div>
+                                    <div class="col-2">
+                                        @item.Duur.Value.ToString(@"h\:mm")
+                                    </div>
+                                    <div class="col-3">
+                                        @Html.DisplayFor(modelItem => item.Thema.Naam)
+                                    </div>
+                                    <div class="col-3">
+                                        @Html.ActionLink("Sessiepartners toewijzen", "Couples", new { id=item.Id }) |
+                                        @Html.ActionLink("Bewerken","Edit", new { id=item.Id })
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </li>
+                        </li>
+                    }
                 }
             </ul>
         </div>

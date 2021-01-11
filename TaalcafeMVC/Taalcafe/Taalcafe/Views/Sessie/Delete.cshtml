@@ -15,7 +15,23 @@
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Datum)
+            @Model.Datum.Value.ToShortDateString()
+        </dd>
+
+        <dt>
+            Tijd
+        </dt>
+
+        <dd>
+            @Model.Datum.Value.ToString("HH:mm")
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Duur)
+        </dt>
+
+        <dd>
+            @Model.Duur.Value.ToString(@"h\:mm")
         </dd>
 
         <dt>

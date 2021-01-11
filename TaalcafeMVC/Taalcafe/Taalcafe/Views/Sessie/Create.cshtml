@@ -13,9 +13,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/css/bootstrap-datetimepicker.min.css">
     
     <script>
+        // documentation on datetimepicker https://xdsoft.net/jqplugins/datetimepicker/
         $(function () {
             $('#datepicker').datetimepicker({
                 format: 'DD-MM-YYYY HH:mm'
+            });
+
+            $('#timepicker').datetimepicker({
+                format: 'HH:mm'
             });
         });
     </script>
@@ -42,12 +47,35 @@
             @Html.LabelFor(model => model.Datum, "Datum", htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 <div class='input-group date' id='datepicker'>
-                    <input asp-for="Datum" type="text" class="form-control" value="@DateTime.Now.ToString("dd-MM-yyyy hh:mm")" />
+                    @if (Model != null && Model.Datum != null) {
+                        <input asp-for="Datum" type="text" class="form-control" value="@Model.Datum.Value.ToString("dd-MM-yyyy hh:mm")" />
+                    }
+                    else {
+                        <input asp-for="Datum" type="text" class="form-control" value="@DateTime.Now.ToString("dd-MM-yyyy hh:mm")" />
+                    }
                     <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
                     </span>
                 </div>
                 @Html.ValidationMessageFor(model => model.Datum, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Duur, "Duur", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                <div class='input-group time' id='timepicker'>
+                    @if (Model != null && Model.Duur != null) {
+                        <input asp-for="Duur" type="text" class="form-control" value="@Model.Duur" />
+                    }
+                    else {
+                        <input asp-for="Duur" type="text" class="form-control" value="00:00" />
+                    }
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-time"></span>
+                    </span>
+                </div>
+                @Html.ValidationMessageFor(model => model.Duur, "", new { @class = "text-danger" })
             </div>
         </div>
 

@@ -28,7 +28,7 @@ namespace Taalcafe.Controllers
 
             var Sessies = context.Sessies
                 .Include(s => s.Thema)
-                .Where(s => s.Datum >= DateTime.Now.Date)
+                .Where(s => s.Datum >= DateTime.Today)
                 .OrderBy(s => s.Datum)
                 .ToList();
 
@@ -46,11 +46,16 @@ namespace Taalcafe.Controllers
         // POST: Sessie/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id","Datum","ThemaId")] Sessie sessie) {
-
+        public IActionResult Create([Bind("Id","Datum","Duur","ThemaId")] Sessie sessie)
+        {
+            Instantiate();
             if (ModelState.IsValid)
             {
-                Instantiate();
+                if (sessie.Datum < DateTime.Now) {
+                    // It should not be possible to choose a moment in the past. proper validation should be built in for this.
+                    ViewBag.ThemaId = new SelectList(context.Themas, "Id", "Naam");
+                    return View(sessie);
+                }
                 context.Sessies.Add(sessie);
                 context.SaveChanges();
                 return RedirectToAction("Index");
@@ -81,11 +86,17 @@ namespace Taalcafe.Controllers
         // POST: Thema/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit([Bind("Id","Datum","ThemaId")] Sessie sessie) {
-
+        public IActionResult Edit([Bind("Id","Datum","Duur","ThemaId")] Sessie sessie) 
+        {
+            Instantiate();
             if (ModelState.IsValid)
             {
-                Instantiate();
+                if (sessie.Datum < DateTime.Now) {
+                    // It should not be possible to choose a moment in the past. proper validation should be built in for this.
+                    ViewBag.ThemaId = new SelectList(context.Themas, "Id", "Naam", sessie.ThemaId);
+                    return View(sessie);
+                }
+
                 context.Entry(sessie).State = EntityState.Modified;
                 context.SaveChanges();
                 return RedirectToAction("Index");
@@ -119,7 +130,8 @@ namespace Taalcafe.Controllers
         // POST: Sessie/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id) {
+        public IActionResult Delete(int id) 
+        {
             Instantiate();
             Sessie sessie = context.Sessies
                 .Include(s => s.SessiePartners)
@@ -159,7 +171,7 @@ namespace Taalcafe.Controllers
         // POST: Sessie/Couples
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Couples([Bind("Id","Datum","ThemaId","SessiePartners")] Sessie sessie)
+        public IActionResult Couples([Bind("Id","Datum","Duur","ThemaId","SessiePartners")] Sessie sessie)
         {
             //TODO: proper model validation for both Sessie and SessiePartner
             if (ModelState.IsValid)
