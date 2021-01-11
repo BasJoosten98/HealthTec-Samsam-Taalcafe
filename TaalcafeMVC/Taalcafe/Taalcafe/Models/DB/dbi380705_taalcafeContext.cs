@@ -103,6 +103,10 @@ namespace Taalcafe.Models.DB
 
                 entity.Property(e => e.Duur).HasColumnType("time");
 
+                entity.Property(e => e.Aanmeldingen);
+
+                entity.Ignore(e => e.AanmeldingIDs);
+
                 entity.HasOne(d => d.Thema)
                     .WithMany(p => p.Sessies)
                     .HasForeignKey(d => d.ThemaId)

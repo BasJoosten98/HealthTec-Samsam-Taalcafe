@@ -54,8 +54,10 @@
                     @Html.ValidationMessageFor(model => model.SessiePartners, "Een gebruiker is bij meerdere duo's ingedeeld.", new { @class = "text-danger" })
                 }
             </div>
-            <div class="row" id="Duos">
-                @Html.EditorFor(model => model.SessiePartners)
+            <div class="row">
+                <div class="container-fluid" id="Duos">
+                    @Html.EditorFor(model => model.SessiePartners)
+                </div>
             </div>
             <div class="row">
                 <input class="btn btn-success" type="button" onclick="AddDuo()" value="Duo Toevoegen" />

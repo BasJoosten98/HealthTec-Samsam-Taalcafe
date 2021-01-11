@@ -38,7 +38,7 @@
                 </li>
                 @foreach (var item in Model)
                 {
-                    if (item.Datum.Value.Add(item.Duur.Value) > DateTime.Now) {
+                    if (item.Datum.Value.Add(item.Duur.Value) >= DateTime.Now) {
                         <li class="list-group-item">
                             <div class="container-fluid">
                                 <div class="row">

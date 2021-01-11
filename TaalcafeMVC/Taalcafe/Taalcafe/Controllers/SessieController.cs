@@ -162,8 +162,8 @@ namespace Taalcafe.Controllers
                 return NotFound();
             }
 
-            ViewBag.Taalcoaches = GetTaalcoachSelectList();
-            ViewBag.Cursisten = GetCursistSelectList();
+            ViewBag.Taalcoaches = GetTaalcoachSelectList(sessie);
+            ViewBag.Cursisten = GetCursistSelectList(sessie);
 
             return View(sessie);
         }
@@ -192,8 +192,8 @@ namespace Taalcafe.Controllers
                         || sessie.SessiePartners.Where(s => s.CursistId == p.CursistId).Count() > 1)
                     {
                         // invalid input, a user was used in multiple inputs
-                        ViewBag.Taalcoaches = GetTaalcoachSelectList();
-                        ViewBag.Cursisten = GetCursistSelectList();
+                        ViewBag.Taalcoaches = GetTaalcoachSelectList(sessie);
+                        ViewBag.Cursisten = GetCursistSelectList(sessie);
                         ViewBag.invalid = true;
 
                         return View(sessie);
@@ -226,8 +226,8 @@ namespace Taalcafe.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult AddDuo([Bind("Id,SessiePartners")] Sessie sessie)
         {            
-            ViewBag.Taalcoaches = GetTaalcoachSelectList();
-            ViewBag.Cursisten = GetCursistSelectList();
+            ViewBag.Taalcoaches = GetTaalcoachSelectList(sessie);
+            ViewBag.Cursisten = GetCursistSelectList(sessie);
 
             sessie.SessiePartners.Add(new SessiePartner());
             return PartialView("SessiePartners", sessie);
@@ -239,14 +239,22 @@ namespace Taalcafe.Controllers
             context = new dbi380705_taalcafeContext();
         }
 
-        private SelectList GetCursistSelectList() 
+        private SelectList GetCursistSelectList(Sessie sessie) 
         {
             Instantiate();
 
             List<Gebruiker> cursisten = context.Gebruikers
                 .Include(g => g.Account)
-                .Where(g => g.Account.Type.ToLower() == "cursist")
+                .Where(g => g.Account.Type == "Cursist")
                 .ToList();
+
+            sessie.InitializeAanmeldingIDs();
+
+            foreach (Gebruiker g in new List<Gebruiker>(cursisten)) {
+                if (!sessie.AanmeldingIDs.Contains(g.Id)) {
+                    cursisten.Remove(g);
+                }
+            }
 
             cursisten.Add(new Gebruiker() {
                 Id = 0,
@@ -256,14 +264,22 @@ namespace Taalcafe.Controllers
             return new SelectList(cursisten, "Id", "Naam");
         }
 
-        private SelectList GetTaalcoachSelectList() 
+        private SelectList GetTaalcoachSelectList(Sessie sessie) 
         {
             Instantiate();
 
             List<Gebruiker> taalcoaches = context.Gebruikers
                 .Include(g => g.Account)
-                .Where(g => g.Account.Type.ToLower() == "taalcoach" || g.Account.Type == "coordinator")
+                .Where(g => (g.Account.Type == "Taalcoach" || g.Account.Type == "Coordinator"))
                 .ToList();
+
+            sessie.InitializeAanmeldingIDs();
+            
+            foreach (Gebruiker g in new List<Gebruiker>(taalcoaches)) {
+                if (g.Account.Type != "Coordinator" && !sessie.AanmeldingIDs.Contains(g.Id)) {
+                    taalcoaches.Remove(g);
+                }
+            }
 
             taalcoaches.Add(new Gebruiker() {
                 Id = 0,
