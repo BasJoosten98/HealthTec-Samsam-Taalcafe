@@ -15,6 +15,7 @@ namespace Taalcafe.Models.DB
         public int Id { get; set; }
         public int ThemaId { get; set; }
         public DateTime? Datum { get; set; }
+        public TimeSpan? Duur { get; set; }
 
         public virtual Thema Thema { get; set; }
         public virtual ICollection<SessiePartner> SessiePartners { get; set; }

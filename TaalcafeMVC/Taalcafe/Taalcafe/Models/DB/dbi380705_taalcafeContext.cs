@@ -97,9 +97,11 @@ namespace Taalcafe.Models.DB
             {
                 entity.ToTable("Sessie");
 
-                entity.Property(e => e.Datum).HasColumnType("date");
+                entity.Property(e => e.Datum).HasColumnType("datetime");
 
                 entity.Property(e => e.ThemaId).HasColumnName("Thema_Id");
+
+                entity.Property(e => e.Duur).HasColumnType("time");
 
                 entity.HasOne(d => d.Thema)
                     .WithMany(p => p.Sessies)
