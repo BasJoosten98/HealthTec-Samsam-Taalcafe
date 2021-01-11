@@ -33,6 +33,7 @@ namespace Taalcafe.Controllers
         // GET: Gebruikers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            Instantiate();
             if (id == null)
             {
                 return NotFound();
@@ -59,8 +60,9 @@ namespace Taalcafe.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Naam,Email,Telefoon,Niveau")] Gebruiker gebruiker)
+        public async Task<IActionResult> Create([Bind("Naam,Email,Telefoon,Niveau")] Gebruiker gebruiker)
         {
+            Instantiate();
             if (ModelState.IsValid)
             {
                 _context.Add(gebruiker);

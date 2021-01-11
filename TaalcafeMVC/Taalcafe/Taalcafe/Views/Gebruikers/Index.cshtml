@@ -11,8 +11,8 @@
         <div class="d-inline-block align-middle col-md-12 pl-0">
             <h3 class="d-inline-block align-middle float-left">Overzicht gebruikers</h3>
         </div>
-        <div class="table-responsive-md">
-            <table class="table-borderless w-100 text-center justify-content-center">
+        <div style="height: 310px;overflow: scroll; class="table-responsive-md">
+            <table  class="table-borderless w-100 text-center justify-content-center">
                 <thead>
                     <tr class="d-flex">
                         <th class="col-md-4 align-middle table-secondary border border-white align-middle">
@@ -25,7 +25,7 @@
                             <label class="mt-3"> @Html.DisplayNameFor(model => model.Niveau)</label>
                         </th>
                         <th class="col-md-2">
-                            <a class="btn btn-success ml-0" asp-action="Create">Gebruiker toevoegen</a>
+                            <a class="btn btn-outline-success ml-0" asp-action="Create">Gebruiker toevoegen</a>
                         </th>
                     </tr>
                 </thead>

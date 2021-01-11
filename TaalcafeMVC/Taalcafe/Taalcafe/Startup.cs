@@ -27,10 +27,8 @@ namespace Taalcafe
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddSession(options => {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);//You can set Time   
-            });
+            services.AddControllers();
+            services.AddMvc();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie();
             /*
@@ -82,7 +80,6 @@ namespace Taalcafe
 
             app.UseRouting();
 
-            app.UseSession();
             app.UseAuthorization();
 
             //app.UseCors("CorsPolicy");
@@ -93,7 +90,7 @@ namespace Taalcafe
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Login}/{action=SignIn}/{id?}");
                 
                 endpoints.MapHub<ConnectionHub>("/connectionhub");
             });
