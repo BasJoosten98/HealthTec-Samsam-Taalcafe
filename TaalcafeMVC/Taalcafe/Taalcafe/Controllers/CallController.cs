@@ -101,7 +101,7 @@ namespace Taalcafe.Controllers
         {
             Instantiate();
             CallOverviewModel model = new CallOverviewModel() { Gebruikers = new List<Gebruiker>() };
-            var gebruikers = context.Gebruikers.Include(g => g.Account);
+            var gebruikers = context.Gebruikers.Include(g => g.Account).Where(g => g.Account != null);
             foreach (Gebruiker g in gebruikers) {
                 model.Gebruikers.Add(new Gebruiker() {
                     Id = g.Id,
