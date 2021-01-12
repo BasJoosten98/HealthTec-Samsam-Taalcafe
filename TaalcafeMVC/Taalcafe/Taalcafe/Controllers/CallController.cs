@@ -21,7 +21,8 @@ namespace Taalcafe.Controllers
             _logger = logger; 
         }
 
-        public IActionResult NextSession(int? id)
+        // GET: Call/Nextsession
+        public IActionResult NextSession(int? userId)
         {
             Instantiate();
 
@@ -35,8 +36,23 @@ namespace Taalcafe.Controllers
             ViewBag.session = nextSession;
             */
 
-            ViewData["user"] = id;
+            ViewData["user"] = userId;
             return View(Sessies.FirstOrDefault());
+        }
+
+        // POST: Call/Nextsession
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult NextSession([Bind("Id","Datum","Duur","ThemaId","Aanmeldingen")] Sessie sessie)
+        {
+            Instantiate();
+
+            context.Entry(sessie).State = EntityState.Modified;
+            context.SaveChanges();
+
+            sessie.InitializeAanmeldingIDs();
+            ViewData["user"] = sessie.AanmeldingIDs.Last();
+            return View(sessie);
         }
 
         public IActionResult Call(int? id)
