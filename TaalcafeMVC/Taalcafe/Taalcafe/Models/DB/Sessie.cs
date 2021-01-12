@@ -25,7 +25,7 @@ namespace Taalcafe.Models.DB
 
         public void InitializeAanmeldingIDs() {
             this.AanmeldingIDs = new List<int>();
-            if (Aanmeldingen != null)
+            if (Aanmeldingen != null && Aanmeldingen != "")
             {
                 foreach (var id in this.Aanmeldingen.Split(","))
                 {

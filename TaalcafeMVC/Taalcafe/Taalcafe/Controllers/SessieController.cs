@@ -46,7 +46,7 @@ namespace Taalcafe.Controllers
         // POST: Sessie/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id","Datum","Duur","ThemaId")] Sessie sessie)
+        public IActionResult Create([Bind("Id","Datum","Duur","ThemaId","Aanmeldingen")] Sessie sessie)
         {
             Instantiate();
             if (ModelState.IsValid)
@@ -86,7 +86,7 @@ namespace Taalcafe.Controllers
         // POST: Thema/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit([Bind("Id","Datum","Duur","ThemaId")] Sessie sessie) 
+        public IActionResult Edit([Bind("Id","Datum","Duur","ThemaId","Aanmeldingen")] Sessie sessie) 
         {
             Instantiate();
             if (ModelState.IsValid)
@@ -171,7 +171,7 @@ namespace Taalcafe.Controllers
         // POST: Sessie/Couples
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Couples([Bind("Id","Datum","Duur","ThemaId","SessiePartners")] Sessie sessie)
+        public IActionResult Couples([Bind("Id","Datum","Duur","ThemaId","SessiePartners","Aanmeldingen")] Sessie sessie)
         {
             //TODO: proper model validation for both Sessie and SessiePartner
             if (ModelState.IsValid)
