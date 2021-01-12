@@ -4,35 +4,44 @@
 }
 
 
-<div class="text-centered">
-    @{ 
-        if (Model == null) {
-            <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
-        }
-        else if (Model.Datum.Value.Add(Model.Duur.Value) >= DateTime.Now && Model.Datum <= DateTime.Now) {
-            <h1>Het taalcafé is begonnen!</h1>
-            @*<div class="form-group">
-                <a asp-controller="Call" asp-action="Call">
-                    <input class="btn btn-success" type="button" value="Deelnemen"/>
-                </a>
-            </div>*@
-            <div class="btn btn-success" type="button" value="Deelnemen">
-                @Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })
-            </div>
-        }
-        else {
-            <h1>Het taalcafé is momenteel niet bezig.</h1>
-            <p>
-                De volgende sessie van het taalcafé staat gepland op @Model.Datum.Value.ToShortDateString()
-                en duurt van @Model.Datum.Value.ToString("HH:mm") tot @Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm").
-                Klik op de onderstaande knop om je aan te melden voor de volgende sessie. 
-            </p>
-            <input class="btn btn-success" value="Ik meld me aan!" type="button"/>
-            <p>
-                Tot dan!
-            </p>
+    <div class="justify-content-center align-items-center">
+        @{
+            if (Model == null)
+            {
+                <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
+            }
+            else if (Model.Datum.Value.Add(Model.Duur.Value) >= DateTime.Now && Model.Datum <= DateTime.Now)
+            {
+                <h1>Het taalcafé is begonnen!</h1>
+                @*<div class="form-group">
+                    <a asp-controller="Call" asp-action="Call">
+                        <input class="btn btn-success" type="button" value="Deelnemen"/>
+                    </a>
+                </div>*@
+                <div class="btn btn-success" type="button" value="Deelnemen">
+                    @Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })
+                </div>
+            }
+            else
+            {
+                <div class="row justify-content-center">
+                    <h1>Het taalcafé is momenteel niet bezig.</h1>
+                    <p>
+                        De volgende sessie van het taalcafé staat gepland op <b>@Model.Datum.Value.ToShortDateString()</b>
+                        en duurt van <b>@Model.Datum.Value.ToString("HH:mm")</b> tot <b>@Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm")</b>.
+                        Klik op de onderstaande knop om je aan te melden voor de volgende sessie.
+                    </p>
+                    <br />
+                </div>
+
+                <div class="row justify-content-center">
+                    <input type="button" value="Meld me aan" class="btn btn-success">
+                </div>
+                <h3 class="row justify-content-center p-2">
+                    Tot dan!
+                </h3>
+            }
+
         }
 
-    }
-    
-</div>
+    </div>
