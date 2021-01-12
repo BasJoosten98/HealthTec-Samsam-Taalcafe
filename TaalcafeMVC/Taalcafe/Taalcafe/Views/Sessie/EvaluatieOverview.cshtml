@@ -1,0 +1,65 @@
+@model List<Taalcafe.Models.DB.Sessie>
+@{
+    ViewData["Title"] = "Evaluatie overzicht";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-9">
+            <h1>Evaluaties Taalcafé sessies</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-2">
+                                <b>Datum</b>
+                            </div>
+                            <div class="col-2">
+                                <b>Tijd</b>
+                            </div>
+                            <div class="col-2">
+                                <b>Duur</b>
+                            </div>
+                            <div class="col-3">
+                                <b>Thema</b>
+                            </div>
+                            <div class="col-3">
+                                <b>Evaluaties</b>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                @foreach (var item in Model)
+                {
+                    if (item.Datum.Value.Add(item.Duur.Value) <= DateTime.Now) {
+                        <li class="list-group-item">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-2">
+                                        @item.Datum.Value.ToShortDateString()
+                                    </div>
+                                    <div class="col-2">
+                                        @item.Datum.Value.ToString("HH:mm")
+                                    </div>
+                                    <div class="col-2">
+                                        @item.Duur.Value.ToString(@"h\:mm")
+                                    </div>
+                                    <div class="col-3">
+                                        @Html.DisplayFor(modelItem => item.Thema.Naam)
+                                    </div>
+                                    <div class="col-3">
+                                        @Html.ActionLink("Evaluaties inzien", "", new { id=item.Id })
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+</div>
