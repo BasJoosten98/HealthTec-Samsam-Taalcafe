@@ -19,56 +19,70 @@
     </script>
 }
 
-
-<div class="justify-content-center align-items-center">
+<div class="container-fluid">
     @if (Model == null)
     {
-        <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
+        <div class="row">
+            <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
+        </div>
     }
     else if (Model.Datum.Value.Add(Model.Duur.Value) >= DateTime.Now && Model.Datum <= DateTime.Now)
     {
-        <h1>Het taalcafé is begonnen!</h1>
-        <div class="btn btn-success" type="button" value="Deelnemen">
-            @Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })
+        <div class="row">
+            <h1>Het taalcafé is begonnen!</h1>
+        </div>
+        <div class="row">
+            <div class="btn btn-success" type="button" value="Deelnemen">
+                @Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })
+            </div>
         </div>
     }
     else
     {
-        <div class="row justify-content-center">
-            <h1>Het taalcafé is momenteel niet bezig.</h1>
-            <p>
-                De volgende sessie van het taalcafé staat gepland op <b>@Model.Datum.Value.ToShortDateString()</b>
-                en duurt van <b>@Model.Datum.Value.ToString("HH:mm")</b> tot <b>@Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm")</b>.
-                Klik op de onderstaande knop om je aan te melden voor de volgende sessie.
-            </p>
+        <div class="row">
+            <div class="justify-content-center">
+                <h1>Het taalcafé is momenteel niet bezig.</h1>
+                <p>
+                    De volgende sessie van het taalcafé staat gepland op <b>@Model.Datum.Value.ToShortDateString()</b>
+                    en duurt van <b>@Model.Datum.Value.ToString("HH:mm")</b> tot <b>@Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm")</b>.
+                    Klik op de onderstaande knop om je aan te melden voor de volgende sessie.
+                </p>
+            </div>
         </div>
 
         Model.InitializeAanmeldingIDs();
         if (Model.AanmeldingIDs.Contains((int) ViewData["user"]))
         {
-            <div class="form-actions no-color">
-                <input type="button" value="U bent al ingeschreven!" class="btn btn-success" disabled />
+            <div class="row">
+                <div class="form-actions no-color">
+                    <input type="button" value="U bent al ingeschreven!" class="btn btn-success" disabled />
+                </div>
             </div>
         }
         else
         {
-            using (Html.BeginForm()) {
-                @Html.AntiForgeryToken()
+            <div class="row">
+                using (Html.BeginForm()) {
+                    @Html.AntiForgeryToken()
 
-                @Html.HiddenFor(model => model.Id)
-                @Html.HiddenFor(model => model.Datum)
-                @Html.HiddenFor(model => model.Duur)
-                @Html.HiddenFor(model => model.ThemaId)
-                @Html.HiddenFor(model => model.Aanmeldingen)
+                    @Html.HiddenFor(model => model.Id)
+                    @Html.HiddenFor(model => model.Datum)
+                    @Html.HiddenFor(model => model.Duur)
+                    @Html.HiddenFor(model => model.ThemaId)
+                    @Html.HiddenFor(model => model.Aanmeldingen)
 
-                <div class="form-actions no-color">
-                    <input type="submit" value="Ik meld me aan!" class="btn btn-success" />
-                </div>
-            }
+                    <div class="form-actions no-color">
+                        <input type="submit" value="Ik meld me aan!" class="btn btn-success" />
+                    </div>
+                }
+            </div>
         }
-
-        <h3 class="row justify-content-center p-2">
-            Tot dan!
-        </h3>
+        <div class="row">
+            <h3 class="row justify-content-center p-2">
+                Tot dan!
+            </h3>
+        </div>
     }
 </div>
+
+    
