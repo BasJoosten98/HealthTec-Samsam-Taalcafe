@@ -2,47 +2,37 @@
 @{
     ViewData["Title"] = "Thema overzicht";
 }
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-9">
-            <h1>Thema's</h1>
+<div class="row justify-content-center">
+    <div class="col-md-auto w-75">
+        <div class="d-inline-block align-middle col-md-12 pl-0">
+            <h3 class="d-inline-block align-middle float-left">Thema's</h3>
         </div>
-        <div class="col-3">
-            @Html.ActionLink("Thema toevoegen","Create")
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-12">
-            <ul class="list-group">
-                <li class="list-group-item">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-9">
-                                <b>Thema</b>
-                            </div>
-                            <div class="col-3">
-                                <b>Bewerken</b>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                @foreach (var item in Model)
-                {
-                    <li class="list-group-item">
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-9">
-                                    @Html.DisplayName(item.Naam)
-                                </div>
-                                <div class="col-3">
-                                    @Html.ActionLink("Bewerken","Edit", new { id=item.Id })
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                }
-            </ul>
+        <div style="height: 310px;overflow: scroll"; class="table-responsive-md">
+            <table style="border-collapse:separate;" class="w-100 text-center justify-content-center">
+                <thead>
+                    <tr>
+                        <th class="col-md-10 align-middle table-secondary border border-white align-middle">
+                            <label class="mt-3">Thema </label>
+                        </th>
+                        <th class="col-md-2">
+                            <a class="btn btn-outline-success ml-0 w-100" asp-action="Create">Thema <br /> toevoegen</a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="col-md-10 align-middle table-active border border-white">
+                                <label class="mt-3">@Html.DisplayName(item.Naam)</label>
+                            </td>
+                            <td class="col-md-2">
+                                <a asp-action="Edit" class="btn btn-success w-100" asp-route-id="@item.Id">Thema <br /> Weergeven</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
