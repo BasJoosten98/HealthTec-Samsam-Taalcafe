@@ -40,11 +40,18 @@ namespace Taalcafe.Controllers
             }
 
             var gebruiker = await _context.Gebruikers
+                .Include(g => g.Account)
+                .Include(g => g.SessiePartnerCursists).ThenInclude(sp => sp.Taalcoach)
+                .Include(g => g.SessiePartnerCursists).ThenInclude(sp => sp.Sessie)
+                .Include(g => g.SessiePartnerTaalcoaches).ThenInclude(sp => sp.Cursist)
+                .Include(g => g.SessiePartnerTaalcoaches).ThenInclude(sp => sp.Sessie)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (gebruiker == null)
             {
                 return NotFound();
             }
+            gebruiker.SessiePartnerCursists.OrderByDescending(sp => sp.Sessie.Datum);
+            gebruiker.SessiePartnerTaalcoaches.OrderByDescending(sp => sp.Sessie.Datum);
 
             return View(gebruiker);
         }
@@ -79,7 +86,8 @@ namespace Taalcafe.Controllers
             {
                 return NotFound();
             }
-
+            
+            Instantiate();
             var gebruiker = await _context.Gebruikers.FindAsync(id);
             if (gebruiker == null)
             {
