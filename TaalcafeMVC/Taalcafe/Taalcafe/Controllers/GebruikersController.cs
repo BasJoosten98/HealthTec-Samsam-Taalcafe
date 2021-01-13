@@ -69,16 +69,17 @@ namespace Taalcafe.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Naam,Email,Telefoon,Niveau")] Gebruiker gebruiker)
+        public async Task<IActionResult> Create([Bind("Naam,Email,Telefoon,Niveau,Account")] Gebruiker gebruiker)
         {
             Instantiate();
             if (ModelState.IsValid)
             {
                 _context.Add(gebruiker);
+                _context.Add(gebruiker.Account);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            
+
             ViewBag.roles = new SelectList(new List<string>() {"Coordinator", "Cursist", "Taalcoach"});
             ViewBag.niveaus = new SelectList(new List<string>() {"1", "2", "3"});
             return View(gebruiker);
@@ -149,8 +150,12 @@ namespace Taalcafe.Controllers
                 return NotFound();
             }
 
+            Instantiate();
             var gebruiker = await _context.Gebruikers
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(g => g.Account)
+                .Include(g => g.SessiePartnerTaalcoaches)
+                .Include(g => g.SessiePartnerCursists)
+                .SingleOrDefaultAsync(m => m.Id == id);
             if (gebruiker == null)
             {
                 return NotFound();
@@ -164,7 +169,11 @@ namespace Taalcafe.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var gebruiker = await _context.Gebruikers.FindAsync(id);
+            Instantiate();
+            Gebruiker gebruiker = await _context.Gebruikers
+                .Include(g => g.Account)
+                .SingleOrDefaultAsync(g => g.Id == id);
+            _context.Accounts.Remove(gebruiker.Account);
             _context.Gebruikers.Remove(gebruiker);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
