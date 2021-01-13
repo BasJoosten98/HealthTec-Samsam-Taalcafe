@@ -52,13 +52,15 @@ namespace Taalcafe.Controllers
             }
             gebruiker.SessiePartnerCursists.OrderByDescending(sp => sp.Sessie.Datum);
             gebruiker.SessiePartnerTaalcoaches.OrderByDescending(sp => sp.Sessie.Datum);
-
+            
             return View(gebruiker);
         }
 
         // GET: Gebruikers/Create
         public IActionResult Create()
         {
+            ViewBag.roles = new SelectList(new List<string>() {"Coordinator", "Cursist", "Taalcoach"});
+            ViewBag.niveaus = new SelectList(new List<string>() {"1", "2", "3"});
             return View();
         }
 
@@ -76,6 +78,9 @@ namespace Taalcafe.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            
+            ViewBag.roles = new SelectList(new List<string>() {"Coordinator", "Cursist", "Taalcoach"});
+            ViewBag.niveaus = new SelectList(new List<string>() {"1", "2", "3"});
             return View(gebruiker);
         }
 
@@ -88,11 +93,17 @@ namespace Taalcafe.Controllers
             }
             
             Instantiate();
-            var gebruiker = await _context.Gebruikers.FindAsync(id);
+            var gebruiker = await _context.Gebruikers
+                .Include(g => g.Account)
+                .SingleOrDefaultAsync(m => m.Id == id);
+            
             if (gebruiker == null)
             {
                 return NotFound();
             }
+
+            ViewBag.roles = new SelectList(new List<string>() {"Coordinator", "Cursist", "Taalcoach"});
+            ViewBag.niveaus = new SelectList(new List<string>() {"1", "2", "3"});
             return View(gebruiker);
         }
 
@@ -101,17 +112,13 @@ namespace Taalcafe.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Naam,Email,Telefoon,Niveau")] Gebruiker gebruiker)
+        public async Task<IActionResult> Edit([Bind("Id,Naam,Email,Telefoon,Niveau,Account")] Gebruiker gebruiker)
         {
-            if (id != gebruiker.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
+                    Instantiate();
                     _context.Update(gebruiker);
                     await _context.SaveChangesAsync();
                 }
@@ -126,8 +133,11 @@ namespace Taalcafe.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", new { id = gebruiker.Id} );
             }
+
+            ViewBag.roles = new SelectList(new List<string>() {"Coordinator", "Cursist", "Taalcoach"});
+            ViewBag.niveaus = new SelectList(new List<string>() {"1", "2", "3"});
             return View(gebruiker);
         }
 
