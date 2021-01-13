@@ -92,7 +92,7 @@ namespace Taalcafe.Controllers
             }
 
             Instantiate();
-            Thema thema = context.Themas.Find(id);
+            Thema thema = context.Themas.Include(t => t.Sessies).SingleOrDefault(t => t.Id == id);
             if (thema == null){
                 return NotFound();
             }

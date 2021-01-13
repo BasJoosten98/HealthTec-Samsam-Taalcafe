@@ -35,6 +35,33 @@ namespace Taalcafe.Controllers
             return View(Sessies);
         }
 
+        public IActionResult EvaluatieOverview()
+        {
+            Instantiate();
+
+            var Sessies = context.Sessies
+                .Include(s => s.Thema)
+                .Where(s => s.Datum <= DateTime.Today)
+                .OrderByDescending(s => s.Datum)
+                .ToList();
+
+            return View(Sessies);
+        }
+
+        public IActionResult Evaluatie(int? id)
+        {
+            Instantiate();
+
+            Sessie sessie = context.Sessies
+                .Include(s => s.Thema)
+                .Include(s => s.SessiePartners).ThenInclude(p => p.Taalcoach)
+                .Include(s => s.SessiePartners).ThenInclude(p => p.Cursist)
+                .SingleOrDefault(s => s.Id == id);
+
+            return View(sessie);
+        }
+
+
         // GET: Sessie/Create
         public IActionResult Create()
         {

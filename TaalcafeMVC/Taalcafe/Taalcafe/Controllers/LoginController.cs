@@ -36,7 +36,7 @@ namespace Taalcafe.Controllers
                     //return View("~/Views/Home/Index.cshtml", model);
                     if(myUser.Type == "Taalcoach" || myUser.Type == "Cursist")
                     {
-                        return RedirectToAction("NextSession", "Call", new { id = myUser.GebruikerId });
+                        return RedirectToAction("NextSession", "Call", new { userId = myUser.GebruikerId });
                     } else if(myUser.Type == "Coordinator")
                     {
                         return RedirectToAction("Index", "Home");
