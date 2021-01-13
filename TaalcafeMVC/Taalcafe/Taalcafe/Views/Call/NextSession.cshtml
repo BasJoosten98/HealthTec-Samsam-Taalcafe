@@ -62,7 +62,7 @@
         else
         {
             <div class="row">
-                using (Html.BeginForm()) {
+                @using (Html.BeginForm()) {
                     @Html.AntiForgeryToken()
 
                     @Html.HiddenFor(model => model.Id)

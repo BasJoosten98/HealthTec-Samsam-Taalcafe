@@ -252,9 +252,12 @@ namespace Taalcafe.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult AddDuo([Bind("Id,SessiePartners")] Sessie sessie)
-        {            
-            ViewBag.Taalcoaches = GetTaalcoachSelectList(sessie);
-            ViewBag.Cursisten = GetCursistSelectList(sessie);
+        {
+            Instantiate();
+            var s = context.Sessies.Find(sessie.Id);
+
+            ViewBag.Taalcoaches = GetTaalcoachSelectList(s);
+            ViewBag.Cursisten = GetCursistSelectList(s);
 
             sessie.SessiePartners.Add(new SessiePartner());
             return PartialView("SessiePartners", sessie);
