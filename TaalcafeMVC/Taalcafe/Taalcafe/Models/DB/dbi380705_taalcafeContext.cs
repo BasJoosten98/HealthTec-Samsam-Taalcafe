@@ -156,6 +156,8 @@ namespace Taalcafe.Models.DB
                 entity.ToTable("Thema");
 
                 entity.Property(e => e.Naam).HasMaxLength(50);
+
+                entity.Ignore(e => e.Files);
             });
 
             OnModelCreatingPartial(modelBuilder);
