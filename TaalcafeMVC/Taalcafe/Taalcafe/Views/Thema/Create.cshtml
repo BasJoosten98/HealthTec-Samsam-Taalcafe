@@ -5,34 +5,6 @@
 
 @section scripts {
     <script src="~/js/create_thema.js"> </script>
-    <script>
-        var fileRows = 0;
-        // Request and add the partial view for Files to the form.        
-        function AddFile() {
-            $.ajax({
-                async: true,
-                data: $('#form').serialize(),
-                type: "POST",
-                url: '/Thema/AddFile',
-                success: function (partialView) {
-                    //console.log("partialView: " + partialView);
-                    
-                    // do some shuffling with the returned elements so that the already existing File inputs don't get their values resest
-                    $('#HiddenFiles').html(partialView);
-                    $('#Files').append($('#HiddenFiles .row').eq(fileRows));
-                    $('#HiddenFiles').html("");
-                    fileRows += 1;
-                },
-                error: function (reqObj, status, err) {
-                    console.log(reqObj);
-                    console.log(reqObj.responseText)
-                    console.log(status);
-                    console.log(err);
-                }
-                
-            });
-        }
-    </script>
 }
 
 @using (Html.BeginForm("Create", "Thema", FormMethod.Post, new { @id="form", enctype="multipart/form-data" }))
@@ -62,8 +34,6 @@
                     @Html.ValidationMessageFor(model => model.Beschrijving, "", new { @class = "text-danger" })
                 </div>
             </div>
-
-            @*TODO: Afbeeldingen toevoegen*@
             <div class="form-group">
                 @Html.HiddenFor(model => model.Afbeeldingen)
                 @Html.LabelFor(model => model.Afbeeldingen, htmlAttributes: new { @class = "control-label col-md-2" })
@@ -77,17 +47,6 @@
                 </div>
                 <input class="btn btn-success" type="button" onclick="AddFile()" value="Bestand toevoegen" />
             </div>
-            @*
-            <div class="form-group">
-                @Html.HiddenFor(model => model.Afbeeldingen)
-                @Html.LabelFor(model => model.Afbeeldingen, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    <input asp-for="files" class="form-control" type="file">
-                    @Html.ValidationMessageFor(model => model.files, "", new { @class = "text-danger" })
-                </div>
-            </div>
-            *@
-
             <div class="form-group row">
                 @Html.HiddenFor(model => model.Vragen)
                 @Html.LabelFor(model => model.Vragen, htmlAttributes: new { @class = "control-label col-md-2" })

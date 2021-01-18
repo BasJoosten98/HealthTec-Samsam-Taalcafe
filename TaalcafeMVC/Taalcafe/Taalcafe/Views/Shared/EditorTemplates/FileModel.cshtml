@@ -3,7 +3,15 @@
     <div class="form-group">
         @Html.HiddenFor(model => model.path)
         <div class="col-md-10">
-            <input asp-for="file" class="form-control" type="file">
+            <input asp-for="file" class="form-control fileInput" type="file">
+            @if (Model.path != "" && Model.path != null)
+            {
+                <img class="previewImage" src="~/uploads/@Model.path">
+            }
+            else
+            {
+                <img class="previewImage" src="" hidden>
+            }
             @Html.ValidationMessageFor(model => model.file, "", new { @class = "text-danger" })
         </div>
     </div>

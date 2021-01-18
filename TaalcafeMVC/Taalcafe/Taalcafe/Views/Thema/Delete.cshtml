@@ -39,8 +39,17 @@ else
         </dt>
 
         <dd>
-            @*TODO: Afbeeldingen weergeven*@
-            <p class="text-warning">Afbeeldingen kunnen nog niet weergeven worden</p>
+            @if (Model.Afbeeldingen == "" || Model.Afbeeldingen == null)
+            {
+                <p class="text-warning">Er zijn geen afbeeldingen toegevoegd aan dit thema.</p>
+            }
+            else
+            {
+                foreach (var item in Model.Afbeeldingen.Split(";"))
+                {
+                    <img src="~/uploads/@item">
+                }
+            }
         </dd>
 
         <dt>
