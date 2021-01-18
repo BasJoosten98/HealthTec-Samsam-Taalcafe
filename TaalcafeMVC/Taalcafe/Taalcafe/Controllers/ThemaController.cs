@@ -52,23 +52,38 @@ namespace Taalcafe.Controllers
             {
                 Instantiate();
 
+                for (int i = 0; i < thema.Files.Count(); i++)
+                {
+                    var fm = thema.Files.ElementAt(i);
+                    if (fm.file == null)
+                    {
+                        thema.Files.RemoveAt(i);
+                        i--;
+                    }
+                    else
+                    {
+                        fm.path = GetUniqueFileName(fm.file.FileName);
+                    }
+                }
+
                 // check whether the client is trying to upload any unallowed file types.
                 if (!ExtensionsAllowed(thema.Files))
                 {
+                    // It is not possible to pass back all the items that the user wanted to upload,
+                    // since we don't know the location of the files on the client's computer.
+                    // That is why we just remove all the files as to avoid confusion.
+                    thema.Files.RemoveRange(0, thema.Files.Count());
                     return View(thema);
                 }
 
                 for (int i = 0; i < thema.Files.Count(); i++)
                 {
                     var file = thema.Files.ElementAt(i);
-                    file.path = GetUniqueFileName(file.file.FileName);
-
                     await SaveFile(file);
                     
                     if (thema.Afbeeldingen == "" || thema.Afbeeldingen == null)
                     {
                         thema.Afbeeldingen = Path.GetFileName(file.path);
-                        
                     }
                     else
                     {
@@ -122,9 +137,38 @@ namespace Taalcafe.Controllers
             {
                 Instantiate();
 
+                for (int i = 0; i < thema.Files.Count(); i++)
+                {
+                    var fm = thema.Files.ElementAt(i);
+                    if (fm.path == null)
+                    {
+                        if (fm.file == null)
+                        {
+                            thema.Files.RemoveAt(i);
+                            i--;
+                        }
+                        else
+                        {
+                            fm.path = GetUniqueFileName(fm.file.FileName);
+                        }
+                    }
+                }
+
                 // check whether the client is trying to upload any unallowed file types.
                 if (!ExtensionsAllowed(thema.Files))
                 {
+                    for (int i = 0; i < thema.Files.Count(); i++)
+                    {
+                        var fm = thema.Files.ElementAt(i);
+                        if (fm.file != null)
+                        {
+                            // It is not possible to pass back all the items that the user wanted to upload,
+                            // since we don't know the location of the files on the client's computer.
+                            // That is why we just remove all the files that aren't new as to avoid confusion.
+                            thema.Files.RemoveAt(i);
+                            i--;
+                        }
+                    }
                     return View(thema);
                 }
 
@@ -133,10 +177,8 @@ namespace Taalcafe.Controllers
                 for (int i = 0; i < thema.Files.Count(); i++)
                 {
                     var file = thema.Files.ElementAt(i);
-                    if (file.path == null) 
+                    if (!thema.Afbeeldingen.Split(";").Contains(Path.GetFileName(file.path))) 
                     {
-                        file.path = GetUniqueFileName(file.file.FileName);
-
                         await SaveFile(file);
                     }
                     else if (file.file != null)
@@ -222,7 +264,7 @@ namespace Taalcafe.Controllers
         {
             foreach (FileModel fm in files) 
             {
-                if (!AllowedExtensions.Contains(Path.GetExtension(fm.file.FileName)))
+                if (!AllowedExtensions.Contains(Path.GetExtension(fm.path)))
                 {
                     return false;
                 }
@@ -234,11 +276,6 @@ namespace Taalcafe.Controllers
         private string GetUniqueFileName(string file)
         {
             string extension = Path.GetExtension(file);
-            
-            if (!AllowedExtensions.Contains(extension)) {
-                throw new Exception("Filetype '" + extension + "' is not accepted.");
-            }
-
             string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
             string fileName = "file_1" + extension;
 

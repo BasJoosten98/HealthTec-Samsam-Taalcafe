@@ -18,6 +18,8 @@ $(document).ready(function () {
         fileRows = afbeeldingen.value.split(';').length;
     }
 
+    RenderVragenLijst();
+
     $('.fileInput').change( function() {
         readURL(this);
     });
@@ -117,6 +119,7 @@ function AddFile() {
     });
 }
 
+// Change the preview image of the file.
 function readURL(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();

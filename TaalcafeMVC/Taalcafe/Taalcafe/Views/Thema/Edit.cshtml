@@ -65,17 +65,7 @@
                 </div>
                 <div class="col-md-8">
                     <ul class="list-group" id="vragenLijst">
-                        @for (var i = 0; i < Model.Vragen.Split("~").Count(); i++)
-                        {
-                            <li class="list-group-item vraag">
-                                <div class="row">
-                                    <div class="col-3">
-                                        <input class="btn btn-danger" type="button" onclick="RemoveVraag(@i)" value="Verwijderen"></input>
-                                    </div>
-                                    <div class="col">@Model.Vragen.Split("~")[i]</div>
-                                </div>
-                            </li>
-                        }
+                        
                     </ul>
                 </div>
             </div>
