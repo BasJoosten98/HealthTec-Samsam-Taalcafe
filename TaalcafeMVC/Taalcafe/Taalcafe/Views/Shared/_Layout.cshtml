@@ -8,15 +8,15 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
-<body>
+<body style="max-width: 100%; overflow-x:hidden;">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-taalcafe border-bottom box-shadow mb-3">
-            <div class="container">
-                <img class="center" src="~/pics/SamSam.PNG" />
+            <div class="container justify-content-center">
+                <a  asp-controller="Home" asp-action="Index"><img style="width:23%" class="center" src="~/pics/SamSam.PNG" /></a>
             </div>
         </nav>
     </header>
-    <div style="margin-top:5%;" class="pt-5">
+    <div class="pt-2">
         <main role="main">
             @RenderBody()
         </main>

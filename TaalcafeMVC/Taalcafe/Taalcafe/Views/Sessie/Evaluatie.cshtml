@@ -73,27 +73,63 @@
     </script>
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <h1><u>Dashboard evaluaties taalcafé sessie: @Model.Datum.Value.ToShortDateString() van @Model.Datum.Value.ToString("HH:mm") tot @Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm"), thema: @Model.Thema.Naam </u></h1>
+<div class="container-fluid pt-0">
+    <div class="row ml-3 mb-3 justify-content-center">
+        <h3><u>Dashboard evaluaties taalcafé sessie: @Model.Datum.Value.ToShortDateString() van @Model.Datum.Value.ToString("HH:mm") tot @Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm"), thema: @Model.Thema.Naam </u></h3>
     </div>
-    <div class="row">
-        <div class="col-6">
-            <div class="row">
+    <div class="row mt-5">
+        <div class="col-4 pr-5">
+            <div class="row ml-3">
                 <h3>Beoordeling gesprekken</h3>
             </div>
-            <div class="row">
-                <canvas id="EvaluationChart" width="400" height="400"></canvas>
+            <div class="row ml-3">
+                <canvas id="EvaluationChart" max-width="200" height="200"></canvas>
             </div>
         </div>
-        <div class="col-6">
-            <div class="row">
+        <div class="col-4 mt-1">
+            <div class="row ml-5">
+                <h3>Sessie duo's</h3>
+            </div>
+            <div class="row ml-5">
+                <ul class="list-group w-75">
+                    <li class="list-group-item">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-6">
+                                    <b>Taalcoach</b>
+                                </div>
+                                <div class="col-6">
+                                    <b>Nieuwe Nederlander</b>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    @foreach (var item in Model.SessiePartners)
+                    {
+                        <li class="list-group-item">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-6">
+                                        @item.Taalcoach.Naam
+                                    </div>
+                                    <div class="col-6">
+                                        @item.Cursist.Naam
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="col-4 mt-1">
+            <div class="row mr-3">
                 <h3>Toelichting op beoordeling</h3>
             </div>
-            <div class="row">
+            <div class="row mr-3">
                 <p><i>Selecteer een toelichting om naar de gebruiker te gaan.</i></p>
             </div>
-            <div class="row">
+            <div class="row mr-3">
                 <ul class="list-group">
                     @foreach (var item in Model.SessiePartners)
                     {
@@ -113,38 +149,5 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <h3>Sessie duo's</h3>
-    </div>
-    <div class="row">
-        <ul class="list-group">
-            <li class="list-group-item">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-4">
-                            <b>Taalcoach</b>
-                        </div>
-                        <div class="col-4">
-                            <b>Nieuwe Nederlander</b>
-                        </div>
-                    </div>
-                </div>
-            </li>
-            @foreach (var item in Model.SessiePartners)
-            {
-                <li class="list-group-item">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-4">
-                                @item.Taalcoach.Naam
-                            </div>
-                            <div class="col-4">
-                                @item.Cursist.Naam
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            }
-        </ul>
-    </div>
+    
 </div>
