@@ -26,8 +26,8 @@ namespace Taalcafe.Models.ViewModels
             this.Vragen = new List<string>();
             
             if (afbeeldingen != null) {
-                foreach (string item in afbeeldingen.Split("~")) {
-                    this.Afbeeldingen.Add(item);
+                foreach (string item in afbeeldingen.Split(";")) {
+                    this.Afbeeldingen.Add("~/uploads/" + item);
                 }
             }
             
