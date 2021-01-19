@@ -27,7 +27,7 @@ namespace Taalcafe.Models.ViewModels
             
             if (afbeeldingen != null) {
                 foreach (string item in afbeeldingen.Split(";")) {
-                    this.Afbeeldingen.Add("~/uploads/" + item);
+                    this.Afbeeldingen.Add("/uploads/" + item);
                 }
             }
             

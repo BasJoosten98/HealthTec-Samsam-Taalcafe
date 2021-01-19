@@ -63,6 +63,7 @@ namespace Taalcafe.Controllers
                     else
                     {
                         fm.path = GetUniqueFileName(fm.file.FileName);
+                        await CreateEmptyFile(fm.path);
                     }
                 }
 
@@ -150,6 +151,7 @@ namespace Taalcafe.Controllers
                         else
                         {
                             fm.path = GetUniqueFileName(fm.file.FileName);
+                            await CreateEmptyFile(fm.path);
                         }
                     }
                 }
@@ -177,7 +179,9 @@ namespace Taalcafe.Controllers
                 for (int i = 0; i < thema.Files.Count(); i++)
                 {
                     var file = thema.Files.ElementAt(i);
-                    if (!thema.Afbeeldingen.Split(";").Contains(Path.GetFileName(file.path))) 
+                    if (thema.Afbeeldingen == null 
+                        || thema.Afbeeldingen == "" 
+                        || !thema.Afbeeldingen.Split(";").Contains(Path.GetFileName(file.path))) 
                     {
                         await SaveFile(file);
                     }
@@ -264,7 +268,10 @@ namespace Taalcafe.Controllers
         {
             foreach (FileModel fm in files) 
             {
-                if (!AllowedExtensions.Contains(Path.GetExtension(fm.path)))
+                // Tolower extentsion since windows extensions are case insensitive (this isn't the case for linux or mac),
+                // but this probably is bad practice.
+                // Ideally all extensions should be manually included in the allowed extensions list
+                if (!AllowedExtensions.Contains(Path.GetExtension(fm.path).ToLower()))
                 {
                     return false;
                 }
@@ -275,7 +282,10 @@ namespace Taalcafe.Controllers
         // Creates a new unique filename and path for the file that is to be uploaded.
         private string GetUniqueFileName(string file)
         {
-            string extension = Path.GetExtension(file);
+            // Tolower extentsion since windows extensions are case insensitive (this isn't the case for linux or mac),
+            // but this probably is bad practice.
+            // Ideally all extensions should be manually included in the allowed extensions list
+            string extension = Path.GetExtension(file).ToLower();
             string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
             string fileName = "file_1" + extension;
 
@@ -288,6 +298,11 @@ namespace Taalcafe.Controllers
                 }
                 fileName = "file_" + num.ToString() + extension;
             }
+        }
+
+        private async Task CreateEmptyFile(string filename)
+        {
+            await using (System.IO.File.Create(filename)) {}
         }
 
         // Saves the file from the Filemodel to the server.
