@@ -49,12 +49,12 @@
             <div class="row">
                 Sessie op @Html.DisplayFor(model => model.Datum).
             </div>
-            <div class="row">
-                @if (ViewBag.invalid == true)
-                {
+            @if (ViewBag.invalid == true)
+            {
+                <div class="row">
                     @Html.ValidationMessageFor(model => model.SessiePartners, "Een gebruiker is bij meerdere duo's ingedeeld.", new { @class = "text-danger" })
-                }
-            </div>
+                </div>
+            }
             <div class="row">
                 <div class="container-fluid" id="Duos">
                     @Html.EditorFor(model => model.SessiePartners)
