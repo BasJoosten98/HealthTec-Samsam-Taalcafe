@@ -31,11 +31,6 @@ namespace Taalcafe.Controllers
                 .OrderBy(s => s.Datum)
                 .ToList();
 
-            /*
-            var nextSession = context.Sessies.SingleOrDefault(s => s.Datum >= DateTime.Today);
-            ViewBag.session = nextSession;
-            */
-
             ViewData["user"] = userId;
             return View(Sessies.FirstOrDefault());
         }
@@ -63,7 +58,7 @@ namespace Taalcafe.Controllers
                 .Include(c => c.Cursist)
                 .Include(c => c.Sessie)
                     .ThenInclude(s => s.Thema)
-                .SingleOrDefault(c => c.Sessie.Datum == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
+                .SingleOrDefault(c => c.Sessie.Datum.Value.Date == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
 
             if (sessiePartner != null)
             {
@@ -94,7 +89,7 @@ namespace Taalcafe.Controllers
                 return View(viewModel);
             }
             
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("SignIn", "Login");
         }
 
         public IActionResult Overview()
