@@ -24,9 +24,9 @@ namespace Taalcafe.Controllers
         public async Task<IActionResult> Index()
         {
             Instantiate();
-            List<Gebruiker> gebruikers = _context.Gebruikers
+            List<Gebruiker> gebruikers = await _context.Gebruikers
                 .Include(c => c.Account)
-                .ToList();
+                .ToListAsync();
             return View(gebruikers);
         }
 

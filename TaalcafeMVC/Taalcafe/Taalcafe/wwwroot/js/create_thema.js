@@ -1,8 +1,10 @@
 "use strict";
 
+const afbeeldingen = document.getElementById("Afbeeldingen");
 const vragen = document.getElementById("Vragen");
 const vraagBox = document.getElementById("vraagBox");
 var vragenLijst = [];
+var fileRows = 0;
 
 
 // Triggers when the page is done loading
@@ -11,7 +13,22 @@ $(document).ready(function () {
     if (vragen.value != "") {
         vragenLijst = vragen.value.split('~')
     }
+
+    if (afbeeldingen.value != "") {
+        fileRows = afbeeldingen.value.split(';').length;
+    }
+
+    RenderVragenLijst();
+
+    $('.fileInput').change( function() {
+        readURL(this);
+    });
+
+    $('.deleteButton').click( function() {
+        removeFile(this);
+    });
 });
+
 
 
 // Add the question input in the textbox to the list of questions.
@@ -71,4 +88,65 @@ function RenderVragenLijst() {
 
         $('#vragenLijst').append(listString);
     });
+}
+
+
+// Request and add the partial view for Files to the form.        
+function AddFile() {
+    $.ajax({
+        async: true,
+        data: $('#form').serialize(),
+        type: "POST",
+        url: '/Thema/AddFile',
+        success: function (partialView) {
+            //console.log("partialView: " + partialView);
+            
+            // do some shuffling with the returned elements so that the already existing File inputs don't get their values resest
+            $('#HiddenFiles').html(partialView);
+            
+            // set onInputChanged event
+            $('#HiddenFiles .file').eq(fileRows).find('.fileInput')
+                .change( function() {
+                    readURL(this);
+                });
+
+            // Bind Remove button
+            $('#HiddenFiles .file').eq(fileRows).find('.deleteButton')
+                .click( function() {
+                    removeFile(this);
+                });
+
+            $('#Files').append($('#HiddenFiles .file').eq(fileRows));
+            $('#HiddenFiles').html("");
+            fileRows += 1;            
+        },
+        error: function (reqObj, status, err) {
+            console.log(reqObj);
+            console.log(reqObj.responseText)
+            console.log(status);
+            console.log(err);
+        }
+    });
+}
+
+// Change the preview image of the file.
+function readURL(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        
+        reader.onload = function (e) {
+            $(input).parent().parent().find('.previewImage').attr('src', e.target.result);
+            $(input).parent().parent().find('.previewImage').prop('hidden', false);
+            
+            $(input).parent().parent().find('.status').prop('value', "EDIT");
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Set file as to be removed.
+function removeFile(input) {
+    $(input).parent().parent().find('.status').prop('value', "DELETE");
+    $(input).parent().parent().parent().prop('hidden', true);
 }
