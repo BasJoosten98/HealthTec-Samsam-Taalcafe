@@ -52,34 +52,28 @@ namespace Taalcafe.Controllers
             {
                 Instantiate();
 
-                for (int i = 0; i < thema.Files.Count(); i++)
-                {
-                    var fm = thema.Files.ElementAt(i);
-                    if (fm.file == null)
-                    {
-                        thema.Files.RemoveAt(i);
-                        i--;
-                    }
-                    else
-                    {
-                        fm.path = GetUniqueFileName(fm.file.FileName);
-                        await CreateEmptyFile(fm.path);
-                    }
-                }
-
                 // check whether the client is trying to upload any unallowed file types.
                 if (!ExtensionsAllowed(thema.Files))
                 {
                     // It is not possible to pass back all the items that the user wanted to upload,
                     // since we don't know the location of the files on the client's computer.
                     // That is why we just remove all the files as to avoid confusion.
-                    thema.Files.RemoveRange(0, thema.Files.Count());
+                    thema.Files = new List<FileModel>();
                     return View(thema);
                 }
 
                 for (int i = 0; i < thema.Files.Count(); i++)
                 {
                     var file = thema.Files.ElementAt(i);
+
+                    if (file.status == "EMPTY" || file.status == "DELETE")
+                    {
+                        thema.Files.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
+
+                    file.path = GetUniqueFileName(file.file.FileName);
                     await SaveFile(file);
                     
                     if (thema.Afbeeldingen == "" || thema.Afbeeldingen == null)
@@ -121,7 +115,8 @@ namespace Taalcafe.Controllers
                 {
                     thema.Files.Add(new FileModel() {
                         path = a,
-                        file = null
+                        file = null,
+                        status = "UNCHANGED"
                     });
                 }
             }
@@ -138,37 +133,24 @@ namespace Taalcafe.Controllers
             {
                 Instantiate();
 
-                for (int i = 0; i < thema.Files.Count(); i++)
-                {
-                    var fm = thema.Files.ElementAt(i);
-                    if (fm.path == null)
-                    {
-                        if (fm.file == null)
-                        {
-                            thema.Files.RemoveAt(i);
-                            i--;
-                        }
-                        else
-                        {
-                            fm.path = GetUniqueFileName(fm.file.FileName);
-                            await CreateEmptyFile(fm.path);
-                        }
-                    }
-                }
-
                 // check whether the client is trying to upload any unallowed file types.
                 if (!ExtensionsAllowed(thema.Files))
                 {
                     for (int i = 0; i < thema.Files.Count(); i++)
                     {
                         var fm = thema.Files.ElementAt(i);
-                        if (fm.file != null)
+                        if (fm.status == "EDIT" || fm.status == "EMPTY")
                         {
                             // It is not possible to pass back all the items that the user wanted to upload,
                             // since we don't know the location of the files on the client's computer.
                             // That is why we just remove all the files that aren't new as to avoid confusion.
-                            thema.Files.RemoveAt(i);
-                            i--;
+
+                            // check if the file was an existing file that got edited or an completely new edited file
+                            if (fm.path == null || fm.path == "")
+                            {
+                                thema.Files.RemoveAt(i);
+                                i--;
+                            }
                         }
                     }
                     return View(thema);
@@ -179,31 +161,42 @@ namespace Taalcafe.Controllers
                 for (int i = 0; i < thema.Files.Count(); i++)
                 {
                     var file = thema.Files.ElementAt(i);
-                    if (thema.Afbeeldingen == null 
-                        || thema.Afbeeldingen == "" 
-                        || !thema.Afbeeldingen.Split(";").Contains(Path.GetFileName(file.path))) 
-                    {
-                        await SaveFile(file);
-                    }
-                    else if (file.file != null)
-                    {
-                        file.path = Path.Combine(hostingEnvironment.WebRootPath, "uploads", file.path);
-                        System.IO.File.Delete(file.path);
-                        file.path = GetUniqueFileName(file.file.FileName);
 
+                    if (file.status == "DELETE" || file.status == "EMPTY")
+                    {
+                        // Remove empty files and files that were marked to be deleted.
+                        if (file.path != null)
+                        {
+                            file.path = Path.Combine(hostingEnvironment.WebRootPath, "uploads", file.path);
+                            System.IO.File.Delete(file.path);
+                        }
+
+                        thema.Files.RemoveAt(i);
+                        i--;
+
+                        continue;
+                    }
+                    else if (file.status == "EDIT")
+                    {
+                        if (file.path != null)
+                        {
+                            // remove the file that is being replaced
+                            file.path = Path.Combine(hostingEnvironment.WebRootPath, "uploads", file.path);
+                            System.IO.File.Delete(file.path);
+                        }
+
+                        file.path = GetUniqueFileName(file.file.FileName);
                         await SaveFile(file);
                     }
 
                     if (imageString == "" || imageString == null)
                     {
                         imageString = Path.GetFileName(file.path);
-                        
                     }
                     else
                     {
                         imageString += ";" + Path.GetFileName(file.path);
                     }
-                    
                 }
 
                 thema.Afbeeldingen = imageString;
@@ -257,7 +250,7 @@ namespace Taalcafe.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult AddFile([Bind("Files")] Thema thema)
         {
-            thema.Files.Add(new FileModel());
+            thema.Files.Add(new FileModel() { status = "EMPTY" });
             return PartialView("Files", thema);
         }
 
@@ -271,9 +264,12 @@ namespace Taalcafe.Controllers
                 // Tolower extentsion since windows extensions are case insensitive (this isn't the case for linux or mac),
                 // but this probably is bad practice.
                 // Ideally all extensions should be manually included in the allowed extensions list
-                if (!AllowedExtensions.Contains(Path.GetExtension(fm.path).ToLower()))
+                if (fm.status == "EDIT")
                 {
-                    return false;
+                    if (!AllowedExtensions.Contains(Path.GetExtension(fm.file.FileName).ToLower()))
+                    {
+                        return false;
+                    }
                 }
             }
             return true;

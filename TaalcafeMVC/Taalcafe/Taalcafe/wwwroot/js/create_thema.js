@@ -23,6 +23,10 @@ $(document).ready(function () {
     $('.fileInput').change( function() {
         readURL(this);
     });
+
+    $('.deleteButton').click( function() {
+        removeFile(this);
+    });
 });
 
 
@@ -101,12 +105,18 @@ function AddFile() {
             $('#HiddenFiles').html(partialView);
             
             // set onInputChanged event
-            $('#HiddenFiles .row').eq(fileRows).find('.fileInput')
+            $('#HiddenFiles .file').eq(fileRows).find('.fileInput')
                 .change( function() {
                     readURL(this);
                 });
 
-            $('#Files').append($('#HiddenFiles .row').eq(fileRows));
+            // Bind Remove button
+            $('#HiddenFiles .file').eq(fileRows).find('.deleteButton')
+                .click( function() {
+                    removeFile(this);
+                });
+
+            $('#Files').append($('#HiddenFiles .file').eq(fileRows));
             $('#HiddenFiles').html("");
             fileRows += 1;            
         },
@@ -125,10 +135,18 @@ function readURL(input) {
         var reader = new FileReader();
         
         reader.onload = function (e) {
-            $(input).parent().children('.previewImage').attr('src', e.target.result);
-            $(input).parent().children('.previewImage').prop('hidden', false);
+            $(input).parent().parent().find('.previewImage').attr('src', e.target.result);
+            $(input).parent().parent().find('.previewImage').prop('hidden', false);
+            
+            $(input).parent().parent().find('.status').prop('value', "EDIT");
         }
         
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+// Set file as to be removed.
+function removeFile(input) {
+    $(input).parent().parent().find('.status').prop('value', "DELETE");
+    $(input).parent().parent().parent().prop('hidden', true);
 }

@@ -30,13 +30,12 @@ namespace Taalcafe
             services.AddControllers();
             services.AddMvc();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie();
+                .AddCookie();
             /*
             services.AddControllersWithViews()
                 .AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
             );*/
-
 
             //Fetching Connection string from APPSETTINGS.JSON  
             var ConnectionString = Configuration.GetConnectionString("ConnectionString");
@@ -45,6 +44,7 @@ namespace Taalcafe
             //services.AddDbContext<EmployeeContext>(options => options.UseSqlServer(ConnectionString));
 
             /*
+            // This should be activated in case the SignalR portion is run from another server
             services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
             {
                 builder
