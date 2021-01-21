@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -110,6 +111,64 @@ namespace Taalcafe.Controllers
             model.Thema = context.Themas.FirstOrDefault(t => t.Sessies.FirstOrDefault(s => s.Thema == t).Datum == DateTime.Today);
             return View(model);
         }
+
+        // GET: Call/SessionEvaluation
+        public async Task<IActionResult> SessionEvaluation(int? userId, int? sessionId)
+        {
+            if (userId != null && sessionId != null)
+            {
+                Instantiate();
+
+                SessiePartner sp = await context.SessiePartners.SingleOrDefaultAsync(sp => 
+                    sp.SessieId == sessionId && (sp.TaalcoachId == userId || sp.CursistId == userId)
+                );
+                
+                if (sp != null)
+                {
+                    SessionEvaluationViewModel sevm = new SessionEvaluationViewModel() {
+                        SessieId = sp.SessieId,
+                        GebruikersId = (int) userId,
+                    };
+                    
+                    return View(sevm);
+                }
+            }
+
+            return RedirectToAction("SignIn", "Login");
+        }
+
+        // POST: Call/SessionEvaluation
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SessionEvaluation([Bind("SessieId","GebruikersId","Cijfer","Feedback")] SessionEvaluationViewModel sevm)
+        {
+            if (ModelState.IsValid)
+            {
+                Instantiate();
+
+                SessiePartner sp = await context.SessiePartners.SingleOrDefaultAsync(sp => 
+                    sp.SessieId == sevm.SessieId && (sp.TaalcoachId == sevm.GebruikersId || sp.CursistId == sevm.GebruikersId)
+                );
+
+                if (sp.TaalcoachId == sevm.GebruikersId)
+                {
+                    sp.CijferTaalcoach = sevm.Cijfer;
+                    sp.FeedbackTaalcoach = sevm.Feedback;
+                }
+                else
+                {
+                    sp.CijferCursist = sevm.Cijfer;
+                    sp.FeedbackCursist = sevm.Feedback;
+                }
+
+                context.Entry(sp).State = EntityState.Modified;
+                context.SaveChanges();
+
+                return RedirectToAction("NextSession");
+            }
+            return View(sevm);
+        }
+
 
         private void Instantiate()
         {
