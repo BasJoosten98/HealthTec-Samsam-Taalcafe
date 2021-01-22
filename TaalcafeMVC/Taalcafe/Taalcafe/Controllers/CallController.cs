@@ -39,14 +39,17 @@ namespace Taalcafe.Controllers
         // POST: Call/Nextsession
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult NextSession([Bind("Id","Datum","Duur","ThemaId","Aanmeldingen")] Sessie sessie)
+        public async Task<IActionResult> NextSession([Bind("Id","Datum","Duur","ThemaId","Aanmeldingen")] Sessie sessie)
         {
             Instantiate();
 
-            context.Entry(sessie).State = EntityState.Modified;
-            context.SaveChanges();
-
+            var curSessie = await context.Sessies.SingleOrDefaultAsync(s => s.Id == sessie.Id);
             sessie.InitializeAanmeldingIDs();
+            curSessie.Aanmeldingen += "," + sessie.AanmeldingIDs.Last().ToString();
+            sessie.Aanmeldingen = curSessie.Aanmeldingen;
+            context.Entry(sessie).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+
             ViewData["user"] = sessie.AanmeldingIDs.Last();
             return View(sessie);
         }
