@@ -1,9 +1,15 @@
 @model Taalcafe.Models.ViewModels.FileModel;
-<div class="row">
-    <div class="form-group">
+<li class="group-list-item file">
+    <div class="row">
         @Html.HiddenFor(model => model.path)
-        <div class="col-md-10">
+        @Html.HiddenFor(model => model.status, new { @class="status"})
+        <div class="col-md-3">
+            <input type="button" class="btn btn-danger deleteButton" value="Verwijderen">
+        </div>
+        <div class="col-md-4">
             <input asp-for="file" class="form-control fileInput" type="file">
+        </div>
+        <div class="col-md-5">
             @if (Model.path != "" && Model.path != null)
             {
                 <img class="previewImage" src="~/uploads/@Model.path">
@@ -12,7 +18,7 @@
             {
                 <img class="previewImage" src="" hidden>
             }
-            @Html.ValidationMessageFor(model => model.file, "", new { @class = "text-danger" })
         </div>
+        @Html.ValidationMessageFor(model => model.file, "", new { @class = "text-danger" })
     </div>
-</div>
+</li>

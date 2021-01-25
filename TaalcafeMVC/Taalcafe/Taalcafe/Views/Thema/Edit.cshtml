@@ -35,18 +35,20 @@
                     @Html.ValidationMessageFor(model => model.Beschrijving, "", new { @class = "text-danger" })
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group row">
                 @Html.HiddenFor(model => model.Afbeeldingen)
                 @Html.LabelFor(model => model.Afbeeldingen, htmlAttributes: new { @class = "control-label col-md-2" })
                 
-                @Html.ValidationMessageFor(model => model.Afbeeldingen, "", new { @class = "text-danger" })
-                <div class="container-fluid" id="Files">
-                    @Html.EditorFor(model => model.Files)
-                </div>
-                <div id="HiddenFiles" hidden>
+                <div class="col-md-10">
+                    @Html.ValidationMessageFor(model => model.Afbeeldingen, "", new { @class = "text-danger" })
+                    <ul class="list-group" id="Files">
+                        @Html.EditorFor(model => model.Files)
+                    </ul>
+                    <ul id="HiddenFiles" hidden>
 
+                    </ul>
+                    <input class="btn btn-success" type="button" onclick="AddFile()" value="Bestand toevoegen" />
                 </div>
-                <input class="btn btn-success" type="button" onclick="AddFile()" value="Bestand toevoegen" />
             </div>
             <div class="form-group row">
                 @Html.HiddenFor(model => model.Vragen)
