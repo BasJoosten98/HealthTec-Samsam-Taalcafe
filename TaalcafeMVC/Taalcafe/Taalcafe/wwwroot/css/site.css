@@ -7,6 +7,7 @@ a.navbar-brand {
   word-break: break-all;
 }
 
+
 /* Provide sufficient contrast against white background */
 a {
   color: #0366d6;
@@ -68,4 +69,12 @@ body {
   width: 100%;
   white-space: nowrap;
   line-height: 60px; /* Vertically center the text there */
+}
+
+.border-5 {
+    border-style: solid;
+    border-width: 5px !important;
+}
+.table-grey {
+    background-color: #A9A9A9 !important;
 }

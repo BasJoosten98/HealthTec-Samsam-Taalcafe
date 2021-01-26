@@ -1,0 +1,101 @@
+@model Taalcafe.Models.ViewModels.CallOverviewModel
+@{
+    ViewData["Title"] = "Call Overview";
+}
+
+@section scripts {
+    <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
+    <script src="~/js/call_overview.js"> </script>
+    <script>
+        function getModel() {
+            return @Html.Raw(Json.Serialize(Model));
+        }
+    </script>
+}
+
+<div>
+    <div class="text-center">
+        <ul id="callList" class="list-group">
+            <li class="list-group-item">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-6">
+                            Duo
+                            <div class="row">
+                                <div class="col-6">
+                                    Taalcoach
+                                </div>
+                                <div class="col-6">
+                                    Nieuwe Nederlander
+                                </div>  
+                            </div>
+                        </div>
+                        <div class="col-3">Hulpvraag</div>
+                        <div class="col-3">knoppen hieronder</div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-10">
+                <div class="row no-gutters" id="webcams">
+                    
+                </div>
+                <div Class="row">
+                    <div class="btn-toolbar" role="toolbar" aria-label="Controls">
+                        <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
+                            <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
+                            <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Call/Hang up">
+                            <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="row">
+                    @if(Model.Thema == null)
+                    {
+                        <h1>Er is geen taalcafé sessie gaande of ingepland voor vandaag!</h1>
+                    }
+                    else
+                    {
+                        <h1>Thema van deze sessie: @Html.DisplayName(Model.Thema.Naam)</h1>
+                        <p>@Html.DisplayName(Model.Thema.Beschrijving)</p>
+                        <h2>Afbeeldingen</h2>
+                        @if (Model.Thema.Afbeeldingen != null)
+                        {
+                            foreach (var item in Model.Thema.Afbeeldingen.Split("~"))
+                            {
+                                <img src="@item"/>
+                            }
+                        }
+                        else 
+                        {
+                            <p>Er zijn geen afbeeldingen beschikbaar over dit thema.</p>
+                        }
+                        <h2>Vragen</h2>
+                        @if (Model.Thema.Vragen != null)
+                        {
+                            foreach (var item in Model.Thema.Vragen.Split("~"))
+                            {
+                                <p>@Html.DisplayFor(modelItem => item)</p>
+                            }
+                        }
+                        else 
+                        {
+                            <p>Er zijn geen vragen beschikbaar over dit thema.</p>
+                        }
+                    }
+                </div>
+                <div class="row">
+                    <video id="localVideo" width="100%" height="auto" muted> </video>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

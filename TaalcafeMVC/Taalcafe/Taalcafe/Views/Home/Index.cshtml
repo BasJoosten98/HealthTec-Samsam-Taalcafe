@@ -1,8 +1,27 @@
-﻿@{
+﻿@model AccountViewModel
+@{
     ViewData["Title"] = "Home Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
+    <div class="container" style="margin-top:5%">
+        <div class="row">
+            <div class="col-sm h-100">
+                <a class="btn btn-secondary w-100 pt-5 pb-5" asp-action="Overview" asp-controller="Call"><h2>Actieve gesprekken</h2></a>
+            </div>
+            <div class="col-sm">
+                <a class="btn btn-secondary w-100 pt-5 pb-5" asp-action="Index" asp-controller="Gebruikers"><h2>Gebruikers</h2></a>
+            </div>
+            <div class="col-sm">
+                <a class="btn btn-secondary w-100 pt-5 pb-5" asp-action="Index" asp-controller="Thema"><h2>Thema's</h2></a>
+            </div>
+        </div>
+        <div class="row pt-4">
+            <div class="col-sm-6">
+                <a class="btn btn-secondary w-100 pt-5 pb-5" asp-action="Index" asp-controller="Sessie"><h2>Planning Taalcafé sessies</h2></a>
+            </div>
+            <div class="col-sm-6">
+                <a class="btn btn-secondary w-100 pt-5 pb-5" asp-action="EvaluatieOverview" asp-controller="Sessie"><h2>Evaluaties taalcafé sessies</h2></a>
+            </div>
+        </div>
+    </div>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>

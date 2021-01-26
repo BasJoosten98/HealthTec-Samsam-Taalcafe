@@ -1,0 +1,65 @@
+﻿@model Taalcafe.Models.DB.Gebruiker
+
+@{
+    ViewData["Title"] = "Gebruiker verwijderen";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Gebruiker verwijderen</h2>
+
+@if (Model.SessiePartnerCursists.Count() > 0 || Model.SessiePartnerTaalcoaches.Count() > 0)
+{
+    <h3>Het is niet mogelijk om deze gebruiker te verwijderen omdat deze ingepland staat of deelgenomen heeft aan een of meerdere taalcafé sessie(s).</h3>
+}
+else 
+{
+    <h3>Weet u zeker dat u deze gebruiker wilt verwijderen?</h3>
+}
+<div>
+    <h4>Gebruiker</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Naam)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Naam)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Email)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Email)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Telefoon)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Telefoon)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Niveau)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Niveau)
+        </dd>
+        <dt class = "col-sm-2">
+            Categorie
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Account.Type)
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        @if (Model.SessiePartnerCursists.Count() > 0 || Model.SessiePartnerTaalcoaches.Count() > 0) {
+            <input type="button" value="Gebruiker verwijderen" class="btn btn-danger" disabled/>
+        }
+        else {
+            <input type="submit" value="Gebruiker verwijderen" class="btn btn-danger" />
+        }
+        <a href='@Url.Action("Edit", "Gebruikers", new { id=@Model.Id })' class="btn btn-warning">Terug naar bewerken</a>
+        <a href='@Url.Action("Index", "Gebruikers")' class="btn btn-secondary">Terug naar gebruikersoverzicht</a>
+    </form>
+</div>

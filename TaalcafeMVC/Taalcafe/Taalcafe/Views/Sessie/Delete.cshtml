@@ -1,0 +1,94 @@
+@model Taalcafe.Models.DB.Sessie
+@{
+    ViewData["Title"] = "Sessie verwijderen";
+}
+
+<h2>Sessie verwijderen</h2>
+
+<h3>Weet u zeker dat u deze sessie wilt verwijderen?</h3>
+<div>
+    <h4>Thema</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Datum)
+        </dt>
+
+        <dd>
+            @Model.Datum.Value.ToShortDateString()
+        </dd>
+
+        <dt>
+            Tijd
+        </dt>
+
+        <dd>
+            @Model.Datum.Value.ToString("HH:mm")
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Duur)
+        </dt>
+
+        <dd>
+            @Model.Duur.Value.ToString(@"h\:mm")
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Thema)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Thema.Naam)
+        </dd>
+
+        <dt>
+            Koppels
+        </dt>
+
+        <dd>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-4">
+                                <b>Taalcoach</b>
+                            </div>
+                            <div class="col-4">
+                                <b>Nieuwe Nederlander</b>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                @foreach (var item in Model.SessiePartners)
+                {
+                    <li class="list-group-item">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-4">
+                                    @item.Taalcoach.Naam
+                                </div>
+                                <div class="col-4">
+                                    @item.Cursist.Naam
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Sessie verwijderen" class="btn btn-danger" />
+        </div>
+        <div class="form-actions no-color">
+            @Html.ActionLink("Terug naar bewerken", "Edit", new { id=Model.Id }) |
+            @Html.ActionLink("Terug naar overzicht", "Index")
+        </div>
+    }
+</div>
