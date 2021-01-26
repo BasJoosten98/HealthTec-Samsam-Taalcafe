@@ -27,7 +27,9 @@ var activeCalls = null;
 var connections = {}
 var model = null;
 
-const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //document.location.pathname + '/connectionhub';
+//document.location.pathname + '/connectionhub';
+const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
+//const hubUrl = 'https://localhost:5001/connectionhub'; //Development
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:

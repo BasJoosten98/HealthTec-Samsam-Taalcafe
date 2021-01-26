@@ -31,11 +31,17 @@ namespace Taalcafe.Hubs
                 connectionId = Context.ConnectionId
             };
 
-            if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId) == null) {
+            if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId || u.userName == uci.userName) == null) 
+            {
                 _Users.Add(uci);
             }
-            else {
+            else if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId) == null) 
+            {
                 _Users.ForEach(u => u.userName = (u.connectionId == uci.connectionId ? uci.userName : u.userName));
+            }
+            else
+            {
+                _Users.ForEach(u => u.connectionId = (u.userName == uci.userName ? uci.connectionId : u.connectionId));
             }
 
             // Send the updated list to all clients
