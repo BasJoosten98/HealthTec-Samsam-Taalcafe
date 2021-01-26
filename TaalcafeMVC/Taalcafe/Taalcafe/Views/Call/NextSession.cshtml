@@ -22,24 +22,24 @@
 <div class="container-fluid ml-2">
     @if (Model == null)
     {
-        <div class="row">
+        <div class="row justify-content-center">
             <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
         </div>
     }
     else if (Model.Datum.Value.Add(Model.Duur.Value) >= DateTime.Now && Model.Datum <= DateTime.Now)
     {
-        <div class="row">
+        <div class="row justify-content-center">
             <h1>Het taalcafé is begonnen!</h1>
         </div>
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="btn btn-success" type="button" value="Deelnemen">
-                @Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })
+                <h2 class="text-white">@Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })</h2>
             </div>
         </div>
     }
     else
     {
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="justify-content-center">
                 <h1>Het taalcafé is momenteel niet bezig.</h1>
                 <p>
@@ -53,15 +53,15 @@
         Model.InitializeAanmeldingIDs();
         if (Model.AanmeldingIDs.Contains((int) ViewData["user"]))
         {
-            <div class="row">
+            <div class="row justify-content-center">
                 <div class="form-actions no-color">
-                    <input type="button" value="U bent al ingeschreven!" class="btn btn-success" disabled />
+                    <input type="button" value="U bent al ingeschreven!" class="btn btn-success h2" disabled />
                 </div>
             </div>
         }
         else
         {
-            <div class="row">
+            <div class="row justify-content-center">
                 @using (Html.BeginForm()) {
                     @Html.AntiForgeryToken()
 
@@ -71,13 +71,13 @@
                     @Html.HiddenFor(model => model.ThemaId)
                     @Html.HiddenFor(model => model.Aanmeldingen)
 
-                    <div class="form-actions no-color">
+                    <div class="form-actions no-color justify-content-center">
                         <input type="submit" value="Ik meld me aan!" class="btn btn-success" />
                     </div>
                 }
             </div>
         }
-        <div class="row">
+        <div class="row justify-content-center">
             <h3 class="row justify-content-center p-2">
                 Tot dan!
             </h3>

@@ -517,7 +517,7 @@ function hangup() {
 
 // Attatch remote mediastream to video element
 function attachMediaStream(e, connectionId) {
-    let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="75%" height:100%;"> </video></div>';
+    let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="70%" height:100%;"> </video></div>';
     $('#webcams').prepend(elementString);
     let videoElement = document.getElementById('Video' + connectionId);
     videoElement.srcObject = e.stream;

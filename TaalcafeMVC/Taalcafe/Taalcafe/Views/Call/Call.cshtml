@@ -16,11 +16,11 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-10">
+        <div class="col-8 p-0 m-0">
             <div class="row no-gutters" id="webcams">
                 
             </div>
-            <div Class="row">
+            <div Class="row justify-content-center">
                 <div class="btn-toolbar" role="toolbar" aria-label="Controls">
                     <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
                         <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
@@ -36,16 +36,23 @@
                 </div>
             </div>
         </div>
-        <div class="col-2">
+        <div class="col-4">
             <div class="row">
                 <h1>Thema van deze sessie: @Html.DisplayName(Model.thema)</h1>
+                </div>
+            <div class="row">
                 <p>@Html.DisplayName(Model.beschrijving)</p>
+                </div>
+            <div class="row">
                 <h2>Afbeeldingen</h2>
+                </div>
                 @if (Model.Afbeeldingen.Count() > 0) 
                 {
                     foreach (var item in Model.Afbeeldingen)
                     {
-                        <img src="@item"/>
+                        <div class="row">
+                        <img src="@item" />
+                            </div>
                     }
                 }
                 else 
@@ -55,11 +62,13 @@
                 <h2>Vragen</h2>
                 @foreach (var item in Model.Vragen)
                 {
-                    <p>@Html.DisplayFor(modelItem => item)</p>
+            <div class="row">
+                <p>@Html.DisplayFor(modelItem => item)</p>
+            </div>
                 }
             </div>
-            <div class="row">
-                <video id="localVideo" width="100%" height="auto" muted> </video>
+            <div class="row"">
+                <video id="localVideo" style="position:fixed; width:300px; height:300px; right: 0; bottom: 22px;" muted> </video>
             </div>
         </div>
     </div>
