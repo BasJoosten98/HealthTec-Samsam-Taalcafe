@@ -201,11 +201,6 @@ namespace Taalcafe.Hubs
                 {
                     _Calls.Remove(currentCall);
                 }
-                else {
-                    foreach (var user in currentCall.Users.Where(u => u.connectionId != callingUser.connectionId)) {
-                        await Clients.Client(user.connectionId).UserLeft(callingUser);
-                    }
-                }
 
                 // And update the active calls list for coordinators
                 await SendCallListUpdate();

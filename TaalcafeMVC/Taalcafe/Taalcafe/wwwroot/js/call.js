@@ -29,8 +29,8 @@ let askHelp = false;
 let dontcall = false;
 
 //document.location.pathname + '/connectionhub';
-const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
-//const hubUrl = 'https://localhost:5001/connectionhub'; //Development
+// const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
+const hubUrl = 'https://localhost:5001/connectionhub'; //Development
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
@@ -400,16 +400,7 @@ wsConn.on('incomingCall', (callingUser) => {
 });
 
 
-// Hub Callback: User left call
-wsConn.on('userLeft', (leavingUser) => {
-    // let the user know someone left the call
-    console.log('SignalR: User: ' + leavingUser.userName + ' has left the call.');
-
-    closeConnection(leavingUser.connectionId);
-});
-
-
-// Hub Callback: Call Ended
+// Hub Callback: Call Ended / user left call
 wsConn.on('callEnded', (signalingUser, signal) => {
     //console.log(signalingUser);
     //console.log(signal);
