@@ -19,6 +19,13 @@ const mediaConstraints = {
     }
 };
 
+const noVideoConstraints = {
+    audio: { 
+        echoCancellation: true,
+        noiseSuppression: true
+    }
+};
+
 const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
 
@@ -87,7 +94,16 @@ function initializeUserMedia() {
             document.getElementById("pauseButton").disabled = false;
         })
         .catch(err => {
-            console.error("Access to microphone and/or webcam denied.", err);
+            navigator.mediaDevices.getUserMedia(noVideoConstraints).then(stream => {
+                localVideoStream = stream;
+                localVideo.srcObject = stream;
+                localVideo.play();
+                document.getElementById("muteButton").disabled = false;
+                document.getElementById("pauseButton").disabled = false;
+            })
+            .catch(error => {
+                console.error("Access to microphone and/or webcam denied.", error);
+            });
         });
 }
 
