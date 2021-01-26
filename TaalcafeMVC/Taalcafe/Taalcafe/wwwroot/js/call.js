@@ -35,7 +35,7 @@ let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
-    .configureLogging(signalR.LogLevel.Debug)
+    .configureLogging(signalR.LogLevel.Trace)
     .withAutomaticReconnect()
     .build();
 
