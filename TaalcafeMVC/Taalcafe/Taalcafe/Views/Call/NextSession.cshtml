@@ -1,0 +1,88 @@
+@model Taalcafe.Models.DB.Sessie
+@{
+    ViewData["Title"] = "NextSession";
+}
+
+@section scripts {
+    <script>
+        const aanmeldingen = document.getElementById("Aanmeldingen");
+
+        $(document).ready(function () {
+            if (aanmeldingen.value == null || aanmeldingen.value == "") {
+                aanmeldingen.value = "@ViewData["user"]";
+            }
+            else if (aanmeldingen.Split(",").Includes("@ViewData["user"]"))
+            {
+                aanmeldingen.value = aanmeldingen.value + "," + "@ViewData["user"]";
+            }
+        });
+    </script>
+}
+
+<div class="container-fluid ml-2">
+    @if (Model == null)
+    {
+        <div class="row justify-content-center">
+            <h1>Er staat geen taalcafé sessie gepland in de toekomst!</h1>
+        </div>
+    }
+    else if (Model.Datum.Value.Add(Model.Duur.Value) >= DateTime.Now && Model.Datum <= DateTime.Now)
+    {
+        <div class="row justify-content-center">
+            <h1>Het taalcafé is begonnen!</h1>
+        </div>
+        <div class="row justify-content-center">
+            <div class="btn btn-success" type="button" value="Deelnemen">
+                <h2 class="text-white">@Html.ActionLink("Deelnemen", "Call", new { id = @ViewData["user"] })</h2>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <div class="justify-content-center">
+                <h1>Het taalcafé is momenteel niet bezig.</h1>
+                <p>
+                    De volgende sessie van het taalcafé staat gepland op <b>@Model.Datum.Value.ToShortDateString()</b>
+                    en duurt van <b>@Model.Datum.Value.ToString("HH:mm")</b> tot <b>@Model.Datum.Value.Add(Model.Duur.Value).ToString("HH:mm")</b>.
+                    Klik op de onderstaande knop om je aan te melden voor de volgende sessie.
+                </p>
+            </div>
+        </div>
+
+        Model.InitializeAanmeldingIDs();
+        if (Model.AanmeldingIDs.Contains((int) ViewData["user"]))
+        {
+            <div class="row justify-content-center">
+                <div class="form-actions no-color">
+                    <input type="button" value="U bent al ingeschreven!" class="btn btn-success h2" disabled />
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row justify-content-center">
+                @using (Html.BeginForm()) {
+                    @Html.AntiForgeryToken()
+
+                    @Html.HiddenFor(model => model.Id)
+                    @Html.HiddenFor(model => model.Datum)
+                    @Html.HiddenFor(model => model.Duur)
+                    @Html.HiddenFor(model => model.ThemaId)
+                    @Html.HiddenFor(model => model.Aanmeldingen)
+
+                    <div class="form-actions no-color justify-content-center">
+                        <input type="submit" value="Ik meld me aan!" class="btn btn-success" />
+                    </div>
+                }
+            </div>
+        }
+        <div class="row justify-content-center">
+            <h3 class="row justify-content-center p-2">
+                Tot dan!
+            </h3>
+        </div>
+    }
+</div>
+
+    

@@ -1,0 +1,83 @@
+@model Taalcafe.Models.DB.Thema
+@{
+    ViewData["Title"] = "Thema bewerken";
+}
+
+@section scripts {
+    <script src="~/js/create_thema.js"></script>
+}
+
+@using (Html.BeginForm("Edit", "Thema", FormMethod.Post, new { @id="form", enctype="multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal mt-0">
+        <div>
+            @Html.ActionLink("Terug naar thema overzicht", "Index")
+        </div>
+        <div class="col-md-10">
+            <h1>Thema bewerken</h1>
+            <hr />
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            @Html.HiddenFor(model => model.Id)
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.Naam, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-8">
+                    @Html.EditorFor(model => model.Naam, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.Naam, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.LabelFor(model => model.Beschrijving, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-8">
+                    <textarea asp-for="Beschrijving" class="form-control"></textarea>
+                    @Html.ValidationMessageFor(model => model.Beschrijving, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.HiddenFor(model => model.Afbeeldingen)
+                @Html.LabelFor(model => model.Afbeeldingen, htmlAttributes: new { @class = "control-label col-md-2" })
+                
+                <div class="col-md-10">
+                    @Html.ValidationMessageFor(model => model.Afbeeldingen, "", new { @class = "text-danger" })
+                    <ul class="list-group" id="Files">
+                        @Html.EditorFor(model => model.Files)
+                    </ul>
+                    <ul id="HiddenFiles" hidden>
+
+                    </ul>
+                    <input class="btn btn-success" type="button" onclick="AddFile()" value="Bestand toevoegen" />
+                </div>
+            </div>
+            <div class="form-group row">
+                @Html.HiddenFor(model => model.Vragen)
+                @Html.LabelFor(model => model.Vragen, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="input-group col-md-8">
+                    <input class="form-control" type="text" id="vraagBox">
+                    <div class="input-group-append">
+                        <input class="btn btn-secondary" type="button" onclick="AddVraag()" value="Toevoegen">
+                    </div>
+                    @Html.ValidationMessageFor(model => model.Vragen, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-2">
+                    Hulpvragen
+                </div>
+                <div class="col-md-8">
+                    <ul class="list-group" id="vragenLijst">
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Aanpassingen opslaan" class="btn btn-success" />
+                <a asp-action="Delete" class="btn btn-danger" asp-route-id="@Model.Id">Thema verwijderen</a>
+            </div>
+        </div>
+    </div>
+}

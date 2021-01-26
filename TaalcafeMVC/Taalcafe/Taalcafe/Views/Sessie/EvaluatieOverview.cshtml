@@ -1,0 +1,63 @@
+@model List<Taalcafe.Models.DB.Sessie>
+@{
+    ViewData["Title"] = "Evaluatie overzicht";
+}
+
+<div class="row justify-content-center"  style="margin-top:5%">
+    <div class="col-md-auto w-75">
+        <div class="d-inline-block align-middle col-md-12 pl-0">
+            <h3 class="d-inline-block align-middle float-left">Evaluaties Taalcafé sessies</h3>
+        </div>
+        <div style="height: 310px;overflow: auto;" class="table-responsive-md">
+            <table class="table-borderless w-100 text-center justify-content-center">
+                <thead>
+                    <tr class="d-flex">
+                        <th class="col-md-2 align-middle table-secondary border border-white align-middle">
+                            <label class="mt-2">Datum</label>
+                        </th>
+                        <th class="col-md-2 align-middle table-secondary border border-white">
+                            <label class="mt-2">Tijd</label>
+                        </th>
+                        <th class="col-md-2 align-middle table-secondary border border-white">
+                            <label class="mt-2"> Duur</label>
+                        </th>
+                        <th class="col-md-2 align-middle table-secondary border border-white">
+                            <label class="mt-2">Thema</label>
+                        </th>
+                        <th class="col-md-2 align-middle table-secondary border border-white">
+                            <label class="mt-2">Evaluaties</label>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        if (item.Datum.Value.Add(item.Duur.Value) <= DateTime.Now)
+                        {
+                    <tr class="d-flex">
+                        <td class="col-md-2 align-middle table-active border border-white">
+                            <label class="mt-3">@item.Datum.Value.ToShortDateString()</label>
+                        </td>
+                        <td class="col-md-2 align-middle table-active border border-white">
+                            <label class="mt-3">@item.Datum.Value.ToString("HH:mm")</label>
+                        </td>
+                        <td class="col-md-2 align-middle table-active border border-white">
+                            <label class="mt-3"> @item.Duur.Value.ToString(@"h\:mm")</label>
+                        </td>
+                        <td class="col-md-2 align-middle table-active border border-white">
+                            <label class="mt-3"> @Html.DisplayFor(modelItem => item.Thema.Naam)</label>
+                        </td>
+                        <td class="col-md-2 align-middle table-active border border-white">
+                            <label class="mt-3"> @item.Duur.Value.ToString(@"h\:mm")</label>
+                        </td>
+                        <td class="col-md-2">
+                            <a asp-action="Evaluatie" class="btn btn-success p-2" asp-route-id="@item.Id">Evaluaties inzien</a>
+                        </td>
+                    </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

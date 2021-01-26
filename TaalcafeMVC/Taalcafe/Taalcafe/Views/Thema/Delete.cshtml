@@ -1,0 +1,89 @@
+@model Taalcafe.Models.DB.Thema
+@{
+    ViewData["Title"] = "Thema verwijderen";
+}
+
+<h2>Thema verwijderen</h2>
+
+@if (Model.Sessies.Count() > 0)
+{
+    <h3>Het is niet mogelijk om dit thema te verwijderen omdat deze gebruikt wordt voor een taalcafé sessie.</h3>
+}
+else 
+{
+    <h3>Weet u zeker dat u dit thema wilt verwijderen?</h3>
+}
+
+<div>
+    <h4>Thema</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Naam)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Naam)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Beschrijving)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Beschrijving)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Afbeeldingen)
+        </dt>
+
+        <dd>
+            @if (Model.Afbeeldingen == "" || Model.Afbeeldingen == null)
+            {
+                <p class="text-warning">Er zijn geen afbeeldingen toegevoegd aan dit thema.</p>
+            }
+            else
+            {
+                foreach (var item in Model.Afbeeldingen.Split(";"))
+                {
+                    <img src="~/uploads/@item">
+                }
+            }
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Vragen)
+        </dt>
+
+        <dd>
+            <ul class="list-group">
+                @for(var i = 0;  i < Model.Vragen.Split("~").Count(); i++)
+                {
+                    <li class="list-group-item">
+                        <div class="col">@Model.Vragen.Split("~")[i]</div>
+                    </li>
+                }
+            </ul>
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            @if (Model.Sessies.Count() > 0) {
+                <input type="button" value="Thema verwijderen" class="btn btn-danger" disabled/>
+            }
+            else {
+                <input type="submit" value="Thema verwijderen" class="btn btn-danger" />
+            }
+            
+        </div>
+        <div class="form-actions no-color">
+            @Html.ActionLink("Terug naar bewerken", "Edit", new { id=Model.Id }) |
+            @Html.ActionLink("Terug naar overzicht", "Index")
+        </div>
+    }
+</div>
