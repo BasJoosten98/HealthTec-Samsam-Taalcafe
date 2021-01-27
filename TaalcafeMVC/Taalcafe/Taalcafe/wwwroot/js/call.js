@@ -99,7 +99,6 @@ function initializeUserMedia() {
                 localVideo.srcObject = stream;
                 localVideo.play();
                 document.getElementById("muteButton").disabled = false;
-                document.getElementById("pauseButton").disabled = false;
             })
             .catch(error => {
                 console.error("Access to microphone and/or webcam denied.", error);
