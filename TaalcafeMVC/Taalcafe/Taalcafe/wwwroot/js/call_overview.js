@@ -19,6 +19,13 @@ const mediaConstraints = {
     }
 };
 
+const noVideoConstraints = {
+    audio: { 
+        echoCancellation: true,
+        noiseSuppression: true
+    }
+};
+
 const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
 var myUsername = null;
@@ -27,7 +34,9 @@ var activeCalls = null;
 var connections = {}
 var model = null;
 
-const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
+//document.location.pathname + '/connectionhub';
+const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
+//const hubUrl = 'https://localhost:5001/connectionhub'; //Development
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
@@ -86,7 +95,16 @@ function initializeUserMedia() {
             document.getElementById("pauseButton").disabled = false;
         })
         .catch(err => {
-            console.error("Access to microphone and/or webcam denied.", err);
+            navigator.mediaDevices.getUserMedia(noVideoConstraints).then(stream => {
+                localVideoStream = stream;
+                localVideo.srcObject = stream;
+                localVideo.play();
+                document.getElementById("muteButton").disabled = false;
+                document.getElementById("pauseButton").disabled = false;
+            })
+            .catch(error => {
+                console.error("Access to microphone and/or webcam denied.", error);
+            });
         });
 }
 
@@ -389,16 +407,7 @@ wsConn.on('incomingCall', (callingUser) => {
 });
 
 
-// Hub Callback: User left call
-wsConn.on('userLeft', (leavingUser) => {
-    // let the user know someone left the call
-    console.log('SignalR: User: ' + leavingUser.userName + ' has left the call.');
-
-    closeConnection(leavingUser.connectionId);
-});
-
-
-// Hub Callback: Call Ended
+// Hub Callback: Call Ended / user left call
 wsConn.on('callEnded', (signalingUser, signal) => {
     //console.log(signalingUser);
     //console.log(signal);

@@ -31,11 +31,17 @@ namespace Taalcafe.Hubs
                 connectionId = Context.ConnectionId
             };
 
-            if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId) == null) {
+            if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId || u.userName == uci.userName) == null) 
+            {
                 _Users.Add(uci);
             }
-            else {
+            else if (_Users.SingleOrDefault(u => u.connectionId == uci.connectionId) == null) 
+            {
                 _Users.ForEach(u => u.userName = (u.connectionId == uci.connectionId ? uci.userName : u.userName));
+            }
+            else
+            {
+                _Users.ForEach(u => u.connectionId = (u.userName == uci.userName ? uci.connectionId : u.connectionId));
             }
 
             // Send the updated list to all clients
@@ -194,11 +200,6 @@ namespace Taalcafe.Hubs
                 if (currentCall.Users.Count < 2)
                 {
                     _Calls.Remove(currentCall);
-                }
-                else {
-                    foreach (var user in currentCall.Users.Where(u => u.connectionId != callingUser.connectionId)) {
-                        await Clients.Client(user.connectionId).UserLeft(callingUser);
-                    }
                 }
 
                 // And update the active calls list for coordinators

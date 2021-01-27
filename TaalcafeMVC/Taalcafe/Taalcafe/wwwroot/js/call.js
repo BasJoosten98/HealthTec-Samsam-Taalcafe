@@ -19,6 +19,13 @@ const mediaConstraints = {
     }
 };
 
+const noVideoConstraints = {
+    audio: { 
+        echoCancellation: true,
+        noiseSuppression: true
+    }
+};
+
 const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
 
@@ -28,12 +35,14 @@ var connections = {}
 let askHelp = false;
 let dontcall = false;
 
-const hubUrl = 'https://localhost:5001/connectionhub'; //document.location.pathname + '/connectionhub';
+//document.location.pathname + '/connectionhub';
+const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
+// const hubUrl = 'https://localhost:5001/connectionhub'; //Development
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
-    .configureLogging(signalR.LogLevel.Debug)
+    .configureLogging(signalR.LogLevel.Trace)
     .withAutomaticReconnect()
     .build();
 
@@ -85,7 +94,15 @@ function initializeUserMedia() {
             document.getElementById("pauseButton").disabled = false;
         })
         .catch(err => {
-            console.error("Access to microphone and/or webcam denied.", err);
+            navigator.mediaDevices.getUserMedia(noVideoConstraints).then(stream => {
+                localVideoStream = stream;
+                localVideo.srcObject = stream;
+                localVideo.play();
+                document.getElementById("muteButton").disabled = false;
+            })
+            .catch(error => {
+                console.error("Access to microphone and/or webcam denied.", error);
+            });
         });
 }
 
@@ -398,16 +415,7 @@ wsConn.on('incomingCall', (callingUser) => {
 });
 
 
-// Hub Callback: User left call
-wsConn.on('userLeft', (leavingUser) => {
-    // let the user know someone left the call
-    console.log('SignalR: User: ' + leavingUser.userName + ' has left the call.');
-
-    closeConnection(leavingUser.connectionId);
-});
-
-
-// Hub Callback: Call Ended
+// Hub Callback: Call Ended / user left call
 wsConn.on('callEnded', (signalingUser, signal) => {
     //console.log(signalingUser);
     //console.log(signal);
@@ -517,7 +525,7 @@ function hangup() {
 
 // Attatch remote mediastream to video element
 function attachMediaStream(e, connectionId) {
-    let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="100%" height="auto"> </video></div>';
+    let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="100%" height:250px;"> </video></div>';
     $('#webcams').prepend(elementString);
     let videoElement = document.getElementById('Video' + connectionId);
     videoElement.srcObject = e.stream;
