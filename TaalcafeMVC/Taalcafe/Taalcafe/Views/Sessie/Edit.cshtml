@@ -16,7 +16,7 @@
         // documentation on datetimepicker https://xdsoft.net/jqplugins/datetimepicker/
         $(function () {
             $('#datepicker').datetimepicker({
-                format: 'DD-MM-YYYY HH:mm'
+                format: 'YYYY-MM-DD HH:mm'
             });
 
             $('#timepicker').datetimepicker({
@@ -50,7 +50,7 @@
             @Html.LabelFor(model => model.Datum, "Datum", htmlAttributes: new { @class = "control-label col-md-2 text-left" })
             <div class="col-md-8">
                 <div class='input-group date' id='datepicker'>
-                    <input asp-for="Datum" type="text" class="form-control" value="@Model.Datum.Value.ToString("dd-MM-yyyy hh:mm")" />
+                    <input asp-for="Datum" type="text" class="form-control" value="@Model.Datum.Value.ToString("yyyy-MM-dd hh:mm")" />
                     <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
                     </span>
