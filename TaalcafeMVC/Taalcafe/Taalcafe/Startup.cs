@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,6 +96,16 @@ namespace Taalcafe
                 
                 endpoints.MapHub<ConnectionHub>("/connectionhub");
             });
+
+            // set localization options
+            var locale = Configuration["SiteLocale"];
+            RequestLocalizationOptions localizationOptions = new RequestLocalizationOptions
+            {
+                SupportedCultures = new List<CultureInfo> { new CultureInfo(locale) },
+                SupportedUICultures = new List<CultureInfo> { new CultureInfo(locale) },
+                DefaultRequestCulture = new RequestCulture(locale)
+            };
+            app.UseRequestLocalization(localizationOptions);
         }
     }
 }
