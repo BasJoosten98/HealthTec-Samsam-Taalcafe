@@ -36,8 +36,8 @@ let askHelp = false;
 let dontcall = false;
 
 //document.location.pathname + '/connectionhub';
-const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
-// const hubUrl = 'https://localhost:5001/connectionhub'; //Development
+// const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
+const hubUrl = 'https://localhost:5001/connectionhub'; //Development
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
@@ -353,6 +353,7 @@ function closeConnection(partnerClientId) {
         document.getElementById("stopCallButton").disabled = true;
         document.getElementById("startCallButton").disabled = false;
         document.getElementById("askHelpButton").disabled = true;
+        document.getElementById("EvaluationBox").hidden = false;
     }
 }
 
@@ -525,6 +526,7 @@ function hangup() {
 
 // Attatch remote mediastream to video element
 function attachMediaStream(e, connectionId) {
+    document.getElementById("EvaluationBox").hidden = true;
     let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="100%" height:250px;"> </video></div>';
     $('#webcams').prepend(elementString);
     let videoElement = document.getElementById('Video' + connectionId);

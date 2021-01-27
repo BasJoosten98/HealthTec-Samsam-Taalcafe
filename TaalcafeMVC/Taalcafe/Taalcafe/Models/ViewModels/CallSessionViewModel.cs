@@ -5,6 +5,7 @@ namespace Taalcafe.Models.ViewModels
 {
     public class CallSessionViewModel
     {
+        public int sessieId { get; set; }
         public string thema { get; set; }
         public string beschrijving { get; set; }
         public int gebruikerId { get; set; }
@@ -14,8 +15,9 @@ namespace Taalcafe.Models.ViewModels
         public ICollection<string> Afbeeldingen { get; set; }
         public ICollection<string> Vragen { get; set; }
 
-        public CallSessionViewModel(string thema, string beschrijving, int gebruikerId, int partnerId, string gebruikerNaam, string partnerNaam, string afbeeldingen, string vragen)
+        public CallSessionViewModel(int sessieId, string thema, string beschrijving, int gebruikerId, int partnerId, string gebruikerNaam, string partnerNaam, string afbeeldingen, string vragen)
         {
+            this.sessieId = sessieId;
             this.thema = thema;
             this.beschrijving = beschrijving;
             this.gebruikerId = gebruikerId;

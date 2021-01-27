@@ -18,7 +18,16 @@
     <div class="row">
         <div class="col-8 p-0 m-0">
             <div class="row no-gutters" id="webcams">
-                
+                <div id="EvaluationBox" hidden>
+                    <p>
+                        Het videogesprek is afgesloten. Als het gesprek onverwachts afgesloten betekent dat dat iets verkeerd gegegaan is met de verbinding tussen u en uw partners. 
+                        Mogelijk is uw internet verbinding of die van uw partner weg gevallen. U kan hier wachten tot de verbinding herstelt, of het gesprek verlaten en doorgaan door op de knop hieronder te drukken.
+                    </p>
+                    <p>
+                        Als u bewust het gesprek afgesloten heeft of als de sessie afgelopen is kan u het bericht hierboven negeren en doorgaan door op de knop hieronder te drukken.
+                    </p>
+                    <a asp-action="SessionEvaluation" class="btn btn-success" asp-route-sessionId="@Model.sessieId" asp-route-userId="@Model.gebruikerId">Doorgaan</a>
+                </div>
             </div>
             <div Class="row justify-content-center">
                 <div class="btn-toolbar" role="toolbar" aria-label="Controls">
