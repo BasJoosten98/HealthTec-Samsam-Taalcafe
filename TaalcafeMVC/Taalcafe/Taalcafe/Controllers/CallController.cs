@@ -42,11 +42,31 @@ namespace Taalcafe.Controllers
         public async Task<IActionResult> NextSession([Bind("Id","Datum","Duur","ThemaId","Aanmeldingen")] Sessie sessie)
         {
             Instantiate();
-
-            var curSessie = await context.Sessies.SingleOrDefaultAsync(s => s.Id == sessie.Id);
+            
+            var dbvalues = await context.Entry(sessie).GetDatabaseValuesAsync();
+            var aanmeldingprop = dbvalues.Properties.FirstOrDefault(p => p.Name == "Aanmeldingen");
+            string dbAanmeldingen = dbvalues.GetValue<string>(aanmeldingprop);
+            List<int> dbAanmeldingList = new List<int>();
+            if (dbAanmeldingen != null && dbAanmeldingen != "")
+            {
+                foreach (var id in dbAanmeldingen.Split(","))
+                {
+                    dbAanmeldingList.Add(Int32.Parse(id));
+                }
+            }
+            
             sessie.InitializeAanmeldingIDs();
-            curSessie.Aanmeldingen += "," + sessie.AanmeldingIDs.Last().ToString();
-            sessie.Aanmeldingen = curSessie.Aanmeldingen;
+            if (dbAanmeldingList.Count() >= sessie.AanmeldingIDs.Count())
+            {
+                foreach (int id in dbAanmeldingList)
+                {
+                    if (!sessie.AanmeldingIDs.Contains(id))
+                    {
+                        sessie.Aanmeldingen += "," + id.ToString();
+                    }
+                }
+            }            
+
             context.Entry(sessie).State = EntityState.Modified;
             await context.SaveChangesAsync();
 
@@ -80,6 +100,7 @@ namespace Taalcafe.Controllers
                 }
             
                 CallSessionViewModel viewModel = new CallSessionViewModel(
+                    sessiePartner.SessieId,
                     sessiePartner.Sessie.Thema.Naam,
                     sessiePartner.Sessie.Thema.Beschrijving,
                     (int) id,
@@ -167,7 +188,7 @@ namespace Taalcafe.Controllers
                 context.Entry(sp).State = EntityState.Modified;
                 context.SaveChanges();
 
-                return RedirectToAction("NextSession");
+                return RedirectToAction("NextSession", new { userId=sevm.GebruikersId } );
             }
             return View(sevm);
         }

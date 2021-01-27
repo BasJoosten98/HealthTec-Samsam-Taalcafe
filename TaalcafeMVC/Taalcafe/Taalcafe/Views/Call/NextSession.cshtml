@@ -11,7 +11,7 @@
             if (aanmeldingen.value == null || aanmeldingen.value == "") {
                 aanmeldingen.value = "@ViewData["user"]";
             }
-            else if (aanmeldingen.Split(",").Includes("@ViewData["user"]"))
+            else if (!aanmeldingen.value.split(",").includes("@ViewData["user"]"))
             {
                 aanmeldingen.value = aanmeldingen.value + "," + "@ViewData["user"]";
             }
