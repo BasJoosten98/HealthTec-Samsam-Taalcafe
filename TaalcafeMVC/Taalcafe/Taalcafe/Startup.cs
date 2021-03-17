@@ -95,6 +95,7 @@ namespace Taalcafe
                     pattern: "{controller=Login}/{action=SignIn}/{id?}");
                 
                 endpoints.MapHub<ConnectionHub>("/connectionhub");
+                endpoints.MapHub<ConnectionHub2>("/connectionhub2");
             });
 
             // set localization options
