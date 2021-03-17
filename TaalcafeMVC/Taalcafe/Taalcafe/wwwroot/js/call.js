@@ -34,15 +34,18 @@ var availableUsers = null;
 var connections = {}
 let askHelp = false;
 let dontcall = false;
+var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
-const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
-// const hubUrl = 'https://localhost:5001/connectionhub'; //Development
+const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
+//const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
+//const hubUrl = 'https://localhost:5001/connectionhub'; //Development
+//const hubUrl = 'https://localhost:44324/connectionhub'; //Development
 let wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {transport: signalR.HttpTransportType.Websockets})
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
-    .configureLogging(signalR.LogLevel.Trace)
+    //.configureLogging(signalR.LogLevel.Trace)
     .withAutomaticReconnect()
     .build();
 
@@ -56,8 +59,10 @@ const peerConnCfg = {'iceServers': [
 // Triggers when the page is done loading
 $(document).ready(function () {
     model = getModel();
+    console.log("model obtained: ", model);
 
-    initializeSignalR();
+    //initializeSignalR();
+    setTimeout(() => initializeSignalR(), 3000);
 
     initializeUserMedia();
 });
@@ -79,7 +84,7 @@ function initializeSignalR() {
             console.log("SignalR: Connected"); 
             getUsername()
         })
-        .catch(err => console.log(err));
+        .catch(err => console.log("SignalR Error: ", err));
 }
 
 
@@ -174,19 +179,20 @@ function callbackIceCandidate(evt, connection, partnerClientId) {
     //console.log("evt.candidate: ", evt.candidate);
     if (evt.candidate) {
         // Found a new candidate
-        console.log('WebRTC: new ICE candidate');
+        console.log('WebRTC: new ICE candidate found, sending it to partner');
         //console.log("evt.candidate: ", evt.candidate);
         sendHubSignal(JSON.stringify({ "candidate": evt.candidate }), partnerClientId);
     } else {
         // null candidate means we are done collecting candidates.
         console.log('WebRTC: ICE candidate gathering complete');
-        sendHubSignal(JSON.stringify({ "candidate": null }), partnerClientId);
+        //You should not send a null candidate to the other peer! written in guide!
+        //sendHubSignal(JSON.stringify({ "candidate": null }), partnerClientId);
     }
 }
 
 
 function callbackAddStream(connection, evt, partnerClientId) {
-    console.log('WebRTC: called callbackAddStream');
+    console.log('WebRTC: called callbackAddStream, attaching media stream from partner');
 
     // Bind the remote stream to the partner video
     attachMediaStream(evt, partnerClientId);
@@ -199,7 +205,7 @@ function callbackAddStream(connection, evt, partnerClientId) {
 
 
 function callbackRemoveStream(connection, evt, connectionId) {
-    console.log('WebRTC: removing remote stream from partner window');
+    console.log('WebRTC: called callbackRemoveStream, removing remote stream from partner window');
     let videoElement = document.getElementById(connectionId);
     if (videoElement != null){
         videoElement.remove();
@@ -223,7 +229,7 @@ function setUsername(username) {
 function getUsername() {
     let username = model.gebruikerId.toString();
     if (username == null) {
-        console.warn("Username is empty.");
+        console.warn("Username is empty. A new random username will be created");
         setUsername(generateRandomUsername());
     }
     else {
@@ -264,8 +270,7 @@ function FindPartner(id) {
 
 
 function sendHubSignal(candidate, partnerClientId) {
-    console.log('candidate', candidate);
-    console.log('SignalR: called sendhubsignal ');
+    console.log('SignalR: sending signal to partner ' + partnerClientId + ' with candidate', candidate);
     wsConn.invoke('sendSignal', candidate, partnerClientId).catch(err => {
             console.error("SignalR: something went wrong when sending signal:", err);
         });
@@ -274,7 +279,7 @@ function sendHubSignal(candidate, partnerClientId) {
 
 // Called upon receiving a signal from the other client via the ConnectionHub
 function newSignal(partnerClientId, data) {
-    console.log('WebRTC: called newSignal');
+    console.log('WebRTC: new signal received from ' + partnerClientId + ' with data ', data);
     //console.log('connections: ', connections);
 
     var signal = JSON.parse(data);
@@ -282,7 +287,7 @@ function newSignal(partnerClientId, data) {
     //console.log("signal: ", signal);
     //console.log("signal: ", signal.sdp || signal.candidate);
     //console.log("partnerClientId: ", partnerClientId);
-    console.log("connection: ", connection);
+    console.log("WebRTC connection: ", connection);
 
     // Route signal based on type
     if (signal.sdp) {
@@ -304,13 +309,19 @@ function newSignal(partnerClientId, data) {
 
 function receivedCandidateSignal(connection, partnerClientId, candidate) {
     //console.log('candidate', candidate);
-    console.log('WebRTC: adding full candidate');
-    connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: added candidate successfully"), () => console.log("WebRTC: cannot add candidate"));
+    if (connection.remoteDescription != null) {
+        console.log('WebRTC: adding full candidate...', candidate);
+        connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: added candidate successfully"), () => console.log("WebRTC: cannot add candidate"));
+    }
+    else {
+        console.log("WebRTC: received candidate will be added as soon as Remote Description has been set!");
+        earlyIceCandidates.push({ connection: connection, partnerClientId: partnerClientId, candidate: candidate });
+    }
 }
 
 
 function receivedSdpSignal(connection, partnerClientId, sdp) {
-    console.log('connection: ', connection);
+    //console.log('connection: ', connection);
     console.log('sdp', sdp);
     console.log('WebRTC: called receivedSdpSignal');
     console.log('WebRTC: processing sdp signal');
@@ -332,6 +343,13 @@ function receivedSdpSignal(connection, partnerClientId, sdp) {
             }, errorHandler);
         } else if (connection.remoteDescription.type == "answer") {
             console.log('WebRTC: remote Description type answer');
+            console.log('WebRTC: Adding remaining ' + earlyIceCandidates.length + " early ice candidates...", earlyIceCandidates);
+            for (let earlyCandidate of earlyIceCandidates) {
+                //receivedCandidateSignal(earlyCandidate.connection, earlyCandidate.partnerClientId, earlyCandidate.candidate);
+                if (earlyCandidate.partnerClientId == partnerClientId) {
+                    receivedCandidateSignal(connection, partnerClientId, earlyCandidate.candidate);
+                }
+            }
         }
     }, errorHandler);
 }
@@ -494,7 +512,14 @@ function initiateCall() {
             console.log("Partner is not online.");
             return;
         }
-    
+
+        if (model.partnerId < model.gebruikerId) {
+            console.log('My partner should call me! I will not call him!');
+            return;
+        }
+
+        console.log('SignalR: Initiate call request send to ', model.partnerId);
+
         document.getElementById("stopCallButton").disabled = false;
         document.getElementById("startCallButton").disabled = true;
         wsConn.invoke('callUser', target);
@@ -526,11 +551,13 @@ function hangup() {
 
 // Attatch remote mediastream to video element
 function attachMediaStream(e, connectionId) {
+    console.log('Attaching video stream from partner ', connectionId, e);
     document.getElementById("EvaluationBox").hidden = true;
     let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId  + '" width="100%" height:250px;"> </video></div>';
     $('#webcams').prepend(elementString);
     let videoElement = document.getElementById('Video' + connectionId);
     videoElement.srcObject = e.stream;
+    console.log('Video stream from partner has been set ', e.stream);
     videoElement.play();
 }
 
