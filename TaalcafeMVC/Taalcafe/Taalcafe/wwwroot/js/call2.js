@@ -30,18 +30,16 @@ const localVideo = document.getElementById("localVideo");
 var localVideoStream = null;
 
 var model = null;
-var availableUsers = null;
 var connections = {}
 let askHelp = false;
-let dontcall = false;
 var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
 //const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
 //const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
 //const hubUrl = 'https://localhost:5001/connectionhub'; //Development
-const hubUrl = 'https://localhost:44324/connectionhub2'; //Development
-let wsConn = new signalR.HubConnectionBuilder()
+const hubUrl = 'https://localhost:44324/connectionhub'; //Development
+var wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { transport: signalR.HttpTransportType.Websockets })
     // Logging levels from most to least:
     // Trace, Debug, Information, Warning, Error, Critical, None
@@ -60,6 +58,10 @@ const peerConnCfg = {
 
 // Triggers when the page is done loading
 $(document).ready(function () {
+    document.getElementById("stopCallButton").disabled = true;
+    document.getElementById("startCallButton").disabled = true;
+    document.getElementById("askHelpButton").disabled = true;
+
     model = getModel();
     console.log("model obtained: ", model);
 
@@ -111,51 +113,48 @@ function initializeUserMedia() {
             })
                 .catch(error => {
                     console.error("Access to microphone and/or webcam denied.", error);
+
                 });
         });
 }
 
-// Create initial RTC session offer
-function initiateOffer(partnerClientId, stream) {
-    console.log('WebRTC: called initiateoffer: ');
+function sendOffer(partnerUserId) {
+    console.log("WebRTC: creating and sending OFFER to " + partnerUserId);
 
     // get a connection for the given partner
-    var connection = getConnection(partnerClientId);
+    var connection = getConnection(partnerUserId);
 
     // add our audio/video stream
-    connection.addStream(stream);
-    console.log("WebRTC: Added local stream");
+    if (localVideoStream != null) {
+        connection.addStream(localVideoStream);
+        console.log("WebRTC: Added local stream to (OFFER) connection");
+    }
+    else {
+        console.error("WebRTC: No local stream found! OFFER failed!");
+        return;
+    }
 
     connection.createOffer().then(offer => {
-        console.log('WebRTC: created Offer: ');
-        console.log('WebRTC: Description after offer: ', offer);
         connection.setLocalDescription(offer).then(() => {
-            console.log('WebRTC: set Local Description: ');
-            console.log('connection before sending offer ', connection);
-            setTimeout(() => {
-                sendHubSignal(JSON.stringify({ "sdp": connection.localDescription }), partnerClientId);
-            }, 1000);
+            console.log("WebRTC: Added OFFER to connection's localdesciption. Sending OFFER now...", offer);
+            sendSignalTo(partnerUserId, JSON.stringify({ "sdp": connection.localDescription }));
         }).catch(err => console.error('WebRTC: Error while setting local description', err));
-    }).catch(err => console.error('WebRTC: Error while creating offer', err));
+    }).catch(err => console.error('WebRTC: Error while creating OFFER', err));
 }
 
 
-function getConnection(partnerClientId) {
-    console.log("WebRTC: called getConnection");
-    if (connections[partnerClientId]) {
-        console.log("WebRTC: connections partner client exist");
-        return connections[partnerClientId];
+function getConnection(partnerUserId) {
+    if (connections[partnerUserId]) {
+        return connections[partnerUserId];
     }
     else {
-        console.log("WebRTC: initialize new connection");
-        return initializeConnection(partnerClientId)
+        return initializeConnection(partnerUserId)
     }
 }
 
 
 // Create the RTCPeerConnection
-function initializeConnection(partnerClientId) {
-    console.log('WebRTC: Initializing connection...');
+function initializeConnection(partnerUserId) {
 
     var connection = new RTCPeerConnection(peerConnCfg);
 
@@ -167,56 +166,46 @@ function initializeConnection(partnerClientId) {
     // connection.onsignalingstatechange = evt => console.log("WebRTC: onsignalingstatechange", evt); //triggering on state change 
     // connection.ontrack = evt => console.log("WebRTC: ontrack", evt);
 
-    connection.onicecandidate = evt => callbackIceCandidate(evt, connection, partnerClientId); // ICE Candidate Callback
+    connection.onicecandidate = evt => callbackIceCandidate(evt, connection, partnerUserId); // ICE Candidate Callback
     //connection.onnegotiationneeded = evt => console.log("WebRTC: Negotiation needed.. Event: ", evt); // Negotiation Needed Callback
-    connection.onaddstream = evt => callbackAddStream(connection, evt, partnerClientId); // Add stream handler callback
-    connection.onremovestream = evt => callbackRemoveStream(connection, evt, partnerClientId); // Remove stream handler callback
+    connection.onaddstream = evt => callbackAddStream(connection, evt, partnerUserId); // Add stream handler callback
+    connection.onremovestream = evt => callbackRemoveStream(connection, evt, partnerUserId); // Remove stream handler callback
 
-    connections[partnerClientId] = connection; // Store away the connection based on username
+    connections[partnerUserId] = connection; // Store away the connection based on username
     //console.log(connection);
     return connection;
 }
 
 
-function callbackIceCandidate(evt, connection, partnerClientId) {
-    console.log("WebRTC: Ice Candidate callback");
-    //console.log("evt.candidate: ", evt.candidate);
+function callbackIceCandidate(evt, connection, partnerUserId) {
     if (evt.candidate) {
         // Found a new candidate
-        console.log('WebRTC: new ICE candidate found, sending it to partner');
-        //console.log("evt.candidate: ", evt.candidate);
-        sendHubSignal(JSON.stringify({ "candidate": evt.candidate }), partnerClientId);
+        console.log('WebRTC: new ICE CANDIDATE found, sending it to partner ' + partnerUserId, evt.candidate);
+        sendSignalTo(partnerUserId, JSON.stringify({ "candidate": evt.candidate }));
     } else {
         // null candidate means we are done collecting candidates.
-        console.log('WebRTC: ICE candidate gathering complete');
-        //You should not send a null candidate to the other peer! written in guide!
-        //sendHubSignal(JSON.stringify({ "candidate": null }), partnerClientId);
+        console.log('WebRTC: ICE CANDIDATE gathering completed');
     }
 }
 
 
 function callbackAddStream(connection, evt, partnerClientId) {
-    console.log('WebRTC: called callbackAddStream, attaching media stream from partner');
+    console.log('WebRTC: called callbackAddStream, attaching media stream from partner ' + partnerClientId);
 
     // Bind the remote stream to the partner video
     attachMediaStream(evt, partnerClientId);
-
-    // enable askhelp button
-    askHelp = false;
-    document.getElementById("askHelpButton").value = "Vraag om hulp";
-    document.getElementById("askHelpButton").disabled = false;
 }
 
 
-function callbackRemoveStream(connection, evt, connectionId) {
-    console.log('WebRTC: called callbackRemoveStream, removing remote stream from partner window');
-    let videoElement = document.getElementById(connectionId);
+function callbackRemoveStream(connection, evt, partnerUserId) {
+    console.log('WebRTC: called callbackRemoveStream, removing remote stream from partner ' + partnerUserId);
+    let videoElement = document.getElementById(partnerUserId);
     if (videoElement != null) {
         videoElement.remove();
     }
 }
 
-// TODO get ID/name from current user
+
 function joinConnectionHub() {
     if (model.gebruikerId == null) {
         console.warn("Username is empty in model. FAILED ");
@@ -229,109 +218,62 @@ function joinConnectionHub() {
     }
 }
 
-
-function getUser(username) {
-    for (let i in availableUsers) {
-        if (availableUsers[i]["userName"] === username) {
-            return availableUsers[i];
-        }
-    }
-    console.error("Couldn't find client:", username, "in list of available users")
-}
-
-
-// Finds the connectionstring of the partner in the list of connected users
-function FindPartner(id) {
-    for (let i in availableUsers) {
-        let u = availableUsers[i];
-        if (u["userName"] == id) {
-            return u;
-        }
-    }
-
-    return null;
-}
-
-
-function sendHubSignal(candidate, partnerClientId) {
-    console.log('SignalR: sending signal to partner ' + partnerClientId + ' with candidate', candidate);
-    wsConn.invoke('sendSignal', candidate, partnerClientId).catch(err => {
-        console.error("SignalR: something went wrong when sending signal:", err);
+function sendSignalTo(userId, data) {
+    console.log("SignalR: sending data to " + userId, data);
+    wsConn.invoke('SendSignal', userId, data).catch(err => {
+        console.error("SignalR: something went wrong when sending data signal:", err);
     });
 }
 
-
-// Called upon receiving a signal from the other client via the ConnectionHub
-function newSignal(partnerClientId, data) {
-    console.log('WebRTC: new signal received from ' + partnerClientId + ' with data ', data);
-    //console.log('connections: ', connections);
+function signalReceived(partnerUserId, data) {
+    console.log('SignalR: signal received from ' + partnerUserId + ' with data ', data);
 
     var signal = JSON.parse(data);
-    var connection = getConnection(partnerClientId);
-    //console.log("signal: ", signal);
-    //console.log("signal: ", signal.sdp || signal.candidate);
-    //console.log("partnerClientId: ", partnerClientId);
-    console.log("WebRTC connection: ", connection);
+    var connection = getConnection(partnerUserId);
 
     // Route signal based on type
     if (signal.sdp) {
-        console.log('WebRTC: sdp signal');
-        receivedSdpSignal(connection, partnerClientId, signal.sdp);
+        console.log('WebRTC: signal contains SDP', signal.sdp);
+        receivedSdpSignal(connection, partnerUserId, signal.sdp);
     } else if (signal.candidate) {
-        console.log('WebRTC: candidate signal');
-        receivedCandidateSignal(connection, partnerClientId, signal.candidate);
+        console.log('WebRTC: signal contains ICE CANDIDATE', signal.candidate);
+        receivedIceCandidateSignal(connection, partnerUserId, signal.candidate);
     } else {
-        console.log('WebRTC: adding null candidate');
-        connection.addIceCandidate(null).then(() => {
-            console.log("WebRTC: added null candidate successfully");
-        }).catch((err) => {
-            console.warn("WebRTC: cannot add null candidate:", err);
-        });
+        console.warn("WebRTC: signal contains NOTHING, no further actions needed");
     }
 }
 
 
-function receivedCandidateSignal(connection, partnerClientId, candidate) {
-    //console.log('candidate', candidate);
+function receivedIceCandidateSignal(connection, partnerUserId, candidate) {
     if (connection.remoteDescription != null) {
-        console.log('WebRTC: adding full candidate...', candidate);
-        connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: added candidate successfully"), () => console.log("WebRTC: cannot add candidate"));
+        console.log("WebRTC: adding ICE CANDIDATE...");
+        connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: ICE CANDIDATE has been added", candidate), () => console.warn("WebRTC: ICE CANDIDATE could not be added", candidate));
     }
     else {
-        console.log("WebRTC: received candidate will be added as soon as Remote Description has been set!");
-        earlyIceCandidates.push({ connection: connection, partnerClientId: partnerClientId, candidate: candidate });
+        console.log("WebRTC: ICE CANDIDATE will be added as soon as Remote Description has been set!");
+        earlyIceCandidates.push({ connection: connection, partnerUserId: partnerUserId, candidate: candidate });
     }
 }
 
-
-function receivedSdpSignal(connection, partnerClientId, sdp) {
-    //console.log('connection: ', connection);
-    console.log('sdp', sdp);
-    console.log('WebRTC: called receivedSdpSignal');
-    console.log('WebRTC: processing sdp signal');
+function receivedSdpSignal(connection, partnerUserId, sdp) {
     connection.setRemoteDescription(new RTCSessionDescription(sdp), () => {
-        console.log('WebRTC: set Remote Description');
+        console.log('WebRTC: Remote Description has been set', connection);
         if (connection.remoteDescription.type == "offer") {
-            console.log('WebRTC: remote Description type offer');
+            console.log('WebRTC: Remote Description is of type OFFER');
             connection.addStream(localVideoStream);
-            console.log('WebRTC: added stream');
+            console.log('WebRTC: creating and sending ANSWER to ' + partnerUserId);
             connection.createAnswer().then((desc) => {
-                console.log('WebRTC: create Answer...');
                 connection.setLocalDescription(desc, () => {
-                    console.log('WebRTC: set Local Description...');
-                    console.log('connection.localDescription: ', connection.localDescription);
-                    //setTimeout(() => {
-                    sendHubSignal(JSON.stringify({ "sdp": connection.localDescription }), partnerClientId);
-                    //}, 1000);
+                    console.log("WebRTC: Added ANSWER to connection's localdesciption. Sending ANSWER now...", desc);
+                    sendSignalTo(partnerUserId, JSON.stringify({ "sdp": connection.localDescription }));
                 }, errorHandler);
             }, errorHandler);
         } else if (connection.remoteDescription.type == "answer") {
-            console.log('WebRTC: remote Description type answer');
-            console.log('WebRTC: Adding remaining ' + earlyIceCandidates.length + " early ice candidates...", earlyIceCandidates);
+            console.log('WebRTC: Remote Description is of type ANSWER');
+            console.log("WebRTC: Adding remaining early ice candidates for this connection...", earlyIceCandidates);
             for (let earlyCandidate of earlyIceCandidates) {
-                //receivedCandidateSignal(earlyCandidate.connection, earlyCandidate.partnerClientId, earlyCandidate.candidate);
-                if (earlyCandidate.partnerClientId == partnerClientId) {
-                    receivedCandidateSignal(connection, partnerClientId, earlyCandidate.candidate);
+                if (earlyCandidate.partnerUserId == partnerUserId) {
+                    receivedIceCandidateSignal(connection, partnerUserId, earlyCandidate.candidate);
                 }
             }
         }
@@ -339,136 +281,66 @@ function receivedSdpSignal(connection, partnerClientId, sdp) {
 }
 
 
-function closeConnection(partnerClientId) {
-    console.log("WebRTC: called closeConnection ");
-    let connection = connections[partnerClientId];
+function closeConnection(partnerUserId) {
+    console.log("WebRTC: closing connection with partner " + partnerUserId);
+    let connection = connections[partnerUserId];
 
     if (connection) {
         // Close the connection
         connection.close();
-        delete connections[partnerClientId]; // Remove the property
+        delete connections[partnerUserId]; // Remove the property
     }
 
-    callbackRemoveStream(null, null, partnerClientId);
+    callbackRemoveStream(null, null, partnerUserId);
 
-    if (Object.keys(connections).length === 0) {
-        document.getElementById("stopCallButton").disabled = true;
-        document.getElementById("startCallButton").disabled = false;
-        document.getElementById("askHelpButton").disabled = true;
-        document.getElementById("EvaluationBox").hidden = false;
-    }
+    //if (Object.keys(connections).length === 0) {
+    //    document.getElementById("stopCallButton").disabled = true;
+    //    document.getElementById("startCallButton").disabled = true;
+    //    document.getElementById("askHelpButton").disabled = true;
+    //    document.getElementById("EvaluationBox").hidden = false;
+    //}
 }
 
 
 function closeAllConnections() {
     console.log("WebRTC: call closeAllConnections ");
-    for (let connectionId in connections) {
-        closeConnection(connectionId);
+    for (let partnerUserId in connections) {
+        closeConnection(partnerUserId);
     }
 }
 
 
 // Hub Callback: Call accepted
 wsConn.on('JoinedSuccess', () => {
-    console.log("SignalR: joining connectionhub was a success!")
+    console.log("SignalR: joining connectionhub was a success!");
+    document.getElementById("stopCallButton").disabled = false;
+    document.getElementById("startCallButton").disabled = false;
+    document.getElementById("askHelpButton").disabled = false;
 });
 
 wsConn.on('JoinedFailed', (reason) => {
     console.log("SignalR: joining connectionhub failed! Reason: " + reason);
 });
 
-
-wsConn.on('callAccepted', (acceptingUser) => {
-    console.log('SignalR: call accepted from: ' + JSON.stringify(acceptingUser) + '.  Initiating WebRTC call and offering my stream up...');
-
-    // Callee accepted our call, let's send them an offer with our video stream
-    initiateOffer(acceptingUser.connectionId, localVideoStream);
-});
-
-
-// Hub Callback: Call Declined
-wsConn.on('callDeclined', (declingingUser, reason) => {
-    console.log('SignalR: call declined from: ' + decliningUser["connectionId"]);
-    console.log('For reason: ' + reason);
-
-    // toggle buttons
-    document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = false;
-});
-
-
-// Hub Callback: Signal from other client
-wsConn.on('receiveSignal', (signalingUser, signal) => {
-    //console.log('WebRTC: receive signal ');
-    //console.log(signalingUser);
-    //console.log('NewSignal', signal);
-    newSignal(signalingUser.connectionId, signal);
-});
-
-
-// Hub Callback: Incoming Call
-wsConn.on('incomingCall', (callingUser) => {
-    console.log('SignalR: incoming call from: ' + JSON.stringify(callingUser));
-
-    if (dontcall) {
-        console.log('Declining calling session.');
-        // Decline the call
-        wsConn.invoke('AnswerCall', false, callingUser).catch(err => console.log(err));
+wsConn.on("CallUser", (partner) => {
+    if (partner != null) {
+        sendOffer(partner.userId);
     }
-    else {
-        console.log('Accepting calling session...');
-        // Accept the call
-        wsConn.invoke('AnswerCall', true, callingUser).catch(err => console.log(err));
+});
 
-        // toggle buttons
-        document.getElementById("stopCallButton").disabled = false;
-        document.getElementById("startCallButton").disabled = true;
+wsConn.on("ReceiveSignal", (partner, data) => {
+    if (partner != null && data != null) {
+        signalReceived(partner.userId, data);
+    }
+});
+
+wsConn.on("UserHasLeft", (partner) => {
+    if (partner != null) {
+        closeConnection(partner.userId);
     }
 });
 
 
-// Hub Callback: Call Ended / user left call
-wsConn.on('callEnded', (signalingUser, signal) => {
-    //console.log(signalingUser);
-    //console.log(signal);
-
-    // Let the user know why the server says the call is over
-    console.log('SignalR: call with ' + signalingUser.connectionId + ' has ended: ' + signal);
-
-    // Close the WebRTC connection
-    closeConnection(signalingUser.connectionId);
-});
-
-
-// Update the list of known and online users
-wsConn.on('updateUserList', (userList) => {
-    console.log('SignalR: called updateUserList' + JSON.stringify(userList));
-    availableUsers = userList;
-    if (availableUsers.length > 1 && !getUser(model.gebruikerId)["inCall"]) {
-        document.getElementById("startCallButton").disabled = false;
-        initiateCall();
-    }
-});
-
-
-// update askHelp if other user in call pushes the button
-wsConn.on('updateActiveCalls', (callList) => {
-    console.log('SignalR: called updateActiveCalls' + JSON.stringify(callList));
-
-    for (let i in callList) {
-        let call = callList[i];
-        if ((call.users[0].userName == model.gebruikerId || call.users[1].userName == model.gebruikerId) && call.help != askHelp) {
-            if (askHelp === true) {
-                askHelp = false;
-                document.getElementById("askHelpButton").value = "Vraag om hulp";
-            }
-            else {
-                askHelp = true;
-                document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
-            }
-        }
-    }
-});
 
 
 // Notify the user that the client is trying to reconnect
@@ -495,34 +367,16 @@ wsConn.onclose(err => {
     }
 });
 
-
-// Call random available user
-function initiateCall() {
-    if (!dontcall) {
-        let target = FindPartner(model.partnerId);
-
-        if (!target) {
-            console.log("Partner is not online.");
-            return;
-        }
-
-        if (model.partnerId < model.gebruikerId) {
-            console.log('My partner should call me! I will not call him!');
-            return;
-        }
-
-        console.log('SignalR: Initiate call request send to ', model.partnerId);
-
-        document.getElementById("stopCallButton").disabled = false;
-        document.getElementById("startCallButton").disabled = true;
-        wsConn.invoke('callUser', target);
-    }
-}
-
-
 // ask for help or stop asking for help
 function toggleHelp() {
-    if (askHelp === true) {
+    setHelpNeeded(!askHelp);
+    wsConn.invoke('AskForHelp');
+}
+wsConn.on('NeedHelpSetTo', (helpNeeded) => {
+    setHelpNeeded(helpNeeded);
+});
+function setHelpNeeded(helpNeeded) {
+    if (!helpNeeded) {
         askHelp = false;
         document.getElementById("askHelpButton").value = "Vraag om hulp";
     }
@@ -530,25 +384,25 @@ function toggleHelp() {
         askHelp = true;
         document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
     }
-    wsConn.invoke('askForHelp');
 }
-
 
 // Close the current calling sessions
 function hangup() {
-    dontcall = true;
-    wsConn.invoke('hangUp');
+    document.getElementById("stopCallButton").disabled = true;
+    document.getElementById("startCallButton").disabled = true;
+    document.getElementById("askHelpButton").disabled = true;
+    document.getElementById("EvaluationBox").hidden = false;
+    wsConn.invoke("Leave");
     closeAllConnections();
 }
 
-
 // Attatch remote mediastream to video element
-function attachMediaStream(e, connectionId) {
-    console.log('Attaching video stream from partner ', connectionId, e);
+function attachMediaStream(e, partnerUserId) {
+    console.log('Attaching video stream from partner ', partnerUserId, e);
     document.getElementById("EvaluationBox").hidden = true;
-    let elementString = '<div class="col" id="' + connectionId + '"><video id="Video' + connectionId + '" width="100%" height:250px;"> </video></div>';
+    let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" width="100%" height:250px;"> </video></div>';
     $('#webcams').prepend(elementString);
-    let videoElement = document.getElementById('Video' + connectionId);
+    let videoElement = document.getElementById('Video' + partnerUserId);
     videoElement.srcObject = e.stream;
     console.log('Video stream from partner has been set ', e.stream);
     videoElement.play();

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Taalcafe.Hubs;
+using Taalcafe.Hubs.HubModels;
 using Taalcafe.Models;
 
 namespace Taalcafe
@@ -59,6 +60,9 @@ namespace Taalcafe
 
             services.AddSignalR();
 
+            services.AddSingleton<List<OnlineGroup>>();
+            services.AddSingleton<List<OnlineUser>>();
+
             services.AddSingleton<List<UserConnectionInfo>>();
             services.AddSingleton<List<Call>>();
             services.AddSingleton<List<CallOffer>>();
@@ -94,8 +98,8 @@ namespace Taalcafe
                     name: "default",
                     pattern: "{controller=Login}/{action=SignIn}/{id?}");
                 
-                endpoints.MapHub<ConnectionHub>("/connectionhub");
-                endpoints.MapHub<ConnectionHub2>("/connectionhub2");
+                //endpoints.MapHub<ConnectionHub>("/connectionhub");
+                endpoints.MapHub<ConnectionHub2>("/connectionhub");
             });
 
             // set localization options

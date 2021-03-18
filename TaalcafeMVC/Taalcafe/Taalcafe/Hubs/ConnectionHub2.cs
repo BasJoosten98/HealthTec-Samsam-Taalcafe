@@ -12,14 +12,15 @@ namespace Taalcafe.Hubs
 {
     public class ConnectionHub2 : Hub<IConnectionHub2>
     {
-        private List<OnlineGroup> onlineGroups;
-        private List<OnlineUser> onlineCoordinators;
-        private dbi380705_taalcafeContext dbContext;
+        private readonly List<OnlineGroup> onlineGroups;
+        private readonly List<OnlineUser> onlineCoordinators;
+        private readonly dbi380705_taalcafeContext dbContext;
 
-        public ConnectionHub2()
+        public ConnectionHub2(List<OnlineUser> coordinators, List<OnlineGroup> groups)
         {
-            onlineGroups = new List<OnlineGroup>();
-            onlineCoordinators = new List<OnlineUser>();
+            onlineCoordinators = coordinators;
+            onlineGroups = groups;
+            dbContext = new dbi380705_taalcafeContext();
         }
 
 
@@ -41,7 +42,7 @@ namespace Taalcafe.Hubs
                 group.NeedsHelp = !group.NeedsHelp;
                 foreach(OnlineUser user in group.OnlineUsers)
                 {
-                    if(user != null) { await Clients.Client(user.ConnectionId).NeedHelpSetTo(group.NeedsHelp); }
+                    await Clients.Client(user.ConnectionId).NeedHelpSetTo(group.NeedsHelp); 
                 }
                 if(group.Coordinator != null)
                 {
@@ -54,7 +55,6 @@ namespace Taalcafe.Hubs
         //Check if user is allowed to join, if yes (set group as online) and partners are online order him to call partners
         public async Task Join(int userId)
         {
-            dbContext = new dbi380705_taalcafeContext();
 
             var coordinator = dbContext.Gebruikers.Include(g => g.Account).SingleOrDefault(g => g.Id == userId);
             if(coordinator != null)
@@ -95,12 +95,18 @@ namespace Taalcafe.Hubs
                 OnlineGroup existingGroup = onlineGroups.FirstOrDefault(g => g.GroupId == sessiePartner.SessieId);
                 if(existingGroup != null)
                 {
+                    OnlineUser sameUser = existingGroup.OnlineUsers.FirstOrDefault(u => u.UserId == user.UserId);
+                    if(sameUser != null) { await Clients.Caller.JoinedFailed("This user has already joined (userId)"); return; }
+
                     existingGroup.OnlineUsers.Add(user);
                     await Clients.Caller.JoinedSuccess();
                     await UpdateOnlineGroups();
                     foreach (OnlineUser partner in existingGroup.OnlineUsers)
                     {
-                        await Clients.Caller.CallUser(partner);
+                        if (partner.UserId != user.UserId)
+                        {
+                            await Clients.Caller.CallUser(partner);
+                        }
                     }
                 }
                 else
@@ -168,7 +174,7 @@ namespace Taalcafe.Hubs
                 OnlineUser user = existingGroup.OnlineUsers.FirstOrDefault(u => u.ConnectionId == Context.ConnectionId);
                 if(user != null)
                 {
-                    if(existingGroup.OnlineUsers.Count <= 1) //remove group
+                    if(existingGroup.OnlineUsers.Count <= 1) //remove group, cuz last person is about to leave
                     {
                         if(existingGroup.Coordinator != null)
                         {
