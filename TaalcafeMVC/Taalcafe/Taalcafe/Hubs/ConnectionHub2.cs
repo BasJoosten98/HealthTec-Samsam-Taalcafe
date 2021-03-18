@@ -185,7 +185,8 @@ namespace Taalcafe.Hubs
                     }
                     else
                     {
-                        foreach(OnlineUser u in existingGroup.OnlineUsers)
+                        existingGroup.OnlineUsers.Remove(user);
+                        foreach (OnlineUser u in existingGroup.OnlineUsers)
                         {
                             await Clients.Client(u.ConnectionId).UserHasLeft(user);
                         }
@@ -193,7 +194,6 @@ namespace Taalcafe.Hubs
                         {
                             await Clients.Client(existingGroup.Coordinator.ConnectionId).UserHasLeft(user);
                         }
-                        existingGroup.OnlineUsers.Remove(user);
                         await UpdateOnlineGroups();
                     }
                 }
