@@ -345,7 +345,7 @@ function closeConnection(partnerUserId) {
     connection.oniceconnectionstatechange = null;
     connection.onicegatheringstatechange = null;
 
-    let videoElement =  = document.getElementById('Video' + partnerUserId);
+    let videoElement = document.getElementById('Video' + partnerUserId);
     if (videoElement != null) {
         if (videoElement.srcObject != null) {
             videoElement.srcObject.getTracks().forEach(track => track.stop());
