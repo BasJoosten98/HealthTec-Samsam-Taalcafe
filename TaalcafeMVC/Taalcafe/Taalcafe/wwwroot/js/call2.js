@@ -35,6 +35,7 @@ let askHelp = false;
 var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
+//const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
 const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
 //const hubUrl = 'https://taalcafedigitaal.azurewebsites.net/connectionhub'; //Production
 //const hubUrl = 'https://localhost:5001/connectionhub'; //Development
@@ -51,7 +52,11 @@ var wsConn = new signalR.HubConnectionBuilder()
 const peerConnCfg = {
     'iceServers': [
         //{'url': 'stun:stun.services.mozilla.com'}, 
-        { 'url': 'stun:stun.l.google.com:19302' }
+        { 'urls': 'stun:stun.l.google.com:19302' },
+        { 'urls': 'stun:stun1.l.google.com:19302' },
+        { 'urls': 'stun:stun2.l.google.com:19302' },
+        { 'urls': 'stun:stun3.l.google.com:19302' },
+        { 'urls': 'stun:stun4.l.google.com:19302' }
     ]
 };
 
@@ -96,7 +101,7 @@ function initializeUserMedia() {
         .then(stream => {
             localVideoStream = stream;
             localVideo.srcObject = stream;
-            localVideo.play();
+            //localVideo.play();
             document.getElementById("muteButton").disabled = false;
             document.getElementById("pauseButton").disabled = false;
             console.log("Camera and microphone are connected");
@@ -106,7 +111,7 @@ function initializeUserMedia() {
             navigator.mediaDevices.getUserMedia(noVideoConstraints).then(stream => {
                 localVideoStream = stream;
                 localVideo.srcObject = stream;
-                localVideo.play();
+                //localVideo.play();
                 document.getElementById("muteButton").disabled = false;
                 console.log("Microphone is connected");
                 initializeSignalR();
@@ -124,17 +129,17 @@ function sendOffer(partnerUserId) {
     // get a connection for the given partner
     var connection = getConnection(partnerUserId);
 
-    // add our audio/video stream
-    if (localVideoStream != null) {
-        connection.addStream(localVideoStream);
-        console.log("WebRTC: Added local stream to (OFFER) connection");
-    }
-    else {
-        console.error("WebRTC: No local stream found! OFFER failed!");
-        return;
-    }
+    //// add our audio/video stream
+    //if (localVideoStream != null) {
+    //    connection.addStream(localVideoStream);
+    //    console.log("WebRTC: Added local stream to (OFFER) connection");
+    //}
+    //else {
+    //    console.error("WebRTC: No local stream found! OFFER failed!");
+    //    return;
+    //}
 
-    connection.createOffer().then(offer => {
+    connection.createOffer({ iceRestart: true }).then(offer => {
         connection.setLocalDescription(offer).then(() => {
             console.log("WebRTC: Added OFFER to connection's localdesciption. Sending OFFER now...", offer);
             sendSignalTo(partnerUserId, JSON.stringify({ "sdp": connection.localDescription }));
@@ -145,6 +150,7 @@ function sendOffer(partnerUserId) {
 
 function getConnection(partnerUserId) {
     if (connections[partnerUserId]) {
+        console.log("Found connection for partner ", partnerUserId, connections[partnerUserId]);
         return connections[partnerUserId];
     }
     else {
@@ -156,7 +162,18 @@ function getConnection(partnerUserId) {
 // Create the RTCPeerConnection
 function initializeConnection(partnerUserId) {
 
+    console.log("Creating new connection for partner... ", partnerUserId);
     var connection = new RTCPeerConnection(peerConnCfg);
+    console.log("Created connection for partner ", partnerUserId, connection);
+
+    localVideoStream.getTracks().forEach(track => connection.addTrack(track, localVideoStream));
+
+    connection.onicecandidate = evt => callbackIceCandidate(evt, connection, partnerUserId); // ICE Candidate Callback
+    connection.ontrack = evt => callbackTrackAdded(evt, connection, partnerUserId);
+    connection.removeTrack = evt => callbackTrackRemoved(evt, connection, partnerUserId);
+    connection.oniceconnectionstatechange = evt => callbackIceConnectionStateChanged(evt, connection, partnerUserId);
+    connection.onicegatheringstatechange = evt => callbackIceGatheringStateChanged(evt, connection, partnerUserId);
+
 
     // connection.iceConnectionState = evt => console.log("WebRTC: iceConnectionState", evt); //not triggering on edge
     // connection.iceGatheringState = evt => console.log("WebRTC: iceGatheringState", evt); //not triggering on edge
@@ -165,15 +182,51 @@ function initializeConnection(partnerUserId) {
     // connection.onicegatheringstatechange = evt => console.log("WebRTC: onicegatheringstatechange", evt); //triggering on state change 
     // connection.onsignalingstatechange = evt => console.log("WebRTC: onsignalingstatechange", evt); //triggering on state change 
     // connection.ontrack = evt => console.log("WebRTC: ontrack", evt);
-
-    connection.onicecandidate = evt => callbackIceCandidate(evt, connection, partnerUserId); // ICE Candidate Callback
     //connection.onnegotiationneeded = evt => console.log("WebRTC: Negotiation needed.. Event: ", evt); // Negotiation Needed Callback
-    connection.onaddstream = evt => callbackAddStream(connection, evt, partnerUserId); // Add stream handler callback
-    connection.onremovestream = evt => callbackRemoveStream(connection, evt, partnerUserId); // Remove stream handler callback
+    //connection.onaddstream = evt => callbackAddStream(connection, evt, partnerUserId); // Add stream handler callback
+    //connection.onremovestream = evt => callbackRemoveStream(connection, evt, partnerUserId); // Remove stream handler callback
 
     connections[partnerUserId] = connection; // Store away the connection based on username
-    //console.log(connection);
     return connection;
+}
+
+function callbackIceGatheringStateChanged(evt, connection, partnerUserId) {
+    console.log("ICE GATHERING STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
+}
+
+function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
+    console.log("ICE CONNENCTION STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
+}
+
+function callbackTrackAdded(evt, connection, partnerUserId) {
+    console.log("A new (video) track will be added from partner " + partnerUserId, evt);
+    let videoElement = document.getElementById('Video' + partnerUserId);
+    if (videoElement == null) {
+        //add video element
+        console.log('Creating video element for partner ', partnerUserId);
+        document.getElementById("EvaluationBox").hidden = true;
+        let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" autoplay width="100%" height:250px;"> </video></div>';
+        $('#webcams').prepend(elementString);
+        videoElement = document.getElementById('Video' + partnerUserId);
+    }
+    videoElement.srcObject = event.streams[0];
+    console.log("Video element source has been set to ", videoElement.srcObject);
+}
+
+function callbackTrackRemoved(evt, connection, partnerUserId){
+    console.log("Some track has been removed from partner " + partnerUserId, evt);
+    let videoElement = document.getElementById('Video' + partnerUserId);
+    if (videoElement != null) {
+        let stream = videoElement.srcObject;
+        let tracklist = stream.getTracks();
+        console.log("Video element source contains ", videoElement.srcObject);
+        if (tracklist.length <= 0) {
+            console.warn("TrackList is empty for partner ", partnerUserId);
+        }
+    }
+    else {
+        console.error("No video element found for partner ", partnerUserId);
+    }
 }
 
 
@@ -197,13 +250,13 @@ function callbackAddStream(connection, evt, partnerClientId) {
 }
 
 
-function callbackRemoveStream(connection, evt, partnerUserId) {
-    console.log('WebRTC: called callbackRemoveStream, removing remote stream from partner ' + partnerUserId);
-    let videoElement = document.getElementById(partnerUserId);
-    if (videoElement != null) {
-        videoElement.remove();
-    }
-}
+//function callbackRemoveStream(connection, evt, partnerUserId) {
+//    console.log('WebRTC: called callbackRemoveStream, removing remote stream from partner ' + partnerUserId);
+//    let videoElement = document.getElementById(partnerUserId);
+//    if (videoElement != null) {
+//        videoElement.remove();
+//    }
+//}
 
 
 function joinConnectionHub() {
@@ -228,8 +281,8 @@ function sendSignalTo(userId, data) {
 function signalReceived(partnerUserId, data) {
     console.log('SignalR: signal received from ' + partnerUserId + ' with data ', data);
 
-    var signal = JSON.parse(data);
     var connection = getConnection(partnerUserId);
+    var signal = JSON.parse(data);
 
     // Route signal based on type
     if (signal.sdp) {
@@ -245,14 +298,15 @@ function signalReceived(partnerUserId, data) {
 
 
 function receivedIceCandidateSignal(connection, partnerUserId, candidate) {
-    if (connection.remoteDescription != null) {
-        console.log("WebRTC: adding ICE CANDIDATE...");
-        connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: ICE CANDIDATE has been added", candidate), () => console.warn("WebRTC: ICE CANDIDATE could not be added", candidate));
-    }
-    else {
-        console.log("WebRTC: ICE CANDIDATE will be added as soon as Remote Description has been set!");
-        earlyIceCandidates.push({ connection: connection, partnerUserId: partnerUserId, candidate: candidate });
-    }
+    console.log("WebRTC: adding ICE CANDIDATE...");
+    connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: ICE CANDIDATE has been added", candidate), () => console.warn("WebRTC: ICE CANDIDATE could not be added", candidate));
+
+    //if (connection.remoteDescription != null) {
+    //}
+    //else {
+    //    console.log("WebRTC: ICE CANDIDATE will be added as soon as Remote Description has been set!");
+    //    earlyIceCandidates.push({ connection: connection, partnerUserId: partnerUserId, candidate: candidate });
+    //}
 }
 
 function receivedSdpSignal(connection, partnerUserId, sdp) {
@@ -260,7 +314,7 @@ function receivedSdpSignal(connection, partnerUserId, sdp) {
         console.log('WebRTC: Remote Description has been set', connection);
         if (connection.remoteDescription.type == "offer") {
             console.log('WebRTC: Remote Description is of type OFFER');
-            connection.addStream(localVideoStream);
+            //connection.addStream(localVideoStream);
             console.log('WebRTC: creating and sending ANSWER to ' + partnerUserId);
             connection.createAnswer().then((desc) => {
                 connection.setLocalDescription(desc, () => {
@@ -285,13 +339,28 @@ function closeConnection(partnerUserId) {
     console.log("WebRTC: closing connection with partner " + partnerUserId);
     let connection = connections[partnerUserId];
 
+    connection.ontrack = null;
+    connection.onremovetrack = null;
+    connection.onicecandidate = null;
+    connection.oniceconnectionstatechange = null;
+    connection.onicegatheringstatechange = null;
+
+    let videoElement =  = document.getElementById('Video' + partnerUserId);
+    if (videoElement != null) {
+        if (videoElement.srcObject != null) {
+            videoElement.srcObject.getTracks().forEach(track => track.stop());
+        }
+        videoElement = document.getElementById(partnerUserId); //complete video element
+        videoElement.remove();
+    }
+
     if (connection) {
         // Close the connection
         connection.close();
         delete connections[partnerUserId]; // Remove the property
     }
 
-    callbackRemoveStream(null, null, partnerUserId);
+    //callbackRemoveStream(null, null, partnerUserId);
 
     //if (Object.keys(connections).length === 0) {
     //    document.getElementById("stopCallButton").disabled = true;
@@ -397,16 +466,16 @@ function hangup() {
 }
 
 // Attatch remote mediastream to video element
-function attachMediaStream(e, partnerUserId) {
-    console.log('Attaching video stream from partner ', partnerUserId, e);
-    document.getElementById("EvaluationBox").hidden = true;
-    let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" width="100%" height:250px;"> </video></div>';
-    $('#webcams').prepend(elementString);
-    let videoElement = document.getElementById('Video' + partnerUserId);
-    videoElement.srcObject = e.stream;
-    console.log('Video stream from partner has been set ', e.stream);
-    videoElement.play();
-}
+//function attachMediaStream(e, partnerUserId) {
+//    console.log('Attaching video stream from partner ', partnerUserId, e);
+//    document.getElementById("EvaluationBox").hidden = true;
+//    let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" width="100%" height:250px;"> </video></div>';
+//    $('#webcams').prepend(elementString);
+//    let videoElement = document.getElementById('Video' + partnerUserId);
+//    videoElement.srcObject = e.stream;
+//    console.log('Video stream from partner has been set ', e.stream);
+//    videoElement.play();
+//}
 
 
 // Mute sound of user microphone
