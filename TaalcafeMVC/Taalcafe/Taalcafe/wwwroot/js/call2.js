@@ -52,6 +52,7 @@ var wsConn = new signalR.HubConnectionBuilder()
 const peerConnCfg = {
     'iceServers': [
         //{'url': 'stun:stun.services.mozilla.com'}, 
+        { 'urls': 'stun:stun.nextcloud.com:443' },
         { 'urls': 'stun:stun.l.google.com:19302' },
         { 'urls': 'stun:stun1.l.google.com:19302' },
         { 'urls': 'stun:stun2.l.google.com:19302' },
@@ -129,19 +130,20 @@ function sendOffer(partnerUserId) {
     // get a connection for the given partner
     var connection = getConnection(partnerUserId);
 
-    //// add our audio/video stream
-    //if (localVideoStream != null) {
-    //    connection.addStream(localVideoStream);
-    //    console.log("WebRTC: Added local stream to (OFFER) connection");
-    //}
-    //else {
-    //    console.error("WebRTC: No local stream found! OFFER failed!");
-    //    return;
-    //}
+    // add our audio/video stream
+    if (localVideoStream != null) {
+        //connection.addStream(localVideoStream); //DEPRECATED
+        localVideoStream.getTracks().forEach(track => connection.addTrack(track, localVideoStream));
+        console.log("WebRTC: Added local stream to (OFFER) connection");
+    }
+    else {
+        console.error("WebRTC: No local stream found! OFFER failed!");
+        return;
+    }
 
     connection.createOffer({ iceRestart: true }).then(offer => {
         connection.setLocalDescription(offer).then(() => {
-            console.log("WebRTC: Added OFFER to connection's localdesciption. Sending OFFER now...", offer);
+            console.log("WebRTC: Added OFFER to connection's localdescription. Sending OFFER now...", offer, connection);
             sendSignalTo(partnerUserId, JSON.stringify({ "sdp": connection.localDescription }));
         }).catch(err => console.error('WebRTC: Error while setting local description', err));
     }).catch(err => console.error('WebRTC: Error while creating OFFER', err));
@@ -166,14 +168,11 @@ function initializeConnection(partnerUserId) {
     var connection = new RTCPeerConnection(peerConnCfg);
     console.log("Created connection for partner ", partnerUserId, connection);
 
-    localVideoStream.getTracks().forEach(track => connection.addTrack(track, localVideoStream));
-
     connection.onicecandidate = evt => callbackIceCandidate(evt, connection, partnerUserId); // ICE Candidate Callback
     connection.ontrack = evt => callbackTrackAdded(evt, connection, partnerUserId);
     connection.removeTrack = evt => callbackTrackRemoved(evt, connection, partnerUserId);
     connection.oniceconnectionstatechange = evt => callbackIceConnectionStateChanged(evt, connection, partnerUserId);
     connection.onicegatheringstatechange = evt => callbackIceGatheringStateChanged(evt, connection, partnerUserId);
-
 
     // connection.iceConnectionState = evt => console.log("WebRTC: iceConnectionState", evt); //not triggering on edge
     // connection.iceGatheringState = evt => console.log("WebRTC: iceGatheringState", evt); //not triggering on edge
@@ -196,7 +195,30 @@ function callbackIceGatheringStateChanged(evt, connection, partnerUserId) {
 
 function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
     console.log("ICE CONNENCTION STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
+    if (connection.iceConnectionState == "connected") {
+        console.log("CONNECTION SUCCESS! Video element will now be showed for partner ", partnerUserId);
+        //show user video on screen now
+        let videoElement = document.getElementById('Video' + partnerUserId);
+        if (videoElement != null) {
+            videoElement.hidden = false;
+            videoElement.disabled = false;
+        }
+        else {
+            console.error("No video element found (while being connected) for partner ", partnerUserId);
+        }
+    }
+    if (connection.iceConnectionState == "disconnected") {
+        //Try to recall user
+        console.log("CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
+        closeConnection(partnerUserId);
+        sendOffer(partnerUserId);
+        let title = document.getElementById('call_title');
+        reconnectTrial++;
+        title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
+    }
 }
+
+var reconnectTrial = 0;
 
 function callbackTrackAdded(evt, connection, partnerUserId) {
     console.log("A new (video) track will be added from partner " + partnerUserId, evt);
@@ -208,6 +230,8 @@ function callbackTrackAdded(evt, connection, partnerUserId) {
         let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" autoplay width="100%" height:250px;"> </video></div>';
         $('#webcams').prepend(elementString);
         videoElement = document.getElementById('Video' + partnerUserId);
+        videoElement.hidden = true;
+        videoElement.disabled = true;
     }
     videoElement.srcObject = event.streams[0];
     console.log("Video element source has been set to ", videoElement.srcObject);
@@ -298,42 +322,73 @@ function signalReceived(partnerUserId, data) {
 
 
 function receivedIceCandidateSignal(connection, partnerUserId, candidate) {
-    console.log("WebRTC: adding ICE CANDIDATE...");
-    connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: ICE CANDIDATE has been added", candidate), () => console.warn("WebRTC: ICE CANDIDATE could not be added", candidate));
-
-    //if (connection.remoteDescription != null) {
-    //}
-    //else {
-    //    console.log("WebRTC: ICE CANDIDATE will be added as soon as Remote Description has been set!");
-    //    earlyIceCandidates.push({ connection: connection, partnerUserId: partnerUserId, candidate: candidate });
-    //}
+    if (connection.remoteDescription != null) {
+        console.log("WebRTC: adding ICE CANDIDATE...");
+        connection.addIceCandidate(new RTCIceCandidate(candidate), () => console.log("WebRTC: ICE CANDIDATE has been added", candidate), () => console.warn("WebRTC: ICE CANDIDATE could not be added", candidate));
+    }
+    else {
+        console.log("WebRTC: ICE CANDIDATE will be added as soon as Remote Description has been set!");
+        earlyIceCandidates.push({ connection: connection, partnerUserId: partnerUserId, candidate: candidate });
+    }
 }
 
 function receivedSdpSignal(connection, partnerUserId, sdp) {
-    connection.setRemoteDescription(new RTCSessionDescription(sdp), () => {
+
+    let sessionDesc = new RTCSessionDescription(sdp);
+
+    if (connection.remoteDescription != null || connection.currentRemoteDescription != null) {
+        //remote description has already been set! Create new connection object for this partner!
+        if (sdp.type == "offer") {
+            closeConnection(partnerUserId);
+            connection = initializeConnection(partnerUserId);
+        }
+        else {
+            console.error("Wrong scernario occurred! Answer has been received while remote description is already set!");
+            return;
+        }
+    }
+
+    connection.setRemoteDescription(sessionDesc, () => {
         console.log('WebRTC: Remote Description has been set', connection);
+
+        addEarlyIceCandidates(connection, partnerUserId);
+
         if (connection.remoteDescription.type == "offer") {
             console.log('WebRTC: Remote Description is of type OFFER');
-            //connection.addStream(localVideoStream);
+
+            //connection.addStream(localVideoStream); //DEPRECATED
+            localVideoStream.getTracks().forEach(track => connection.addTrack(track, localVideoStream));
+
             console.log('WebRTC: creating and sending ANSWER to ' + partnerUserId);
             connection.createAnswer().then((desc) => {
-                connection.setLocalDescription(desc, () => {
-                    console.log("WebRTC: Added ANSWER to connection's localdesciption. Sending ANSWER now...", desc);
+                connection.setLocalDescription(desc).then(() => {
+                    console.log("WebRTC: Added ANSWER to connection's localdescription. Sending ANSWER now...", desc, connection);
                     sendSignalTo(partnerUserId, JSON.stringify({ "sdp": connection.localDescription }));
-                }, errorHandler);
-            }, errorHandler);
+                }).catch((error) => console.log(error));
+            }).catch((error) => console.log(error));
+
         } else if (connection.remoteDescription.type == "answer") {
             console.log('WebRTC: Remote Description is of type ANSWER');
-            console.log("WebRTC: Adding remaining early ice candidates for this connection...", earlyIceCandidates);
-            for (let earlyCandidate of earlyIceCandidates) {
-                if (earlyCandidate.partnerUserId == partnerUserId) {
-                    receivedIceCandidateSignal(connection, partnerUserId, earlyCandidate.candidate);
-                }
-            }
+            
         }
     }, errorHandler);
 }
 
+function addEarlyIceCandidates(connection, partnerUserId) {
+    if (connection.remoteDescription != null) {
+        console.log("WebRTC: Adding remaining early ice candidates from partner ", partnerUserId, earlyIceCandidates);
+
+        for (let earlyIceCandidate of earlyIceCandidates) {
+            if (earlyIceCandidate.partnerUserId == partnerUserId) {
+                receivedIceCandidateSignal(earlyIceCandidate.connection, partnerUserId, earlyIceCandidate.candidate);
+            }
+        }
+        earlyIceCandidates = earlyIceCandidates.filter(candidate => candidate.partnerUserId != partnerUserId);
+    }
+    else {
+        console.error("Tried to add early ICE CANDIDATES while Remote Description has not been set yet!");
+    }
+}
 
 function closeConnection(partnerUserId) {
     console.log("WebRTC: closing connection with partner " + partnerUserId);
@@ -353,6 +408,8 @@ function closeConnection(partnerUserId) {
         videoElement = document.getElementById(partnerUserId); //complete video element
         videoElement.remove();
     }
+
+    earlyIceCandidates = earlyIceCandidates.filter(candidate => candidate.partnerUserId != partnerUserId); //remove early ice candidates for partner
 
     if (connection) {
         // Close the connection
