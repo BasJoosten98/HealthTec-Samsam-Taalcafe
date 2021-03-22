@@ -63,8 +63,6 @@ const peerConnCfg = {
 // Triggers when the page is done loading
 $(document).ready(function () {
     document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = true;
-    document.getElementById("askHelpButton").disabled = true;
 
     model = getModel();
     console.log("model obtained: ", model);
@@ -220,7 +218,6 @@ function callbackTrackAdded(evt, connection, partnerUserId) {
     if (videoElement == null) {
         //add video element
         console.log('Creating video element for partner ', partnerUserId);
-        document.getElementById("EvaluationBox").hidden = true;
         let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" autoplay width="100%" height:250px;"> </video></div>';
         $('#webcams').prepend(elementString);
         videoElement = document.getElementById('Video' + partnerUserId);
@@ -231,7 +228,7 @@ function callbackTrackAdded(evt, connection, partnerUserId) {
     console.log("Video element source has been set to ", videoElement.srcObject);
 }
 
-function callbackTrackRemoved(evt, connection, partnerUserId){
+function callbackTrackRemoved(evt, connection, partnerUserId) {
     console.log("Some track has been removed from partner " + partnerUserId, evt);
     let videoElement = document.getElementById('Video' + partnerUserId);
     if (videoElement != null) {
@@ -267,8 +264,14 @@ function callbackAddStream(connection, evt, partnerClientId) {
     attachMediaStream(evt, partnerClientId);
 }
 
-
+//THIS WILL LOGIN AS COORDINATOR BAS ACCOUNT
 function joinConnectionHub() {
+    console.log("SignalR: joining connectionhub...")
+    wsConn.invoke("Join", 6).catch(err => {
+        console.error("Failed SignalR connection: Not able to connect to signaling server.", err);
+    });
+    return;
+
     if (model.gebruikerId == null) {
         console.warn("Username is empty in model. FAILED ");
     }
@@ -354,7 +357,7 @@ function receivedSdpSignal(connection, partnerUserId, sdp) {
 
         } else if (connection.remoteDescription.type == "answer") {
             console.log('WebRTC: Remote Description is of type ANSWER');
-            
+
         }
     }, errorHandler);
 }
@@ -415,9 +418,7 @@ function closeAllConnections() {
 // Hub Callback: Call accepted
 wsConn.on('JoinedSuccess', () => {
     console.log("SignalR: joining connectionhub was a success!");
-    document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = false;
-    document.getElementById("askHelpButton").disabled = false;
+    //document.getElementById("stopCallButton").disabled = false;
 });
 
 wsConn.on('JoinedFailed', (reason) => {
@@ -427,6 +428,7 @@ wsConn.on('JoinedFailed', (reason) => {
 wsConn.on("CallUser", (partner) => {
     if (partner != null) {
         sendOffer(partner.userId);
+        document.getElementById("stopCallButton").disabled = false;
     }
 });
 
@@ -439,10 +441,76 @@ wsConn.on("ReceiveSignal", (partner, data) => {
 wsConn.on("UserHasLeft", (partner) => {
     if (partner != null) {
         closeConnection(partner.userId);
+
+        //Coordinator could be the only one in a group
+        //If so, the group has been removed and thus should the button states be changed to normal
+        if (Object.keys(connections).length == 0) {
+            document.getElementById("stopCallButton").disabled = true;
+        }
     }
 });
 
 
+wsConn.on("ReceiveOnlineGroups", (onlineGroups) => {
+    console.log("Groups update received", onlineGroups);
+    //update UI with onlineGroups
+    $('#callList li.call').remove(); //removes current list
+
+    for (let group of onlineGroups) {
+        let usersString = "";
+        for (let groupUser of group.onlineUsers) {
+            usersString += groupUser.name + " ";
+        }
+
+        let coordinatorString = "None";
+        if (group.coordinator != null) {
+            coordinatorString = group.coordinator.name;
+        }
+
+        let listString = '<li class="list-group-item call">';
+
+        if (group.needsHelp) {
+            listString += '<div class="container-fluid alert-warning"><div class="row">';
+            
+            listString += '<div class="col-3">' + usersString + '</div>';
+            listString += '<div class="col-3">' + coordinatorString + '</div>';
+            listString += '<div class="col-3">Handje omhoog gestoken</div>';
+        }
+        else {
+            listString += '<div class="container-fluid"><div class="row">';
+            listString += '<div class="col-3">' + usersString + '</div>';
+            listString += '<div class="col-3">' + coordinatorString + '</div>';
+            listString += '<div class="col-3"></div>';
+        }
+
+        listString += '<input class="col-3" value="Deelnemen" type="button" onclick="joinGroup(' + group.groupId + ')"';
+        if (group.coordinator != null) {
+            // disable button if a coordinator already is in the call
+            listString += ' disabled></input></div></div></li>';
+        }
+        else {
+            listString += '></input></div></div></li>';
+        }
+
+        $('#callList').append(listString);
+    }
+
+    if (onlineGroups.length === 0) {
+        /* builds the following structure:
+ 
+        <li class="list-group-item call">
+            <div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div>
+        </li>
+        */
+        $('#callList').append('<li class="list-group-item call"><div class="container-fluid alert-secondary">Er zijn op dit moment geen actieve gesprekken.</div></li>');
+    }
+});
+
+function joinGroup(groupId) {
+    wsConn.invoke("JoinGroupCallAsCoordinator", groupId).catch(err => {
+        console.error("Failed SignalR connection: Not able to connect to signaling server.", err);
+    });
+}
 
 
 // Notify the user that the client is trying to reconnect
@@ -469,31 +537,28 @@ wsConn.onclose(err => {
     }
 });
 
-// ask for help or stop asking for help
-function toggleHelp() {
-    setHelpNeeded(!askHelp);
-    wsConn.invoke('AskForHelp');
-}
-wsConn.on('NeedHelpSetTo', (helpNeeded) => {
-    setHelpNeeded(helpNeeded);
-});
-function setHelpNeeded(helpNeeded) {
-    if (!helpNeeded) {
-        askHelp = false;
-        document.getElementById("askHelpButton").value = "Vraag om hulp";
-    }
-    else {
-        askHelp = true;
-        document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
-    }
-}
+// A coordinator can not see the help symbol in a call
+//function toggleHelp() {
+//    setHelpNeeded(!askHelp);
+//    wsConn.invoke('AskForHelp');
+//}
+//wsConn.on('NeedHelpSetTo', (helpNeeded) => {
+//    //setHelpNeeded(helpNeeded);
+//});
+//function setHelpNeeded(helpNeeded) {
+//    if (!helpNeeded) {
+//        askHelp = false;
+//        document.getElementById("askHelpButton").value = "Vraag om hulp";
+//    }
+//    else {
+//        askHelp = true;
+//        document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
+//    }
+//}
 
 // Close the current calling sessions
 function hangup() {
     document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = true;
-    document.getElementById("askHelpButton").disabled = true;
-    document.getElementById("EvaluationBox").hidden = false;
     wsConn.invoke("Leave");
     closeAllConnections();
 }

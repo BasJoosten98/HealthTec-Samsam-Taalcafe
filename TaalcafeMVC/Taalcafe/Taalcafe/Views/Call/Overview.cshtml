@@ -5,7 +5,7 @@
 
 @section scripts {
     <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
-    <script src="~/js/call_overview.js"> </script>
+    <script src="~/js/call_overview2.js"> </script>
     <script>
         function getModel() {
             return @Html.Raw(Json.Serialize(Model));
@@ -23,10 +23,10 @@
                             Duo
                             <div class="row">
                                 <div class="col-6">
-                                    Taalcoach
+                                    Mensen in groep
                                 </div>
                                 <div class="col-6">
-                                    Nieuwe Nederlander
+                                    Coordinator
                                 </div>  
                             </div>
                         </div>
@@ -93,7 +93,7 @@
                     }
                 </div>
                 <div class="row">
-                    <video id="localVideo" width="100%" height="auto" muted> </video>
+                    <video id="localVideo" width="100%" height="auto" muted autoplay> </video>
                 </div>
             </div>
         </div>

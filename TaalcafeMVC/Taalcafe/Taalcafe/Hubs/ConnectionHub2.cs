@@ -28,9 +28,9 @@ namespace Taalcafe.Hubs
         {
             await Leave();
             OnlineUser coordinator = onlineCoordinators.SingleOrDefault(c => c.ConnectionId == Context.ConnectionId);
-            if (coordinator != null)
+            if (coordinator != null) //user is a coordinator, so log him out!
             {
-                onlineCoordinators.Remove(coordinator);
+                onlineCoordinators.RemoveAll(c => c.ConnectionId == Context.ConnectionId || c.UserId == coordinator.UserId);
             }
         }
         //Look up group and let coordinators know that this group needs help (in call overview)
@@ -44,10 +44,11 @@ namespace Taalcafe.Hubs
                 {
                     await Clients.Client(user.ConnectionId).NeedHelpSetTo(group.NeedsHelp); 
                 }
-                if(group.Coordinator != null)
-                {
-                    await Clients.Client(group.Coordinator.ConnectionId).NeedHelpSetTo(group.NeedsHelp);
-                }
+                //Coordinator can not see the help symbol in call
+                //if(group.Coordinator != null)
+                //{
+                //    await Clients.Client(group.Coordinator.ConnectionId).NeedHelpSetTo(group.NeedsHelp);
+                //}
             }
             await UpdateOnlineGroups();
         }
