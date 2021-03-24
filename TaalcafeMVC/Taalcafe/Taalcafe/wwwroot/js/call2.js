@@ -35,8 +35,8 @@ let askHelp = false;
 var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
-//const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
-const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
+const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
+//const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
 //const hubUrl = 'https://localhost:44324/connectionhub'; //Development
 var wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { transport: signalR.HttpTransportType.Websockets })
@@ -184,13 +184,13 @@ function initializeConnection(partnerUserId) {
 }
 
 function callbackIceGatheringStateChanged(evt, connection, partnerUserId) {
-    console.log("ICE GATHERING STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
+    console.log("WebRTC: ICE GATHERING STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
 }
 
 function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
-    console.log("ICE CONNENCTION STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
+    console.log("WebRTC: ICE CONNENCTION STATE CHANGED from partner ", partnerUserId, evt, connection.iceConnectionState)
     if (connection.iceConnectionState == "connected") {
-        console.log("CONNECTION SUCCESS! Video element will now be showed for partner ", partnerUserId);
+        console.log("WebRTC: CONNECTION SUCCESS! Video element will now be showed for partner ", partnerUserId);
         //show user video on screen now
         let videoElement = document.getElementById('Video' + partnerUserId);
         if (videoElement != null) {
@@ -201,14 +201,28 @@ function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
             console.error("No video element found (while being connected) for partner ", partnerUserId);
         }
     }
-    if (connection.iceConnectionState == "disconnected") {
+    else if (connection.iceConnectionState == "disconnected") {
         //Try to recall user
-        console.log("CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
-        closeConnection(partnerUserId);
-        sendOffer(partnerUserId);
-        let title = document.getElementById('call_title');
-        reconnectTrial++;
-        title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
+        let localDesc = connection.localDescription;
+        if (localDesc == null) { localDesc = connection.currentLocalDescription; }
+
+        if (localDesc != null) {
+            if (localDesc.type == "offer") {
+                //This user is the one that started the call! He should recall!
+                console.warn("WebRTC: CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
+                closeConnection(partnerUserId);
+                sendOffer(partnerUserId);
+                let title = document.getElementById('call_title');
+                reconnectTrial++;
+                title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
+                return;
+            }
+            else {
+                console.warn("WebRTC: CONNECTION DISCONNECTED, waiting for recall from partner ", partnerUserId);
+                return;
+            }
+        }
+        console.error("WebRTC: CONNECTION DISCONNECTED, but no localdescription found! Unable to handle recall from this side!", partnerUserId, connection);
     }
 }
 
