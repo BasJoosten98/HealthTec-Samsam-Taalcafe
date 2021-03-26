@@ -86,11 +86,19 @@ namespace Taalcafe
 
             app.UseRouting();
 
-            app.UseAuthorization();
-
             //app.UseCors("CorsPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // set localization options
+            var locale = Configuration["SiteLocale"];
+            RequestLocalizationOptions localizationOptions = new RequestLocalizationOptions
+            {
+                SupportedCultures = new List<CultureInfo> { new CultureInfo(locale) },
+                SupportedUICultures = new List<CultureInfo> { new CultureInfo(locale) },
+                DefaultRequestCulture = new RequestCulture(locale)
+            };
+            app.UseRequestLocalization(localizationOptions);
 
             app.UseEndpoints(endpoints =>
             {
@@ -102,15 +110,7 @@ namespace Taalcafe
                 endpoints.MapHub<ConnectionHub2>("/connectionhub");
             });
 
-            // set localization options
-            var locale = Configuration["SiteLocale"];
-            RequestLocalizationOptions localizationOptions = new RequestLocalizationOptions
-            {
-                SupportedCultures = new List<CultureInfo> { new CultureInfo(locale) },
-                SupportedUICultures = new List<CultureInfo> { new CultureInfo(locale) },
-                DefaultRequestCulture = new RequestCulture(locale)
-            };
-            app.UseRequestLocalization(localizationOptions);
+
         }
     }
 }
