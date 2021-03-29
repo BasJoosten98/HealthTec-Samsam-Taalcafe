@@ -35,9 +35,9 @@ let askHelp = false;
 var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
-const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
+//const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
 //const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
-//const hubUrl = 'https://localhost:44324/connectionhub'; //Development
+const hubUrl = 'https://localhost:44324/connectionhub'; //Development
 var wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { transport: signalR.HttpTransportType.Websockets })
     // Logging levels from most to least:
@@ -546,3 +546,4 @@ function muteLocalVideo() {
         }
     }
 }
+

@@ -35,9 +35,9 @@ let askHelp = false;
 var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
-const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
+//const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
 //const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
-//const hubUrl = 'https://localhost:44324/connectionhub'; //Development
+const hubUrl = 'https://localhost:44324/connectionhub'; //Development
 var wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { transport: signalR.HttpTransportType.Websockets })
     // Logging levels from most to least:
@@ -281,7 +281,7 @@ function callbackAddStream(connection, evt, partnerClientId) {
 //THIS WILL LOGIN AS COORDINATOR BAS ACCOUNT
 function joinConnectionHub() {
     console.log("SignalR: joining connectionhub...")
-    wsConn.invoke("Join", 6).catch(err => {
+    wsConn.invoke("Join", 1).catch(err => {
         console.error("Failed SignalR connection: Not able to connect to signaling server.", err);
     });
     return;

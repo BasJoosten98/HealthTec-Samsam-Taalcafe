@@ -117,6 +117,22 @@ namespace Taalcafe.Controllers
             return RedirectToAction("SignIn", "Login");
         }
 
+        public IActionResult NewCall()
+        {
+            CallSessionViewModel viewModel = new CallSessionViewModel(
+                    2,
+                    "Koken",
+                    "Koken is het bereiden van voedsel door middel van verhitting! Door deze voedselverwerkingsmethode verandert de structuur van het rauwe voedsel en worden bacteriën gedood",
+                    8,
+                    7,
+                    "Bas",
+                    "Ralf",
+                    null,
+                    "Wat is je favoriete gerecht om klaar te maken?~Draag je een koksmuts tijdens het koken?~Doe je het samen?"
+                );
+            return View(viewModel);
+        }
+
         public IActionResult Overview()
         {
             Instantiate();

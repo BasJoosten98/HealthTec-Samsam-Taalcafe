@@ -1,11 +1,11 @@
-@model Taalcafe.Models.ViewModels.CallSessionViewModel
+﻿@model Taalcafe.Models.ViewModels.CallSessionViewModel
 @{
     ViewData["Title"] = "Call";
 }
 
 @section scripts {
-    <script src="~/js/signalr/dist/browser/signalr.min.js"> </script>
-    <script type="text/javascript" src="~/js/call2.js"> </script>
+    <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
+    <script type="text/javascript" src="~/js/call2.js"></script>
     <script>
         function getModel() {
             return @Html.Raw(Json.Serialize(@Model));
@@ -14,74 +14,87 @@
 }
 
 
-<div class="container-fluid">
+<div class="container-fluid bg-dark">
     <div class="row">
-        <div class="col-8 p-0 m-0">
-            <div class="row ml-2">
-                <h4><b id="call_title">(This works with the new connectionhub)</b></h4>
+        <div class="col-8 p-0 m-0 bg-dark">
+            @*EVALUATION BOX*@
+            <div id="EvaluationBox" class="row" hidden>
+                <p>
+                    Het videogesprek is afgesloten. Als het gesprek onverwachts afgesloten betekent dat dat iets verkeerd gegegaan is met de verbinding tussen u en uw partners.
+                    Mogelijk is uw internet verbinding of die van uw partner weg gevallen. U kan hier wachten tot de verbinding herstelt, of het gesprek verlaten en doorgaan door op de knop hieronder te drukken.
+                </p>
+                <p>
+                    Als u bewust het gesprek afgesloten heeft of als de sessie afgelopen is kan u het bericht hierboven negeren en doorgaan door op de knop hieronder te drukken.
+                </p>
+                <a asp-action="SessionEvaluation" class="btn btn-success" asp-route-sessionId="@Model.sessieId" asp-route-userId="@Model.gebruikerId">Doorgaan</a>
             </div>
-            <div class="row no-gutters" id="webcams">               
-                <div id="EvaluationBox" hidden>
-                    <p>
-                        Het videogesprek is afgesloten. Als het gesprek onverwachts afgesloten betekent dat dat iets verkeerd gegegaan is met de verbinding tussen u en uw partners. 
-                        Mogelijk is uw internet verbinding of die van uw partner weg gevallen. U kan hier wachten tot de verbinding herstelt, of het gesprek verlaten en doorgaan door op de knop hieronder te drukken.
-                    </p>
-                    <p>
-                        Als u bewust het gesprek afgesloten heeft of als de sessie afgelopen is kan u het bericht hierboven negeren en doorgaan door op de knop hieronder te drukken.
-                    </p>
-                    <a asp-action="SessionEvaluation" class="btn btn-success" asp-route-sessionId="@Model.sessieId" asp-route-userId="@Model.gebruikerId">Doorgaan</a>
-                </div>
+            @*WEBCAMS*@
+            <div id="webcams" class="row no-gutters">
+
             </div>
-            <div Class="row justify-content-center">
+            @*TASK BAR*@
+            <div id="taskbar" style="position:absolute; bottom:20px; left:0; right:0;">
                 <div class="btn-toolbar" role="toolbar" aria-label="Controls">
-                    <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
-                        <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled/>
-                        <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled/>
-                    </div>
-                    <div class="btn-group mr-2" role="group" aria-label="Call/Hang up">
-                        <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled hidden/>
-                        <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled/>
-                    </div>
-                    <div class="btn-group" role="group" aria-label="Ask help">
-                        <input class="btn btn-secondary" id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()"/>
+                    <div class="m-auto">
+                        <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
+                            <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled />
+                            <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled />
+                        </div>
+                        <div class="btn-group mr-2" role="group" aria-label="Call/Hang up">
+                            <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled hidden />
+                            <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled />
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Ask help">
+                            <input class="btn btn-secondary" id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-4">
-            <div class="row">
-                <h1>Thema van deze sessie: @Html.DisplayName(Model.thema)</h1>
-                </div>
-            <div class="row">
-                <p>@Html.DisplayName(Model.beschrijving)</p>
-                </div>
-            <div class="row">
-                <h2>Afbeeldingen</h2>
-                </div>
-                @if (Model.Afbeeldingen.Count() > 0) 
-                {
-                    foreach (var item in Model.Afbeeldingen)
-                    {
-                        <div class="row">
-                        <img src="@item" />
+        @*RIGHT PANEL WITH THEMEBOX AND LOCALVIDEO*@
+        <div id="rightpanel" class="col-4">
+            <div id="themebox" class="row bg-white pt-3 pb-3">
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col-12">
+                            <h1 id="themetitle" style="text-align:center; color:orangered">@Html.DisplayName(Model.thema)</h1>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p id="themedesc" style="text-align:center">
+                                @Html.DisplayName(Model.beschrijving)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            @foreach (var item in Model.Afbeeldingen)
+                            {
+                                <img src="@item" />
+                            }
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        @foreach (var question in Model.Vragen)
+                        {
+                            <div class="col-1 align-self-center pr-0">
+                                <input type="checkbox" id="@Html.DisplayFor(modelItem => question)">
+
                             </div>
-                    }
-                }
-                else 
-                {
-                    <p>Er zijn geen afbeeldingen beschikbaar over dit thema.</p>
-                }
-                <h2>Vragen</h2>
-                @foreach (var item in Model.Vragen)
-                {
-            <div class="row">
-                <p>@Html.DisplayFor(modelItem => item)</p>
+                            <div class="col-11">
+                                <label class="mt-0 mb-0" for="@Html.DisplayFor(modelItem => question)">@Html.DisplayFor(modelItem => question)</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
             </div>
-                }
-            </div>
-            <div class="row">
-                <video id="localVideo" autoplay style="position:fixed; width:300px; height:300px; right: 0; bottom: 0;" muted> </video>
+            <div id="localvideobox" class="row justify-content-center bg-dark">
+                <video id="localVideo" autoplay muted width="100%" poster="~/pics/def_user.png"> </video>
             </div>
         </div>
+
     </div>
 </div>
+
