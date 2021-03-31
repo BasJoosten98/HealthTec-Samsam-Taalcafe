@@ -35,9 +35,9 @@ let askHelp = false;
 var earlyIceCandidates = [];
 
 //document.location.pathname + '/connectionhub';
-//const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
+const hubUrl = 'https://samsam-taalcafe-dev.azurewebsites.net/connectionhub'; //Production-dev
 //const hubUrl = 'https://samsam-taalcafe.azurewebsites.net/connectionhub'; //Production
-const hubUrl = 'https://localhost:44324/connectionhub'; //Development
+//const hubUrl = 'https://localhost:44324/connectionhub'; //Development
 var wsConn = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { transport: signalR.HttpTransportType.Websockets })
     // Logging levels from most to least:
@@ -50,12 +50,18 @@ var wsConn = new signalR.HubConnectionBuilder()
 const peerConnCfg = {
     'iceServers': [
         //{'url': 'stun:stun.services.mozilla.com'}, 
-        { 'urls': 'stun:stun.nextcloud.com:443' },
+        //{ 'urls': 'stun:stun.nextcloud.com:443' },
+        //{ urls: 'stun:stun.xs4all.nl:3478' },
         { 'urls': 'stun:stun.l.google.com:19302' },
-        { 'urls': 'stun:stun1.l.google.com:19302' },
-        { 'urls': 'stun:stun2.l.google.com:19302' },
-        { 'urls': 'stun:stun3.l.google.com:19302' },
-        { 'urls': 'stun:stun4.l.google.com:19302' }
+        //{ 'urls': 'stun:stun1.l.google.com:19302' },
+        //{ 'urls': 'stun:stun2.l.google.com:19302' },
+        //{ 'urls': 'stun:stun3.l.google.com:19302' },
+        //{ 'urls': 'stun:stun4.l.google.com:19302' },        
+        //{ 'urls': 'stun:stun.voys.nl:3478' },
+        //{ 'urls': 'stun:stun.voipplanet.nl:3478' },
+        //{ 'urls': 'stun:stun.solcon.nl:3478' },
+        //{ 'urls': 'stun:stun.dcalling.de:3478' },
+        //{ 'urls': 'stun:stun.1und1.de:3478' },
     ]
 };
 
@@ -208,17 +214,14 @@ function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
 
         if (localDesc != null) {
             if (localDesc.type == "offer") {
-                //This user is the one that started the call! He should recall!
-                console.warn("WebRTC: CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
-                closeConnection(partnerUserId);
-                sendOffer(partnerUserId);
-                //let title = document.getElementById('call_title');
-                //reconnectTrial++;
-                //title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
+                //This user is the one that started the call! He failed, let the other try!
+                console.warn("WebRTC: CONNECTION DISCONNECTED, I tried, but failed, waiting for recall from partner ", partnerUserId);
                 return;
             }
             else {
-                console.warn("WebRTC: CONNECTION DISCONNECTED, waiting for recall from partner ", partnerUserId);
+                console.warn("WebRTC: CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
+                closeConnection(partnerUserId);
+                sendOffer(partnerUserId);
                 return;
             }
         }

@@ -102,6 +102,10 @@ namespace Taalcafe.Hubs
                     existingGroup.OnlineUsers.Add(user);
                     await Clients.Caller.JoinedSuccess();
                     await UpdateOnlineGroups();
+                    if (existingGroup.Coordinator != null)
+                    {
+                        await Clients.Caller.CallUser(existingGroup.Coordinator);
+                    }
                     foreach (OnlineUser partner in existingGroup.OnlineUsers)
                     {
                         if (partner.UserId != user.UserId)
