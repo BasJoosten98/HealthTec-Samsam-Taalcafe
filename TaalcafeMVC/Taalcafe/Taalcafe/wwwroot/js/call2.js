@@ -212,9 +212,9 @@ function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
                 console.warn("WebRTC: CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
                 closeConnection(partnerUserId);
                 sendOffer(partnerUserId);
-                let title = document.getElementById('call_title');
-                reconnectTrial++;
-                title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
+                //let title = document.getElementById('call_title');
+                //reconnectTrial++;
+                //title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
                 return;
             }
             else {
@@ -225,6 +225,31 @@ function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
         console.error("WebRTC: CONNECTION DISCONNECTED, but no localdescription found! Unable to handle recall from this side!", partnerUserId, connection);
     }
 }
+//function recall() {
+//    let partnerUserId = model.partnerId;
+//    let connection = getConnection(partnerUserId);
+//    //Try to recall user
+//    let localDesc = connection.localDescription;
+//    if (localDesc == null) { localDesc = connection.currentLocalDescription; }
+
+//    if (localDesc != null) {
+//        if (localDesc.type == "offer") {
+//            //This user is the one that started the call! He should recall!
+//            console.warn("WebRTC: CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
+//            closeConnection(partnerUserId);
+//            sendOffer(partnerUserId);
+//            let title = document.getElementById('call_title');
+//            reconnectTrial++;
+//            title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
+//            return;
+//        }
+//        else {
+//            console.warn("WebRTC: CONNECTION DISCONNECTED, waiting for recall from partner ", partnerUserId);
+//            return;
+//        }
+//    }
+//    console.error("WebRTC: CONNECTION DISCONNECTED, but no localdescription found! Unable to handle recall from this side!", partnerUserId, connection);
+//}
 
 var reconnectTrial = 0;
 
@@ -232,17 +257,38 @@ function callbackTrackAdded(evt, connection, partnerUserId) {
     console.log("A new (video) track will be added from partner " + partnerUserId, evt);
     let videoElement = document.getElementById('Video' + partnerUserId);
     if (videoElement == null) {
-        //add video element
-        console.log('Creating video element for partner ', partnerUserId);
-        document.getElementById("EvaluationBox").hidden = true;
-        let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" autoplay width="100%" height:250px;"> </video></div>';
-        $('#webcams').prepend(elementString);
-        videoElement = document.getElementById('Video' + partnerUserId);
-        videoElement.hidden = true;
-        videoElement.disabled = true;
+        videoElement = addHiddenVideoElementFor(partnerUserId);
     }
     videoElement.srcObject = event.streams[0];
     console.log("Video element source has been set to ", videoElement.srcObject);
+}
+
+var totalVideoElements = 0;
+var videoElementsHeight = 100;
+var startVideoElement = 1;
+function addHiddenVideoElementFor(partnerUserId) {
+    //add video element
+    console.log('Creating video element for partner ', partnerUserId);
+    totalVideoElements++;
+    if (startVideoElement * startVideoElement < totalVideoElements) {
+        //too much elements, decrease height
+        startVideoElement++;
+        videoElementsHeight = Math.floor(100 / startVideoElement);
+        console.log("VideoElementHeight set to ", videoElementsHeight);
+        for (let userId in connections) { //gets the keys
+            let div = document.getElementById(userId);
+            if (div != null) {
+                div.style.height = "" + videoElementsHeight + "%";
+                div.style.width = "" + videoElementsHeight + "%";
+            }
+        }
+    }
+    let elementString = '<div  id="' + partnerUserId + '" style="width:' + videoElementsHeight + '%; height:' + videoElementsHeight + '%;"><video id="Video' + partnerUserId + '" autoplay style="object-fit: contain; height:100%; width:100%"> </video ></div > ';
+    $('#webcams').prepend(elementString);
+    let videoElement = document.getElementById('Video' + partnerUserId);
+    videoElement.hidden = true;
+    videoElement.disabled = true;
+    return videoElement;
 }
 
 function callbackTrackRemoved(evt, connection, partnerUserId){
@@ -406,6 +452,20 @@ function closeConnection(partnerUserId) {
         }
         videoElement = document.getElementById(partnerUserId); //complete video element
         videoElement.remove();
+        totalVideoElements--;
+        if (totalVideoElements < startVideoElement) {
+            //too few elements, increase height
+            startVideoElement--;
+            videoElementsHeight = Math.floor(100 / startVideoElement);
+            console.log("VideoElementHeight set to ", videoElementsHeight);
+            for (let userId in connections) { //gets the keys
+                let div = document.getElementById(userId);
+                if (div != null) {
+                    div.style.height = "" + videoElementsHeight + "%";
+                    div.style.width = "" + videoElementsHeight + "%";
+                }
+            }
+        }
     }
 
     earlyIceCandidates = earlyIceCandidates.filter(candidate => candidate.partnerUserId != partnerUserId); //remove early ice candidates for partner

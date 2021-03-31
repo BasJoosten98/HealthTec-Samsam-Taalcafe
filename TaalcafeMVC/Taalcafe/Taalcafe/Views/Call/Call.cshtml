@@ -14,11 +14,15 @@
 }
 
 
-<div class="container-fluid bg-dark">
+<div class="container-fluid bg-dark" style="height:75vh; overflow:hidden;">
     <div class="row">
-        <div class="col-8 p-0 m-0 bg-dark">
+        @*<div class="col-12">
+            <input class="btn btn-secondary" id="recall" value="Recall" type="button" onclick="recall()" />
+            <h2 id="call_title">Welcome to the new connectionhub!</h2>
+        </div>*@
+        <div class="col-8 p-0 m-0 bg-dark" style="height:75vh; overflow:hidden;">
             @*EVALUATION BOX*@
-            <div id="EvaluationBox" class="row" hidden>
+            <div id="EvaluationBox" class="row bg-white" hidden>
                 <p>
                     Het videogesprek is afgesloten. Als het gesprek onverwachts afgesloten betekent dat dat iets verkeerd gegegaan is met de verbinding tussen u en uw partners.
                     Mogelijk is uw internet verbinding of die van uw partner weg gevallen. U kan hier wachten tot de verbinding herstelt, of het gesprek verlaten en doorgaan door op de knop hieronder te drukken.
@@ -53,7 +57,7 @@
         </div>
         @*RIGHT PANEL WITH THEMEBOX AND LOCALVIDEO*@
         <div id="rightpanel" class="col-4">
-            <div id="themebox" class="row bg-white pt-3 pb-3">
+            <div id="themebox" class="row bg-white pt-3 pb-3" style="height:55vh; overflow:auto;">
                 <div class="col-12">
                     <div class="row">
                         <div class="col-12">
@@ -67,15 +71,20 @@
                             </p>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12">
-                            @foreach (var item in Model.Afbeeldingen)
-                            {
-                                <img src="@item" />
-                            }
+                    <hr />
+                    @if (Model.Afbeeldingen.Count > 0)
+                    {
+                        <div class="row">
+                            <div class="col-12">
+                                @foreach (var item in Model.Afbeeldingen)
+                                {
+                                    <img src="@item" />
+                                }
+                            </div>
                         </div>
-                    </div>
-                    <div class="row mt-3">
+                        <hr />
+                    }
+                    <div class="row mt-3" style="max-height:30vh; overflow:auto;">
                         @foreach (var question in Model.Vragen)
                         {
                             <div class="col-1 align-self-center pr-0">
@@ -90,8 +99,8 @@
                 </div>
 
             </div>
-            <div id="localvideobox" class="row justify-content-center bg-dark">
-                <video id="localVideo" autoplay muted width="100%" poster="~/pics/def_user.png"> </video>
+            <div id="localvideobox" class="row justify-content-center bg-dark" style="height:20vh; overflow:hidden;">
+                <video id="localVideo" autoplay muted poster="~/pics/def_user.png" style="height:100%; width:100%; object-fit:contain;"> </video>
             </div>
         </div>
 
