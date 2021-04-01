@@ -52,7 +52,12 @@ const peerConnCfg = {
         //{'url': 'stun:stun.services.mozilla.com'}, 
         //{ 'urls': 'stun:stun.nextcloud.com:443' },
         //{ 'urls': 'stun:stun.xs4all.nl:3478' },
-        { 'urls': 'stun:stun.l.google.com:19302' }, 
+        {
+            url: 'turn:relay.backups.cz',
+            credential: 'webrtc',
+            username: 'webrtc'
+        }
+        { 'urls': 'stun:stun.l.google.com:19302' },
         //{ 'urls': 'stun:stun1.l.google.com:19302' },
         //{ 'urls': 'stun:stun2.l.google.com:19302' },
         //{ 'urls': 'stun:stun3.l.google.com:19302' },
@@ -344,12 +349,24 @@ function receivedSdpSignal(connection, partnerUserId, sdp) {
     if (connection.remoteDescription != null || connection.currentRemoteDescription != null) {
         //remote description has already been set! Create new connection object for this partner!
         if (sdp.type == "offer") {
+            console.warn("Remote description has already been set, new connection will be made for OFFER from partner ", partnerUserId, connection);
             closeConnection(partnerUserId);
             connection = initializeConnection(partnerUserId);
         }
         else {
             console.error("Wrong scernario occurred! Answer has been received while remote description is already set!");
             return;
+        }
+    }
+    if (connection.localDescription != null || connection.currentLocalDescription != null) {
+        //local description has been set! If remote is of type OFFER, give a warning and create new connection
+        if (sdp.type == "offer") {
+            console.error("Local description has already been set, new connection will be made for OFFER from partner ", partnerUserId, connection);
+            closeConnection(partnerUserId);
+            connection = initializeConnection(partnerUserId);
+        }
+        else {
+            //It is an asnwer, which is fine!
         }
     }
 

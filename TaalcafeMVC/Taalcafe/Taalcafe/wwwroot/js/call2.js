@@ -51,7 +51,12 @@ const peerConnCfg = {
     'iceServers': [
         //{'url': 'stun:stun.services.mozilla.com'}, 
         //{ 'urls': 'stun:stun.nextcloud.com:443' },
-        //{ urls: 'stun:stun.xs4all.nl:3478' },
+        //{ urls: 'stun:stun.xs4all.nl:3478' },      
+        {
+            url: 'turn:relay.backups.cz',
+            credential: 'webrtc',
+            username: 'webrtc'
+        }
         { 'urls': 'stun:stun.l.google.com:19302' },
         //{ 'urls': 'stun:stun1.l.google.com:19302' },
         //{ 'urls': 'stun:stun2.l.google.com:19302' },
@@ -228,31 +233,6 @@ function callbackIceConnectionStateChanged(evt, connection, partnerUserId) {
         console.error("WebRTC: CONNECTION DISCONNECTED, but no localdescription found! Unable to handle recall from this side!", partnerUserId, connection);
     }
 }
-//function recall() {
-//    let partnerUserId = model.partnerId;
-//    let connection = getConnection(partnerUserId);
-//    //Try to recall user
-//    let localDesc = connection.localDescription;
-//    if (localDesc == null) { localDesc = connection.currentLocalDescription; }
-
-//    if (localDesc != null) {
-//        if (localDesc.type == "offer") {
-//            //This user is the one that started the call! He should recall!
-//            console.warn("WebRTC: CONNECTION DISCONNECTED, trying to recall partner ", partnerUserId);
-//            closeConnection(partnerUserId);
-//            sendOffer(partnerUserId);
-//            let title = document.getElementById('call_title');
-//            reconnectTrial++;
-//            title.innerHTML = "WebRTC reconnection trial #" + reconnectTrial;
-//            return;
-//        }
-//        else {
-//            console.warn("WebRTC: CONNECTION DISCONNECTED, waiting for recall from partner ", partnerUserId);
-//            return;
-//        }
-//    }
-//    console.error("WebRTC: CONNECTION DISCONNECTED, but no localdescription found! Unable to handle recall from this side!", partnerUserId, connection);
-//}
 
 var reconnectTrial = 0;
 
@@ -286,8 +266,8 @@ function addHiddenVideoElementFor(partnerUserId) {
             }
         }
     }
-    let elementString = '<div  id="' + partnerUserId + '" style="width:' + videoElementsHeight + '%; height:' + videoElementsHeight + '%;"><video id="Video' + partnerUserId + '" autoplay style="object-fit: contain; height:100%; width:100%"> </video ></div > ';
-    $('#webcams').prepend(elementString);
+    let elementString = '<div  id="' + partnerUserId + '" style="width:' + videoElementsHeight + '%; height:' + videoElementsHeight + '%; overflow:hidden;"><video id="Video' + partnerUserId + '" autoplay style="object-fit: contain; height:100%; width:100%"> </video ></div > ';
+    $('#webcams').append(elementString);
     let videoElement = document.getElementById('Video' + partnerUserId);
     videoElement.hidden = true;
     videoElement.disabled = true;
@@ -387,12 +367,24 @@ function receivedSdpSignal(connection, partnerUserId, sdp) {
     if (connection.remoteDescription != null || connection.currentRemoteDescription != null) {
         //remote description has already been set! Create new connection object for this partner!
         if (sdp.type == "offer") {
+            console.warn("Remote description has already been set, new connection will be made for OFFER from partner ", partnerUserId, connection);
             closeConnection(partnerUserId);
             connection = initializeConnection(partnerUserId);
         }
         else {
             console.error("Wrong scernario occurred! Answer has been received while remote description is already set!");
             return;
+        }
+    }
+    if (connection.localDescription != null || connection.currentLocalDescription != null) {
+        //local description has been set! If remote is of type OFFER, give a warning and create new connection
+        if (sdp.type == "offer") {
+            console.error("Local description has already been set, new connection will be made for OFFER from partner ", partnerUserId, connection);
+            closeConnection(partnerUserId);
+            connection = initializeConnection(partnerUserId);
+        }
+        else {
+            //It is an asnwer, which is fine!
         }
     }
 
