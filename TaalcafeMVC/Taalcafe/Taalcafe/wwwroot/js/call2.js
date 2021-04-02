@@ -15,6 +15,8 @@ const mediaConstraints = {
         noiseSuppression: true
     },
     video: {
+        width: { ideal: 320 },
+        height: { ideal: 240 }, 
         facingMode: { ideal: "user" }
     }
 };
@@ -51,13 +53,14 @@ const peerConnCfg = {
     'iceServers': [
         //{'url': 'stun:stun.services.mozilla.com'}, 
         //{ 'urls': 'stun:stun.nextcloud.com:443' },
-        //{ urls: 'stun:stun.xs4all.nl:3478' },      
+        { urls: 'stun:stun.xs4all.nl:3478' },   
+        { urls: 'stun:stun.l.google.com:19302' },
         {
             url: 'turn:relay.backups.cz',
             credential: 'webrtc',
             username: 'webrtc'
         }
-        { 'urls': 'stun:stun.l.google.com:19302' },
+        
         //{ 'urls': 'stun:stun1.l.google.com:19302' },
         //{ 'urls': 'stun:stun2.l.google.com:19302' },
         //{ 'urls': 'stun:stun3.l.google.com:19302' },
@@ -448,7 +451,7 @@ function closeConnection(partnerUserId) {
         videoElement = document.getElementById(partnerUserId); //complete video element
         videoElement.remove();
         totalVideoElements--;
-        if (totalVideoElements < startVideoElement) {
+        if ((startVideoElement - 1) * (startVideoElement - 1) <= totalVideoElements) {
             //too few elements, increase height
             startVideoElement--;
             videoElementsHeight = Math.floor(100 / startVideoElement);
