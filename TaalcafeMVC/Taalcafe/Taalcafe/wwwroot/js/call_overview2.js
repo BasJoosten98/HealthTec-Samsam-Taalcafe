@@ -51,20 +51,23 @@ var wsConn = new signalR.HubConnectionBuilder()
 // ICE server url's (these are ice servers freely provided by Google and Mozilla)
 const peerConnCfg = {
     'iceServers': [
-        //{'url': 'stun:stun.services.mozilla.com'}, 
-        //{ 'urls': 'stun:stun.nextcloud.com:443' },
-        { urls: 'stun:stun.xs4all.nl:3478' },
+        { urls: 'stun:stun.nextcloud.com:443' },
         { urls: 'stun:stun.l.google.com:19302' },
         {
             url: 'turn:relay.backups.cz',
             credential: 'webrtc',
             username: 'webrtc'
-        }
+        },
+        {
+            url: 'turn:numb.viagenie.ca',
+            credential: 'muazkh',
+            username: 'webrtc@live.com'
+        },
         //{ 'urls': 'stun:stun1.l.google.com:19302' },
-        //{ 'urls': 'stun:stun2.l.google.com:19302' },
-        //{ 'urls': 'stun:stun3.l.google.com:19302' },
-        //{ 'urls': 'stun:stun4.l.google.com:19302' },        
-        //{ 'urls': 'stun:stun.voys.nl:3478' },
+        //{ 'urls': 'stun:stun2.l.google.com:19302' }, 
+        //{ 'urls': 'stun:stun3.l.google.com:19302' }, 
+        //{ 'urls': 'stun:stun4.l.google.com:19302' }, 
+        //{ 'urls': 'stun:stun.voys.nl:3478' }, 
         //{ 'urls': 'stun:stun.voipplanet.nl:3478' },
         //{ 'urls': 'stun:stun.solcon.nl:3478' },
         //{ 'urls': 'stun:stun.dcalling.de:3478' },
@@ -244,7 +247,7 @@ function callbackTrackAdded(evt, connection, partnerUserId) {
         console.log('Creating video element for partner ', partnerUserId);
         let elementString = '<div class="col" id="' + partnerUserId + '"><video id="Video' + partnerUserId + '" autoplay width="100%" height:250px;"> </video></div>';
         $('#webcams').prepend(elementString);
-        videoElement = document.getElementById('Video' + partnerUserId);
+        videoElement = document.getElementById('Video' + partnerUserId); 
         videoElement.hidden = true;
         videoElement.disabled = true;
     }
