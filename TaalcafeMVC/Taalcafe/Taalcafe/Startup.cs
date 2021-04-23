@@ -1,20 +1,18 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Taalcafe.DataAccess;
+using Taalcafe.DbContext;
 using Taalcafe.Hubs;
-using Taalcafe.Hubs.HubModels;
-using Taalcafe.Models;
+
+using Taalcafe.Models.DatabaseModels;
 
 namespace Taalcafe
 {
@@ -31,9 +29,39 @@ namespace Taalcafe
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
             services.AddMvc();
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie();
+
+            services.AddDbContextPool<ApplicationDbContext>(options => 
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("TaalcafeDevLocal"));
+            });
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            //Changing default password requirements
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequiredUniqueChars = 0;
+                options.Password.RequiredLength = 4;
+                options.Password.RequireNonAlphanumeric = false;
+
+                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+                options.User.RequireUniqueEmail = true;
+            });
+
+            services.AddSignalR();
+
+            services.AddScoped<SessionRepository>();
+            services.AddScoped<ThemeRepository>();
+            services.AddScoped<UserEntryRepository>();
+
+
+            //services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            //    .AddCookie();
+
             /*
             services.AddControllersWithViews()
                 .AddNewtonsoftJson(options =>
@@ -41,7 +69,7 @@ namespace Taalcafe
             );*/
 
             //Fetching Connection string from APPSETTINGS.JSON  
-            var ConnectionString = Configuration.GetConnectionString("ConnectionString");
+            //var ConnectionString = Configuration.GetConnectionString("ConnectionString");
 
             //Entity Framework  
             //services.AddDbContext<EmployeeContext>(options => options.UseSqlServer(ConnectionString));
@@ -58,14 +86,12 @@ namespace Taalcafe
             }));
             */
 
-            services.AddSignalR();
+            //services.AddSingleton<List<OnlineGroup>>();
+            //services.AddSingleton<List<OnlineUser>>();
 
-            services.AddSingleton<List<OnlineGroup>>();
-            services.AddSingleton<List<OnlineUser>>();
-
-            services.AddSingleton<List<UserConnectionInfo>>();
-            services.AddSingleton<List<Call>>();
-            services.AddSingleton<List<CallOffer>>();
+            //services.AddSingleton<List<UserConnectionInfo>>();
+            //services.AddSingleton<List<Call>>();
+            //services.AddSingleton<List<CallOffer>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

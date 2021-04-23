@@ -12,12 +12,12 @@ using Taalcafe.Models.DB;
 
 namespace Taalcafe.Controllers
 {
-    public class SessieController : Controller
+    public class SessionController : Controller
     {
-        private readonly ILogger<ThemaController> _logger;
+        private readonly ILogger<ThemeController> _logger;
         private dbi380705_taalcafeContext context;
 
-        public SessieController(ILogger<ThemaController> logger)
+        public SessionController(ILogger<ThemeController> logger)
         {
             _logger = logger; 
         }

@@ -6,7 +6,7 @@ using Taalcafe.Models.DB;
 
 namespace Taalcafe.Controllers
 {
-    public class LoginController : Controller
+    public class AccountController : Controller
     {
         private dbi380705_taalcafeContext _context;
 

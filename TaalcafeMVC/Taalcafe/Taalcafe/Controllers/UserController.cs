@@ -10,12 +10,12 @@ using Taalcafe.Models.DB;
 
 namespace Taalcafe.Controllers
 {
-    public class GebruikersController : Controller
+    public class UserController : Controller
     {
-        private readonly ILogger<GebruikersController> _logger;
+        private readonly ILogger<UserController> _logger;
         private dbi380705_taalcafeContext _context;
 
-        public GebruikersController(ILogger<GebruikersController> logger)
+        public UserController(ILogger<UserController> logger)
         {
             _logger = logger;
         }

@@ -15,16 +15,16 @@ using Taalcafe.Models.ViewModels;
 
 namespace Taalcafe.Controllers
 {
-    public class ThemaController : Controller
+    public class ThemeController : Controller
     {
-        private readonly ILogger<ThemaController> _logger;
+        private readonly ILogger<ThemeController> _logger;
         private dbi380705_taalcafeContext context;
         private readonly IWebHostEnvironment hostingEnvironment;
         private static readonly List<string> AllowedExtensions = new List<string>() {
             ".jpg", ".jpeg", ".png", ".img" //, ".pdf" (Plans for pdf support)
         };
 
-        public ThemaController(IWebHostEnvironment environment, ILogger<ThemaController> logger)
+        public ThemeController(IWebHostEnvironment environment, ILogger<ThemeController> logger)
         {
             _logger = logger;
             hostingEnvironment = environment; 
