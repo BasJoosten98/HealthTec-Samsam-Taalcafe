@@ -10,6 +10,7 @@ namespace Taalcafe.Hubs
     {
         Task JoinedSuccess();
         Task JoinedFailed(string reason);
+        Task ServerMessage(int messageId, string message);
         Task ReceiveOnlineGroups(List<OnlineGroup> groups);
         Task NeedHelpSetTo(bool val);
         Task CallUser(OnlineUser user);

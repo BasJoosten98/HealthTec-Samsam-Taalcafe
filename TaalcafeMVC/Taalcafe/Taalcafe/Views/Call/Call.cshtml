@@ -40,18 +40,50 @@
             <div id="taskbar" style="position:absolute; bottom:20px; left:0; right:0;">
                 <div class="btn-toolbar" role="toolbar" aria-label="Controls">
                     <div class="m-auto">
-                        <div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
-                            <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled />
-                            <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled />
-                        </div>
-                        <div class="btn-group mr-2" role="group" aria-label="Call/Hang up">
-                            <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled hidden />
-                            <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled />
-                        </div>
-                        <div class="btn-group" role="group" aria-label="Ask help">
-                            <input class="btn btn-secondary" id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()" />
-                        </div>
+
+                        <button type="button" id="muteButton" class="btn-lg bg-white mr-2" style="width:100px; overflow:hidden;" onclick="muteLocalSound()" disabled>
+                            <i id="muteIcon" class="fas fa-microphone fa-2x"></i>
+                            <i id="unmuteIcon" class="fas fa-microphone-slash fa-2x" hidden></i>
+                        </button>
+                        <button type="button" id="pauseButton" class="btn-lg bg-white mr-2" style="width:100px; overflow:hidden;" onclick="muteLocalVideo()" disabled>
+                            <i id="pauseIcon" class="fas fa-video fa-2x"></i>
+                            <i id="unpauseIcon" class="fas fa-video-slash fa-2x" hidden></i>
+                        </button>
+                        <button type="button" id="stopCallButton" class="btn-lg bg-danger mr-2" style="width:100px; overflow:hidden;" onclick="hangup()" disabled>
+                            <i id="hangupIcon" class="fas fa-phone fa-2x "></i>
+                        </button>
+                        <button type="button" id="askHelpButton" class="btn-lg bg-warning" style="width:100px; overflow:hidden;" onclick="toggleHelp()" disabled>
+                            <i id="askIcon" class="far fa-question-circle fa-2x"></i>
+                            <i id="unaskIcon" class="fas fa-question-circle fa-2x" hidden></i>
+                        </button>
+
+
+                        @*<div class="btn-group mr-2" role="group" aria-label="Mute mic/webcam">
+                        <input class="btn btn-secondary" id="muteButton" value="Demp microfoon" type="button" onclick="muteLocalSound()" disabled />
+                        <input class="btn btn-secondary" id="pauseButton" value="Zet camera uit" type="button" onclick="muteLocalVideo()" disabled />
                     </div>
+                    <div class="btn-group mr-2" role="group" aria-label="Call/Hang up">
+                        <input class="btn btn-secondary" id="startCallButton" value="Start videogesprek" type="button" onclick="initiateCall()" disabled hidden />
+                        <input class="btn btn-secondary" id="stopCallButton" value="Ophangen" type="button" onclick="hangup()" disabled />
+                    </div>
+                    <div class="btn-group" role="group" aria-label="Ask help">
+                        <input class="btn btn-secondary" id="askHelpButton" value="Vraag om hulp" type="button" onclick="toggleHelp()" />
+                    </div>*@
+                    </div>
+                </div>
+            </div>
+            @*INFORMATION PANEL*@
+            <div id="informationpanel" class="border-5 border-danger bg-white p-2" style="position:absolute; left:5%; right:5%; top:10%;" hidden>
+                <div class="border-bottom border-danger">
+                    <h1 id="info_title">Title</h1>
+                </div>
+                <div class="border-bottom border-danger" style="overflow-y:auto;">
+                    <p id="info_content" class="mb-2 mt-2">
+                        Content
+                    </p>
+                </div>
+                <div id="info_buttons" class="mb-2 mt-2">
+
                 </div>
             </div>
         </div>

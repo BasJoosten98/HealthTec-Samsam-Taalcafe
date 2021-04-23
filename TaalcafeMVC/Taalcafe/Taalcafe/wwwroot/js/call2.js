@@ -79,7 +79,6 @@ const peerConnCfg = {
 // Triggers when the page is done loading
 $(document).ready(function () {
     document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = true;
     document.getElementById("askHelpButton").disabled = true;
 
     model = getModel();
@@ -127,11 +126,24 @@ function initializeUserMedia() {
                 localVideo.srcObject = stream;
                 document.getElementById("muteButton").disabled = false;
                 console.log("Microphone is connected");
-                initializeSignalR();
+
+                showInfoPanel(
+                    "Alleen microfoon",
+                    "We konden geen verbinding maken met uw camera. Dit is geen vereiste, maar is wel fijner voor uw gesprekspartner als de camera verbonden is. Graag willen we u daarom vragen om opnieuw te proberen. Wilt u geen gebruik maken van uw camera dan kunt u verder gaan met alleen een microfoon.",
+                    { "Probeer opnieuw": initializeUserMedia, "Alleen microfoon": initializeSignalR }
+
+                );
+
+                //initializeSignalR();
             })
                 .catch(error => {
                     console.error("Access to microphone and/or webcam denied.", error);
-
+             
+                    showInfoPanel(
+                        "Geen toegang tot camera en microfoon",
+                        "We konden geen verbing maken met uw camera en microfoon. Om deel te kunnen nemen aan een videogesprek zijn deze vereist. Het zou kunnen dat uw webbrowser geen toegang verleend aan ons hiervoor. Graag dit even te controleren en opnieuw te proberen.",
+                        { "Probeer opnieuw": initializeUserMedia}
+                    );
                 });
         });
 }
@@ -487,17 +499,6 @@ function closeAllConnections() {
 
 
 // Hub Callback: Call accepted
-wsConn.on('JoinedSuccess', () => {
-    console.log("SignalR: joining connectionhub was a success!");
-    document.getElementById("stopCallButton").disabled = false;
-    document.getElementById("startCallButton").disabled = false;
-    document.getElementById("askHelpButton").disabled = false;
-});
-
-wsConn.on('JoinedFailed', (reason) => {
-    console.log("SignalR: joining connectionhub failed! Reason: " + reason);
-});
-
 wsConn.on("CallUser", (partner) => {
     if (partner != null) {
         sendOffer(partner.userId);
@@ -513,6 +514,21 @@ wsConn.on("ReceiveSignal", (partner, data) => {
 wsConn.on("UserHasLeft", (partner) => {
     if (partner != null) {
         closeConnection(partner.userId);
+    }
+});
+wsConn.on("ServerMessage", (id, msg) => {
+    console.log("SERVER MSG: ", id, msg);
+    switch (id) {
+        case 1:
+            //joined failed, show info panel to try again
+            break;
+        case 3:
+            //joined user success
+            document.getElementById("stopCallButton").disabled = false;
+            document.getElementById("askHelpButton").disabled = false;
+            break;
+        case 4:
+            //no session for this user, show info panel
     }
 });
 
@@ -552,20 +568,25 @@ wsConn.on('NeedHelpSetTo', (helpNeeded) => {
     setHelpNeeded(helpNeeded);
 });
 function setHelpNeeded(helpNeeded) {
+    const unIcon = document.getElementById("unaskIcon");
+    const icon = document.getElementById("askIcon");
     if (!helpNeeded) {
         askHelp = false;
-        document.getElementById("askHelpButton").value = "Vraag om hulp";
+        icon.hidden = false;
+        unIcon.hidden = true;
+        //document.getElementById("askHelpButton").value = "Vraag om hulp";
     }
     else {
         askHelp = true;
-        document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
+        icon.hidden = true;
+        unIcon.hidden = false;
+        //document.getElementById("askHelpButton").value = "Niet meer om hulp vragen";
     }
 }
 
 // Close the current calling sessions
 function hangup() {
     document.getElementById("stopCallButton").disabled = true;
-    document.getElementById("startCallButton").disabled = true;
     document.getElementById("askHelpButton").disabled = true;
     document.getElementById("EvaluationBox").hidden = false;
     wsConn.invoke("Leave");
@@ -575,15 +596,21 @@ function hangup() {
 // Mute sound of user microphone
 function muteLocalSound() {
     const sPause = document.getElementById("muteButton");
+    const unIcon = document.getElementById("unmuteIcon");
+    const icon = document.getElementById("muteIcon");
 
     for (let i in localVideo.srcObject.getAudioTracks()) {
         let track = localVideo.srcObject.getAudioTracks()[i]
         if (track.enabled) {
-            sPause.value = "Microfoon aanzetten";
+            //sPause.value = "Microfoon aanzetten";
+            unIcon.hidden = false;
+            icon.hidden = true;
             track.enabled = false;
         }
         else {
-            sPause.value = "Demp microfoon";
+            //sPause.value = "Demp microfoon";
+            unIcon.hidden = true;
+            icon.hidden = false;
             track.enabled = true;
         }
     }
@@ -593,17 +620,55 @@ function muteLocalSound() {
 // Stop showing the user webcam recording
 function muteLocalVideo() {
     const vPause = document.getElementById("pauseButton");
+    const unIcon = document.getElementById("unpauseIcon");
+    const icon = document.getElementById("pauseIcon");
 
     for (let i in localVideo.srcObject.getVideoTracks()) {
         let track = localVideo.srcObject.getVideoTracks()[i]
         if (track.enabled) {
-            vPause.value = "Zet camera aan";
+            //vPause.value = "Zet camera aan";
+            unIcon.hidden = false;
+            icon.hidden = true;
             track.enabled = false;
         }
         else {
-            vPause.value = "Zet camera uit";
+            //vPause.value = "Zet camera uit";
+            unIcon.hidden = true;
+            icon.hidden = false;
             track.enabled = true;
         }
     }
+}
+
+
+function showInfoPanel(title, content, buttons) {
+    const panel = document.getElementById("informationpanel");
+    const panel_title = document.getElementById("info_title");
+    const panel_content = document.getElementById("info_content");
+    const panel_buttons = document.getElementById("info_buttons");
+
+    panel_title.innerHTML = title;
+    panel_content.innerHTML = content;
+    panel_buttons.innerHTML = "";
+
+    let buttonStart = '<button type="button" class="btn-lg bg-warning mr-2" id="';
+    let buttonEnd = '</button>';
+    for (let btnKey in buttons) {
+        let btn = buttonStart + btnKey + '">' + btnKey + buttonEnd;
+        panel_buttons.innerHTML += btn;       
+    }
+    for (let btnKey in buttons) {
+        let btnElement = document.getElementById(btnKey);
+        btnElement.onclick = function () {
+            hideInfoPanel();
+            setTimeout(buttons[btnKey], 500);
+        }
+    }
+    panel.hidden = false;
+}
+
+function hideInfoPanel() {
+    const panel = document.getElementById("informationpanel");
+    panel.hidden = true;
 }
 

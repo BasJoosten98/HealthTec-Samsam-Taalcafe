@@ -49,8 +49,9 @@ namespace Taalcafe.Hubs
                 //{
                 //    await Clients.Client(group.Coordinator.ConnectionId).NeedHelpSetTo(group.NeedsHelp);
                 //}
+                await UpdateOnlineGroups();
             }
-            await UpdateOnlineGroups();
+            
         }
 
         //Check if user is allowed to join, if yes (set group as online) and partners are online order him to call partners
@@ -68,12 +69,21 @@ namespace Taalcafe.Hubs
                     user.ConnectionId = Context.ConnectionId;
 
                     OnlineUser c = onlineCoordinators.SingleOrDefault(c => c.ConnectionId == Context.ConnectionId);
-                    if(c != null) { await Clients.Caller.JoinedFailed("This coordinator has already joined (connectionId)"); return; }
+                    if(c != null) { 
+                        //await Clients.Caller.JoinedFailed("This coordinator has already joined (connectionId)");
+                        await Clients.Caller.ServerMessage(1, "This coordinator has already joined (connectionId)");
+                        return; 
+                    }
                     c = onlineCoordinators.SingleOrDefault(c => c.UserId == user.UserId);
-                    if (c != null) { await Clients.Caller.JoinedFailed("This coordinator has already joined (userId)"); return; }
+                    if (c != null) { 
+                        //await Clients.Caller.JoinedFailed("This coordinator has already joined (userId)");
+                        await Clients.Caller.ServerMessage(1, "This coordinator has already joined (userId)");
+                        return; 
+                    }
 
                     onlineCoordinators.Add(user);
-                    await Clients.Caller.JoinedSuccess();
+                    //await Clients.Caller.JoinedSuccess();
+                    await Clients.Caller.ServerMessage(2, "You joined as a coordinator");
                     await Clients.Caller.ReceiveOnlineGroups(onlineGroups);
                     return;
                 }
@@ -97,10 +107,15 @@ namespace Taalcafe.Hubs
                 if(existingGroup != null)
                 {
                     OnlineUser sameUser = existingGroup.OnlineUsers.FirstOrDefault(u => u.UserId == user.UserId);
-                    if(sameUser != null) { await Clients.Caller.JoinedFailed("This user has already joined (userId)"); return; }
+                    if(sameUser != null) {
+                        //await Clients.Caller.JoinedFailed("This user has already joined (userId)"); 
+                        await Clients.Caller.ServerMessage(1, "This user has already joined (userId)");
+                        return; 
+                    }
 
                     existingGroup.OnlineUsers.Add(user);
-                    await Clients.Caller.JoinedSuccess();
+                    //await Clients.Caller.JoinedSuccess();
+                    await Clients.Caller.ServerMessage(3, "You joined as a user");
                     await UpdateOnlineGroups();
                     if (existingGroup.Coordinator != null)
                     {
@@ -119,7 +134,8 @@ namespace Taalcafe.Hubs
                     OnlineGroup newGroup = new OnlineGroup();
                     newGroup.GroupId = sessiePartner.SessieId;
                     newGroup.OnlineUsers.Add(user);
-                    await Clients.Caller.JoinedSuccess();
+                    //await Clients.Caller.JoinedSuccess();
+                    await Clients.Caller.ServerMessage(3, "You joined as a user");
 
                     onlineGroups.Add(newGroup);
                     await UpdateOnlineGroups();
@@ -127,7 +143,8 @@ namespace Taalcafe.Hubs
             }
             else
             {
-                await Clients.Caller.JoinedFailed("No session found which contains a user with id " + userId);
+                //await Clients.Caller.JoinedFailed("No session found which contains a user with id " + userId);
+                await Clients.Caller.ServerMessage(4, "No session found which contains a user with id " + userId);
             }
         }
         //Check if user has coordinator role, if yes and group is online order him to call partners in group
@@ -151,6 +168,14 @@ namespace Taalcafe.Hubs
                         await Clients.Caller.CallUser(partner);
                     }
                 }
+                else
+                {
+                    await Clients.Caller.ServerMessage(6, "The group you are trying to join does not exist, groupId:" + groupId);
+                }
+            }
+            else
+            {
+                await Clients.Caller.ServerMessage(5, "You are not logged in as a coordinator");
             }
         }
         //Let online partners in group know that user has left (if online partners in group = 0, remove online group)
@@ -218,6 +243,14 @@ namespace Taalcafe.Hubs
                 {
                     await Clients.Client(receiver.ConnectionId).ReceiveSignal(sender, data);
                 }
+                else
+                {
+                    await Clients.Caller.ServerMessage(8, "You are not in the same group (atm) with the receiving user, thus you cannot signal this user with id:" + toUserId);
+                }
+            }
+            else
+            {
+                await Clients.Caller.ServerMessage(7, "You are not part of any group and thus cannot signal anyone");
             }
         }
         //Send all online groups to coordinators (in call overview)

@@ -84,6 +84,7 @@ namespace Taalcafe.Controllers
                     .ThenInclude(s => s.Thema)
                 .SingleOrDefault(c => c.Sessie.Datum.Value.Date == DateTime.Today && (c.TaalcoachId == id || c.CursistId == id));
 
+            CallSessionViewModel viewModel;
             if (sessiePartner != null)
             {
                 Gebruiker user;
@@ -99,7 +100,7 @@ namespace Taalcafe.Controllers
                     partner = sessiePartner.Taalcoach;
                 }
             
-                CallSessionViewModel viewModel = new CallSessionViewModel(
+                 viewModel = new CallSessionViewModel(
                     sessiePartner.SessieId,
                     sessiePartner.Sessie.Thema.Naam,
                     sessiePartner.Sessie.Thema.Beschrijving,
@@ -113,7 +114,19 @@ namespace Taalcafe.Controllers
                 
                 return View(viewModel);
             }
-            
+             viewModel = new CallSessionViewModel(
+                    2,
+                    "Koken",
+                    "Koken is het bereiden van voedsel door middel van verhitting! Door deze voedselverwerkingsmethode verandert de structuur van het rauwe voedsel en worden bacteriën gedood",
+                    8,
+                    7,
+                    "Bas",
+                    "Ralf",
+                    null,
+                    "Wat is je favoriete gerecht om klaar te maken?~Draag je een koksmuts tijdens het koken?~Doe je het samen?"
+                );
+            return View(viewModel);
+
             return RedirectToAction("SignIn", "Login");
         }
 
