@@ -1,63 +1,119 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Taalcafe.Models;
-using Taalcafe.Models.DB;
+using Taalcafe.Generators;
+using Taalcafe.Models.DatabaseModels;
+using Taalcafe.Models.Shared;
+using Taalcafe.Models.ViewModels;
 
 namespace Taalcafe.Controllers
 {
     public class AccountController : Controller
     {
-        private dbi380705_taalcafeContext _context;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly SignInManager<ApplicationUser> signInManager;
 
-        public IActionResult SignIn()
+        public AccountController(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
+        {
+            this.userManager = userManager;
+            this.signInManager = signInManager;
+        }
+
+        [HttpGet]
+        public IActionResult Login()
         {
             return View();
         }
 
         [HttpPost]
-        public ActionResult Login(AccountViewModel model)
+        public async Task<ActionResult> LoginAsync(LoginViewModel model)
         {
-            Instantiate();
             if (ModelState.IsValid)
             {
-                //The ".FirstOrDefault()" method will return either the first matched
-                //result or null
-                var myUser = _context.Accounts
-                    .FirstOrDefault(u => u.Gebruikersnaam == model.Gebruikersnaam
-                                 && u.Wachtwoord == model.Wachtwoord);
+                string userName = userManager.Users
+                    .Where(User => User.Email == model.Email)
+                    .FirstOrDefault()?.UserName;
 
-                if (myUser != null)    //User was found
+                if (string.IsNullOrEmpty(userName))
                 {
-                    //ViewBag.message = "Success";
-                    //return View("~/Views/Home/Index.cshtml", model);
-                    if(myUser.Type == "Taalcoach" || myUser.Type == "Cursist")
+                    ModelState.AddModelError("", "Er bestaat geen account met dit emailadres");
+                }
+                else
+                {
+                    var result = await signInManager.PasswordSignInAsync(userName, model.Password, false, false);
+                    if (result.Succeeded)
                     {
-                        return RedirectToAction("NextSession", "Call", new { userId = myUser.GebruikerId });
-                    } else if(myUser.Type == "Coordinator")
+                        return RedirectToAction("index", "home");
+                    }
+                    else
                     {
-                        return RedirectToAction("Index", "Home");
+                        ModelState.AddModelError("", "Verkeerd wachtwoord of emailadres");
                     }
                 }
-                else    //User was not found
-                {
-                    ModelState.AddModelError("", "Email or password is incorrect");
-                    return View("~/Views/Home/Index.cshtml", model);
-                }
+
+            }
+            //return View(model); //Kijk wat verschil is hier!
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Admin()
+        {
+            ApplicationUser adminInDb = userManager.Users
+                .Where(user => user.Role == Role.ADMIN)
+                .FirstOrDefault();
+
+            if(adminInDb != null)
+            {
+                return RedirectToAction("index", "home");
             }
 
             return View();
         }
 
-        private void Instantiate()
+        [HttpPost]
+        public async Task<IActionResult> AdminAsync(AdminRegisterModelView model)
         {
-            _context = new dbi380705_taalcafeContext();
+            ApplicationUser adminInDb = userManager.Users
+                .Where(user => user.Role == Role.ADMIN)
+                .FirstOrDefault();
+
+            if (adminInDb != null)
+            {
+                return RedirectToAction("index", "home");
+            }
+
+            if (ModelState.IsValid)
+            {
+                ApplicationUser user = new ApplicationUser
+                {
+                    UserName = model.FullName,
+                    Email = model.Email,
+                    Role = Role.ADMIN
+                };
+                string password = RandomStringGenerator.CreateString(10);
+
+                var result = await userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                {
+                    await signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction("index", "home");
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
+            return View(model);
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+        //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        //public IActionResult Error()
+        //{
+        //    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        //}
     }
 }

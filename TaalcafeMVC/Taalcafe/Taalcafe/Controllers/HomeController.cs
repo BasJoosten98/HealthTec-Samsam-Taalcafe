@@ -1,11 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using System.Linq;
-using Taalcafe.Models;
-using Taalcafe.Models.DB;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Taalcafe.Controllers
 {
@@ -21,10 +14,28 @@ namespace Taalcafe.Controllers
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpGet]
+        public IActionResult Message()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            if(TempData.ContainsKey("title") && TempData.ContainsKey("content"))
+            {
+                if (!(TempData.ContainsKey("controller") && TempData.ContainsKey("action")))
+                {
+                    TempData["controller"] = "home";
+                    TempData["action"] = "index";
+                }
+                return View();
+            }
+            else
+            {
+                return RedirectToAction("index", "home");
+            }
         }
+
+        //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        //public IActionResult Error()
+        //{
+        //    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        //}
     }
 }

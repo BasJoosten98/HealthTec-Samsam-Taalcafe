@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Taalcafe.Models.Shared
 {
-    public enum Roles
+    public enum Role
     {
         CURSIST, TAALCOACH, COORDINATOR, ADMIN
     }

@@ -14,10 +14,10 @@ namespace Taalcafe.Controllers
 {
     public class SessionController : Controller
     {
-        private readonly ILogger<ThemeController> _logger;
+        private readonly ILogger<ThemaController> _logger;
         private dbi380705_taalcafeContext context;
 
-        public SessionController(ILogger<ThemeController> logger)
+        public SessionController(ILogger<ThemaController> logger)
         {
             _logger = logger; 
         }
