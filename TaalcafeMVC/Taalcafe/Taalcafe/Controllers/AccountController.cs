@@ -121,7 +121,8 @@ namespace Taalcafe.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            return View();
+            LoginViewModel model = new LoginViewModel();
+            return View(model);
         }
 
         [HttpPost]

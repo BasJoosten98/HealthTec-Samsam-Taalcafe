@@ -139,10 +139,10 @@ namespace Taalcafe.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Join(int id) //De meeting joinen (videobellen)
+        public IActionResult Join(int id) //De meeting joinen (videobellen)
         {
             //TODO: Check de role en verwijs gebruiker door naar juiste pagina
-            throw new NotImplementedException();
+            return null;
         }
     }
 }

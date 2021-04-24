@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Taalcafe.DataAccess;
 using Taalcafe.DbContext;
-using Taalcafe.Hubs;
 
 using Taalcafe.Models.DatabaseModels;
 
@@ -32,31 +31,31 @@ namespace Taalcafe
 
             services.AddMvc();
 
-            services.AddDbContextPool<ApplicationDbContext>(options => 
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("TaalcafeDevLocal"));
-            });
+            //services.AddDbContextPool<ApplicationDbContext>(options => 
+            //{
+            //    options.UseSqlServer(Configuration.GetConnectionString("TaalcafeDevLocal"));
+            //});
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
+            //services.AddIdentity<ApplicationUser, IdentityRole>()
+            //.AddEntityFrameworkStores<ApplicationDbContext>();
 
             //Changing default password requirements
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.Password.RequiredUniqueChars = 0;
-                options.Password.RequiredLength = 4;
-                options.Password.RequireNonAlphanumeric = false;
+            //services.Configure<IdentityOptions>(options =>
+            //{
+            //    options.Password.RequiredUniqueChars = 0;
+            //    options.Password.RequiredLength = 4;
+            //    options.Password.RequireNonAlphanumeric = false;
 
-                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            //    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-                options.User.RequireUniqueEmail = true;
-            });
+            //    options.User.RequireUniqueEmail = true;
+            //});
 
-            services.AddSignalR();
+            //services.AddSignalR();
 
-            services.AddScoped<MeetingRepository>();
-            services.AddScoped<ThemeRepository>();
-            services.AddScoped<UserEntryRepository>();
+            //services.AddScoped<MeetingRepository>();
+            //services.AddScoped<ThemeRepository>();
+            //services.AddScoped<UserEntryRepository>();
 
 
             //services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -130,10 +129,10 @@ namespace Taalcafe
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Login}/{action=SignIn}/{id?}");
+                    pattern: "{controller=Test}/{action=Index}/{id?}");
                 
                 //endpoints.MapHub<ConnectionHub>("/connectionhub");
-                endpoints.MapHub<ConnectionHub2>("/connectionhub");
+                //endpoints.MapHub<ConnectionHub2>("/connectionhub");
             });
 
 
