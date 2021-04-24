@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Taalcafe.Generators;
 using Taalcafe.Models.DatabaseModels;
 using Taalcafe.Models.Shared;
@@ -21,6 +23,101 @@ namespace Taalcafe.Controllers
             this.signInManager = signInManager;
         }
 
+        public async Task<ActionResult> Index()
+        {
+            IEnumerable<ApplicationUser> model = await userManager.Users.ToListAsync();
+            return View(model);
+        }
+
+        public async Task<ActionResult> Details(string id)
+        {
+            ApplicationUser model = await userManager.FindByIdAsync(id);
+            return View(model);
+        }
+
+        public ActionResult Create()
+        {           
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Create(UserRegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                //TODO: controleer wie de gebruiker maakt en of de rol van de nieuwe gebruiker is toegestaan
+
+                ApplicationUser user = new ApplicationUser
+                {
+                    UserName = model.FullName,
+                    Email = model.Email,
+                    Role = model.Role,
+                    PhoneNumber = model.PhoneNumber
+                };
+                string password = RandomStringGenerator.CreateString(4);
+
+                var result = await userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                {
+                    //TODO: laat message zien met wachtwoord
+                    return RedirectToAction("index");
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
+            return View(model);
+        }
+
+        public async Task<ActionResult> Edit(string id)
+        {
+            ApplicationUser user = await userManager.FindByIdAsync(id);
+            UserRegisterViewModel model = new UserRegisterViewModel
+            {
+                FullName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
+                Role = user.Role,
+                Email = user.Email
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Edit(string id, UserRegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                ApplicationUser user = new ApplicationUser
+                {
+                    UserName = model.FullName,
+                    Email = model.Email,
+                    Role = model.Role,
+                    PhoneNumber = model.PhoneNumber
+                };
+                await userManager.UpdateAsync(user);
+
+                return RedirectToAction("details", new { id = id});
+            }
+            else
+            {
+                return View();
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Delete(string id)
+        {
+            ApplicationUser user = await userManager.FindByIdAsync(id);
+            await userManager.DeleteAsync(user);
+            return RedirectToAction("index");
+        }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -28,13 +125,16 @@ namespace Taalcafe.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> LoginAsync(LoginViewModel model)
+        public async Task<ActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                string userName = userManager.Users
-                    .Where(User => User.Email == model.Email)
-                    .FirstOrDefault()?.UserName;
+                //string userName = userManager.Users
+                //    .Where(User => User.Email == model.Email)
+                //    .FirstOrDefault()?.UserName;
+
+                ApplicationUser user = await userManager.FindByEmailAsync(model.Email);
+                string userName = user?.UserName;
 
                 if (string.IsNullOrEmpty(userName))
                 {
@@ -54,8 +154,15 @@ namespace Taalcafe.Controllers
                 }
 
             }
-            //return View(model); //Kijk wat verschil is hier!
-            return View();
+            return View(model); //Kijk wat verschil is hier!
+            //return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return RedirectToAction("login", "account");
         }
 
         [HttpGet]
@@ -74,7 +181,7 @@ namespace Taalcafe.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AdminAsync(AdminRegisterModelView model)
+        public async Task<IActionResult> Admin(AdminRegisterViewModel model)
         {
             ApplicationUser adminInDb = userManager.Users
                 .Where(user => user.Role == Role.ADMIN)

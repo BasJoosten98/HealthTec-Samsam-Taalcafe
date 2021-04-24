@@ -54,7 +54,7 @@ namespace Taalcafe
 
             services.AddSignalR();
 
-            services.AddScoped<SessionRepository>();
+            services.AddScoped<MeetingRepository>();
             services.AddScoped<ThemeRepository>();
             services.AddScoped<UserEntryRepository>();
 

@@ -13,12 +13,12 @@ namespace Taalcafe.Models.DatabaseModels
         public int Id { get; set; }
 
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; }
 
         [Required]
-        public int SessionId { get; set; }
+        public int MeetingId { get; set; }
 
-        public string GroupToken { get; set; }
+        public string GroupNumber { get; set; }
 
         public Mark Mark { get; set; }
 
@@ -26,8 +26,8 @@ namespace Taalcafe.Models.DatabaseModels
 
 
 
-        [ForeignKey("SessionId")]
-        public virtual Session Session { get; set; }
+        [ForeignKey("MeetingId")]
+        public virtual Meeting Meeting { get; set; }
 
         [ForeignKey("UserId")]
         public virtual ApplicationUser User { get; set; }

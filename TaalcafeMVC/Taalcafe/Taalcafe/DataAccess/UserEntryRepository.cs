@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,5 +16,19 @@ namespace Taalcafe.DataAccess
 
         }
 
+        public async Task<IEnumerable<UserEntry>> GetByUserIdAsync(string id)
+        {
+            return await Context.UserEntries.Where(entry => entry.UserId == id).ToListAsync();
+        }
+
+        public async Task<IEnumerable<UserEntry>> GetByMeetingIdAsync(int id)
+        {
+            return await Context.UserEntries.Where(entry => entry.MeetingId == id).ToListAsync();
+        }
+
+        public async Task<UserEntry> GetByUserIdAndMeetingIdAsync(string userId, int meetingId)
+        {
+            return await Context.UserEntries.Where(entry => entry.UserId == userId && entry.MeetingId == meetingId).FirstOrDefaultAsync();
+        }
     }
 }

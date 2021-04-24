@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taalcafe.Hubs.HubModels;
 using Taalcafe.Models.DB;
+using Taalcafe.Models.HubModels;
 
 namespace Taalcafe.Hubs
 {
