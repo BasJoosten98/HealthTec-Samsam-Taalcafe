@@ -45,11 +45,12 @@ namespace Taalcafe.Controllers
                 themeRepository.Add(createdTheme);
                 await themeRepository.SaveAsync();
 
-                return RedirectToAction("details", new { id = createdTheme.Id });
+                return RedirectToAction("index");
+                //return RedirectToAction("details", new { id = createdTheme.Id });
             }
             else
             {
-                return View();
+                return View(createdTheme);
             }
         }
 
@@ -65,9 +66,12 @@ namespace Taalcafe.Controllers
         {
             if (ModelState.IsValid)
             {
+                updatedTheme.Id = id;
+                themeRepository.Update(updatedTheme);
                 await themeRepository.SaveAsync();
 
-                return RedirectToAction("details", new { id = updatedTheme.Id });
+                return RedirectToAction("index");
+                //return RedirectToAction("details", new { id = updatedTheme.Id });
             }
             else
             {
@@ -80,9 +84,18 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Delete(int id)
         {
             Theme theme = await themeRepository.GetByIdAsync(id);
+
+            TempData["title"] = "Thema verwijderd!";
+            List<string> content = new List<string>();
+            content.Add($"Het thema {theme.Title} is verwijderd. ");
+            TempData["content"] = content;
+            TempData["action"] = "index";
+            TempData["controller"] = "theme";
+
             themeRepository.Remove(theme);
             await themeRepository.SaveAsync();
-            return RedirectToAction("index");
+
+            return RedirectToAction("message", "home");
         }
     }
 }

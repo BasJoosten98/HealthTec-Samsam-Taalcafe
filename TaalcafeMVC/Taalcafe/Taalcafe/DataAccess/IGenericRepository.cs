@@ -11,5 +11,6 @@ namespace Taalcafe.DataAccess
         bool HasChanges();
         void Add(T model);
         void Remove(T model);
+        void Update(T model);
     }
 }

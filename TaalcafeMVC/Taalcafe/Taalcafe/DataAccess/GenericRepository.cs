@@ -47,5 +47,10 @@ namespace Taalcafe.DataAccess
         {
             Context.Set<TEntity>().Remove(model);
         }
+
+        public void Update(TEntity model)
+        {
+            Context.Set<TEntity>().Update(model);
+        }
     }
 }

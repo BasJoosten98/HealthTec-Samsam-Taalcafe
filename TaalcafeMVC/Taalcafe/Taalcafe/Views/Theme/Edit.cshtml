@@ -1,0 +1,47 @@
+﻿@model Theme
+@{
+    ViewData["Title"] = "Thema bewerken";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts {
+    <script src="~/js/create_theme.js"></script>
+}
+
+<div class="container">
+    <h1 class="pt-2">Thema bewerken</h1>
+    <hr />
+    <form asp-action="Edit" method="post" class="form-horizontal mt-0">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-md-5">
+                <div asp-validation-summary="ModelOnly" class="text-danger val-summary"></div>
+                <div class="form-group">
+                    <label asp-for="Title"></label>
+                    <input type="text" class="form-control" asp-for="Title">
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Description"></label>
+                    <input type="text" class="form-control" asp-for="Description">
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Questions"></label><br />
+                    <input type="text" class="form-control" asp-for="Questions" hidden>
+                    <div class="input-group">
+                        <input class="form-control" type="text" id="vraagBox">
+                        <div class="input-group-append">
+                            <input class="btn btn-secondary" type="button" onclick="AddVraag()" value="Toevoegen">
+                        </div>
+                    </div>
+                    <span asp-validation-for="Questions" class="text-danger"></span>
+                    <ul class="list-group" id="vragenLijst"> </ul>
+                </div>
+                <div class="form-group row justify-content-center pr-3 pl-3">
+                    <input type="submit" value="Opslaan" class="btn btn-success" style="width: 100%;" />
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

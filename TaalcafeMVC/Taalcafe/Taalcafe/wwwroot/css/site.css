@@ -78,3 +78,8 @@ body {
 .table-grey {
     background-color: #A9A9A9 !important;
 }
+
+.val-summary ul {
+    list-style-type: none;
+    padding: 0;
+}

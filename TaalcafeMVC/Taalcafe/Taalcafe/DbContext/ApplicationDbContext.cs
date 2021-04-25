@@ -17,7 +17,7 @@ namespace Taalcafe.DbContext
         }
 
         public DbSet<Theme> Themes { get; set; }
-        public DbSet<Meeting> Sessions { get; set; }
+        public DbSet<Meeting> Meetings { get; set; }
         public DbSet<UserEntry> UserEntries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

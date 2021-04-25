@@ -7,6 +7,6 @@ namespace Taalcafe.Models.Shared
 {
     public enum Role
     {
-        CURSIST, TAALCOACH, COORDINATOR, ADMIN
+        Cursist, Taalcoach, Coordinator
     }
 }

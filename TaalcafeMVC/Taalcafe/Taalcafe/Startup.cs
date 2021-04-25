@@ -31,31 +31,36 @@ namespace Taalcafe
 
             services.AddMvc();
 
-            //services.AddDbContextPool<ApplicationDbContext>(options => 
-            //{
-            //    options.UseSqlServer(Configuration.GetConnectionString("TaalcafeDevLocal"));
-            //});
+            services.AddDbContextPool<ApplicationDbContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("TaalcafeLocalDev"));
+            });
 
-            //services.AddIdentity<ApplicationUser, IdentityRole>()
-            //.AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
 
             //Changing default password requirements
-            //services.Configure<IdentityOptions>(options =>
-            //{
-            //    options.Password.RequiredUniqueChars = 0;
-            //    options.Password.RequiredLength = 4;
-            //    options.Password.RequireNonAlphanumeric = false;
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequiredUniqueChars = 0;
+                options.Password.RequiredLength = 4;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
 
-            //    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                options.User.AllowedUserNameCharacters = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-            //    options.User.RequireUniqueEmail = true;
-            //});
+                options.User.RequireUniqueEmail = true;
+            });
+
+            services.AddScoped<MeetingRepository>();
+            services.AddScoped<ThemeRepository>();
+            services.AddScoped<UserEntryRepository>();
 
             //services.AddSignalR();
 
-            //services.AddScoped<MeetingRepository>();
-            //services.AddScoped<ThemeRepository>();
-            //services.AddScoped<UserEntryRepository>();
+
+
 
 
             //services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -94,7 +99,7 @@ namespace Taalcafe
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, RoleManager<IdentityRole> roleManager)
         {
             if (env.IsDevelopment())
             {
@@ -129,7 +134,7 @@ namespace Taalcafe
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Test}/{action=Index}/{id?}");
+                    pattern: "{controller=Account}/{action=Login}/{id?}");
                 
                 //endpoints.MapHub<ConnectionHub>("/connectionhub");
                 //endpoints.MapHub<ConnectionHub2>("/connectionhub");

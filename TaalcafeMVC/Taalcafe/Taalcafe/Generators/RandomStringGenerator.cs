@@ -18,7 +18,7 @@ namespace Taalcafe.Generators
             {
                 holder += allowedChars[random.Next(0, allowedChars.Length)];
             }
-            return holder;
+            return "1234";
         }
 
         public static string CreateString()

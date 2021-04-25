@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -31,13 +32,15 @@ namespace Taalcafe.Controllers
 
         public async Task<ActionResult> Details(string id)
         {
+            throw new NotImplementedException();
             ApplicationUser model = await userManager.FindByIdAsync(id);
             return View(model);
         }
 
         public ActionResult Create()
-        {           
-            return View();
+        {
+            UserRegisterViewModel model = new UserRegisterViewModel();
+            return View(model);
         }
 
         [HttpPost]
@@ -52,7 +55,6 @@ namespace Taalcafe.Controllers
                 {
                     UserName = model.FullName,
                     Email = model.Email,
-                    Role = model.Role,
                     PhoneNumber = model.PhoneNumber
                 };
                 string password = RandomStringGenerator.CreateString(4);
@@ -60,8 +62,20 @@ namespace Taalcafe.Controllers
                 var result = await userManager.CreateAsync(user, password);
                 if (result.Succeeded)
                 {
-                    //TODO: laat message zien met wachtwoord
-                    return RedirectToAction("index");
+                    await userManager.AddToRoleAsync(user, model.Role.ToString());
+                    
+                    TempData["title"] = "Gebruiker toegevoegd!";
+                    List<string> content = new List<string>();
+                    content.Add("Uw gebruikers account is gemaakt met de gegeven gegevens.");
+                    content.Add("");
+                    content.Add("Email: " + model.Email);
+                    content.Add("Wachtwoord: " + password);
+                    content.Add("");
+                    content.Add("U kunt nu gebruik maken van het account.");
+                    TempData["content"] = content;
+                    TempData["action"] = "index";
+                    TempData["controller"] = "account";
+                    return RedirectToAction("message", "home");
                 }
 
                 foreach (var error in result.Errors)
@@ -75,12 +89,13 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Edit(string id)
         {
             ApplicationUser user = await userManager.FindByIdAsync(id);
+            var roles = await userManager.GetRolesAsync(user);
             UserRegisterViewModel model = new UserRegisterViewModel
             {
                 FullName = user.UserName,
                 PhoneNumber = user.PhoneNumber,
-                Role = user.Role,
-                Email = user.Email
+                Email = user.Email,
+                Role = Enum.Parse<Role>(roles[0])
             };
 
             return View(model);
@@ -92,20 +107,26 @@ namespace Taalcafe.Controllers
         {
             if (ModelState.IsValid)
             {
-                ApplicationUser user = new ApplicationUser
+                var user = await userManager.FindByIdAsync(id);
+                var roles = await userManager.GetRolesAsync(user);
+                if(roles[0] != model.Role.ToString())
                 {
-                    UserName = model.FullName,
-                    Email = model.Email,
-                    Role = model.Role,
-                    PhoneNumber = model.PhoneNumber
-                };
+                    await userManager.RemoveFromRoleAsync(user, roles[0]);
+                    await userManager.AddToRoleAsync(user, model.Role.ToString());
+                }
+
+                user.UserName = model.FullName;
+                user.Email = model.Email;
+                user.PhoneNumber = model.PhoneNumber;
+
                 await userManager.UpdateAsync(user);
 
-                return RedirectToAction("details", new { id = id});
+                //return RedirectToAction("details", new { id = id});
+                return RedirectToAction("index");
             }
             else
             {
-                return View();
+                return View(model);
             }
         }
 
@@ -114,8 +135,17 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Delete(string id)
         {
             ApplicationUser user = await userManager.FindByIdAsync(id);
+
+            TempData["title"] = "Gebruiker verwijderd!";
+            List<string> content = new List<string>();
+            content.Add($"De gebruiker {user.UserName} is verwijderd. ");
+            TempData["content"] = content;
+            TempData["action"] = "index";
+            TempData["controller"] = "account";
+
             await userManager.DeleteAsync(user);
-            return RedirectToAction("index");
+
+            return RedirectToAction("message", "home");
         }
 
         [HttpGet]
@@ -126,14 +156,11 @@ namespace Taalcafe.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                //string userName = userManager.Users
-                //    .Where(User => User.Email == model.Email)
-                //    .FirstOrDefault()?.UserName;
-
                 ApplicationUser user = await userManager.FindByEmailAsync(model.Email);
                 string userName = user?.UserName;
 
@@ -155,40 +182,35 @@ namespace Taalcafe.Controllers
                 }
 
             }
-            return View(model); //Kijk wat verschil is hier!
-            //return View();
+            return View(model);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await signInManager.SignOutAsync();
-            return RedirectToAction("login", "account");
+            return RedirectToAction("login");
         }
 
         [HttpGet]
-        public IActionResult Admin()
+        public async Task<IActionResult> Admin()
         {
-            ApplicationUser adminInDb = userManager.Users
-                .Where(user => user.Role == Role.ADMIN)
-                .FirstOrDefault();
-
-            if(adminInDb != null)
+            var adminUsers = await userManager.GetUsersInRoleAsync("Admin");
+            if(adminUsers != null && adminUsers.Count > 0)
             {
                 return RedirectToAction("index", "home");
             }
-
-            return View();
+            AdminRegisterViewModel model = new AdminRegisterViewModel();
+            return View(model);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Admin(AdminRegisterViewModel model)
         {
-            ApplicationUser adminInDb = userManager.Users
-                .Where(user => user.Role == Role.ADMIN)
-                .FirstOrDefault();
-
-            if (adminInDb != null)
+            var adminUsers = await userManager.GetUsersInRoleAsync("Admin");
+            if (adminUsers != null && adminUsers.Count > 0)
             {
                 return RedirectToAction("index", "home");
             }
@@ -198,16 +220,25 @@ namespace Taalcafe.Controllers
                 ApplicationUser user = new ApplicationUser
                 {
                     UserName = model.FullName,
-                    Email = model.Email,
-                    Role = Role.ADMIN
+                    Email = model.Email
                 };
                 string password = RandomStringGenerator.CreateString(10);
 
                 var result = await userManager.CreateAsync(user, password);
                 if (result.Succeeded)
                 {
+                    await userManager.AddToRoleAsync(user, "Admin");
                     await signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("index", "home");
+                    TempData["title"] = "Admin account gemaakt!";
+                    List<string> content = new List<string>();
+                    content.Add("Uw admin account is gemaakt met de gegeven gegevens.");
+                    content.Add("");
+                    content.Add("Email: " + model.Email);
+                    content.Add("Wachtwoord: " + password);
+                    content.Add("");
+                    content.Add("U kunt nu gebruik maken van uw admin account.");
+                    TempData["content"] = content;
+                    return RedirectToAction("message", "home");
                 }
 
                 foreach (var error in result.Errors)

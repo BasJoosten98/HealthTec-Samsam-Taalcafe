@@ -1,0 +1,41 @@
+﻿@model UserRegisterViewModel
+@{
+    ViewData["Title"] = "Gebruiker maken";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container">
+    <h1 class="pt-2">Gebuiker toevoegen</h1>
+    <hr />
+    <form asp-action="Create" method="post" class="form-horizontal mt-0">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-md-5">
+                <div asp-validation-summary="ModelOnly" class="text-danger val-summary"></div>
+                <div class="form-group">
+                    <label asp-for="FullName"></label>
+                    <input type="text" class="form-control" asp-for="FullName">
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Role"></label>
+                    <select asp-for="Role" asp-items="Html.GetEnumSelectList<Role>()">
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Email"></label>
+                    <input type="text" class="form-control" asp-for="Email">
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="PhoneNumber"></label>
+                    <input type="text" class="form-control" asp-for="PhoneNumber">
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group row justify-content-center pr-3 pl-3">
+                    <input type="submit" value="Gebruiker toevoegen" class="btn btn-success" style="width: 100%;" />
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

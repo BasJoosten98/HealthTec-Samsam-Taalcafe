@@ -1,0 +1,42 @@
+﻿@model IEnumerable<ApplicationUser>
+@{
+    ViewData["Title"] = "Users";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h1 class="mt-2"> Gebruikers</h1>
+    <hr />
+    <div class="mb-2">
+        <a class="btn btn-primary" asp-action="create" asp-controller="account">Gebruiker toevoegen</a>
+    </div>
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Naam</th>
+                <th scope="col">Email</th>
+                <th scope="col">Telefoon</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count(); i++)
+            {
+                <tr>
+                    <th>@(i + 1)</th>
+                    <td>@Model.ElementAt(i).UserName</td>
+                    <td>@Model.ElementAt(i).Email</td>
+                    <td>@Model.ElementAt(i).PhoneNumber</td>
+                    <td>
+                        <a class="btn btn-primary" asp-action="edit" asp-controller="account" asp-route-id="@Model.ElementAt(i).Id">Bewerken</a>
+                        <form asp-action="Delete" asp-route-id="@Model.ElementAt(i).Id" method="post" style="display:inline-block;">
+                            @Html.AntiForgeryToken()
+                            <input type="submit" value="Verwijder" class="btn btn-danger" />
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

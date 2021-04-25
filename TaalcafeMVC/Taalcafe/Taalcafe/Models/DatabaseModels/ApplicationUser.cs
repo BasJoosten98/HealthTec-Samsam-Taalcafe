@@ -10,8 +10,6 @@ namespace Taalcafe.Models.DatabaseModels
 {
     public class ApplicationUser : IdentityUser
     {
-        [Required]
-        public Role Role { get; set; }
         public virtual ICollection<UserEntry> UserEntries { get; set; }
     }
 }
