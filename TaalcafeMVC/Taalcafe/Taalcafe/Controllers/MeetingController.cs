@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +16,20 @@ namespace Taalcafe.Controllers
     {
         private readonly MeetingRepository meetingRepository;
         private readonly UserEntryRepository userEntryRepository;
+        private readonly ThemeRepository themeRepository;
 
         public MeetingController(MeetingRepository meetingRepository,
-            UserEntryRepository userEntryRepository)
+            UserEntryRepository userEntryRepository,
+            ThemeRepository themeRepository)
         {
             this.meetingRepository = meetingRepository;
             this.userEntryRepository = userEntryRepository;
+            this.themeRepository = themeRepository;
         }
 
         public async Task<ActionResult> Index()
         {
-            IEnumerable<Meeting> model = await meetingRepository.GetAllAsync();
+            IEnumerable<Meeting> model = await meetingRepository.GetAllMeetingsIncludingThemes();
             return View(model);
         }
 
@@ -35,22 +39,35 @@ namespace Taalcafe.Controllers
             return View(model);
         }
 
-        public ActionResult Create()
+        public async Task<ActionResult> Create()
         {
-            Meeting model = new Meeting();
+            IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
+            CreateMeetingViewModel model = new CreateMeetingViewModel
+            {
+                StartDate = DateTime.Now + TimeSpan.FromMinutes(5),
+                EndDate = DateTime.Now + TimeSpan.FromHours(1) + TimeSpan.FromMinutes(5),
+                ThemeSelectList = themes.Select(theme => new SelectListItem(theme.Title, theme.Id.ToString()))
+            };
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(Meeting createdMeeting)
+        public async Task<ActionResult> Create(Meeting model)
         {
             if (ModelState.IsValid)
             {
-                meetingRepository.Add(createdMeeting);
+                meetingRepository.Add(model);
                 await meetingRepository.SaveAsync();
 
-                return RedirectToAction("details", new { id = createdMeeting.Id });
+                TempData["title"] = "Meeting toegevoegd!";
+                List<string> content = new List<string>();
+                content.Add("De meeting is toegevoegd. ");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "meeting";
+
+                return RedirectToAction("message", "home");
             }
             else
             {
@@ -60,19 +77,36 @@ namespace Taalcafe.Controllers
 
         public async Task<ActionResult> Edit(int id)
         {
-            Meeting model = await meetingRepository.GetByIdAsync(id);
+            IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
+            Meeting meeting = await meetingRepository.GetByIdAsync(id);
+            CreateMeetingViewModel model = new CreateMeetingViewModel
+            {
+                ThemeId = meeting.ThemeId,
+                StartDate = meeting.StartDate,
+                EndDate = meeting.EndDate,
+                ThemeSelectList = themes.Select(theme => new SelectListItem(theme.Title, theme.Id.ToString()))
+            };
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(int id, Meeting updatedMeeting)
+        public async Task<ActionResult> Edit(int id, Meeting model)
         {
             if (ModelState.IsValid)
             {
+                model.Id = id;
+                meetingRepository.Update(model);
                 await meetingRepository.SaveAsync();
 
-                return RedirectToAction("details", new { id = updatedMeeting.Id });
+                TempData["title"] = "Meeting bijgewerkt!";
+                List<string> content = new List<string>();
+                content.Add("De meeting is bijgewerkt. ");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "meeting";
+
+                return RedirectToAction("message", "home");
             }
             else
             {
@@ -85,9 +119,18 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Delete(int id)
         {
             Meeting meeting = await meetingRepository.GetByIdAsync(id);
+
+            TempData["title"] = "Meeting verwijderd!";
+            List<string> content = new List<string>();
+            content.Add("De meeting is verwijderd. ");
+            TempData["content"] = content;
+            TempData["action"] = "index";
+            TempData["controller"] = "meeting";
+
             meetingRepository.Remove(meeting);
             await meetingRepository.SaveAsync();
-            return RedirectToAction("index");
+
+            return RedirectToAction("message", "home");
         }
 
         [HttpGet]

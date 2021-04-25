@@ -38,19 +38,25 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(Theme createdTheme)
+        public async Task<ActionResult> Create(Theme model)
         {
             if (ModelState.IsValid)
             {
-                themeRepository.Add(createdTheme);
+                themeRepository.Add(model);
                 await themeRepository.SaveAsync();
 
-                return RedirectToAction("index");
-                //return RedirectToAction("details", new { id = createdTheme.Id });
+                TempData["title"] = "Thema toegevoegd!";
+                List<string> content = new List<string>();
+                content.Add($"Het thema {model.Title} is toegevoegd. ");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "theme";
+
+                return RedirectToAction("message", "home");
             }
             else
             {
-                return View(createdTheme);
+                return View(model);
             }
         }
 
@@ -62,16 +68,22 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(int id, Theme updatedTheme)
+        public async Task<ActionResult> Edit(int id, Theme model)
         {
             if (ModelState.IsValid)
             {
-                updatedTheme.Id = id;
-                themeRepository.Update(updatedTheme);
+                model.Id = id;
+                themeRepository.Update(model);
                 await themeRepository.SaveAsync();
 
-                return RedirectToAction("index");
-                //return RedirectToAction("details", new { id = updatedTheme.Id });
+                TempData["title"] = "Thema bijgewerkt!";
+                List<string> content = new List<string>();
+                content.Add($"Het thema {model.Title} is bijgewerkt. ");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "theme";
+
+                return RedirectToAction("message", "home");
             }
             else
             {

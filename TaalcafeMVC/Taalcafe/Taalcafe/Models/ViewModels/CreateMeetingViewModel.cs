@@ -1,16 +1,15 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Taalcafe.Models.DatabaseModels;
 
-namespace Taalcafe.Models.DatabaseModels
+namespace Taalcafe.Models.ViewModels
 {
-    public class Meeting
+    public class CreateMeetingViewModel
     {
-        public int Id { get; set; }
-
         [Required]
         [Display(Name = "Thema")]
         public int ThemeId { get; set; }
@@ -23,11 +22,7 @@ namespace Taalcafe.Models.DatabaseModels
         [Display(Name = "Eindtijd")]
         public DateTime EndDate { get; set; }
 
-
-
-        [ForeignKey("ThemeId")]
-        public virtual Theme Theme { get; set; }
-
-        public virtual ICollection<UserEntry> UserEntries { get; set; }
+        [Required]
+        public IEnumerable<SelectListItem> ThemeSelectList { get; set; }
     }
 }
