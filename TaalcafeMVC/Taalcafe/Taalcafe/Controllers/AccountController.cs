@@ -121,8 +121,14 @@ namespace Taalcafe.Controllers
 
                 await userManager.UpdateAsync(user);
 
-                //return RedirectToAction("details", new { id = id});
-                return RedirectToAction("index");
+                TempData["title"] = "Gebruiker bijgewerkt!";
+                List<string> content = new List<string>();
+                content.Add($"De gebruiker {user.UserEntries} is bijgewerkt.");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "account";
+
+                return RedirectToAction("message", "home");
             }
             else
             {

@@ -1,7 +1,8 @@
-﻿@model IEnumerable<Meeting>
+﻿@model MeetingIndexViewModel
 @{
     ViewData["Title"] = "Meetings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    IEnumerable<Meeting> curMeetingList = null;
 }
 
 <div class="container">
@@ -10,33 +11,125 @@
     <div class="mb-2">
         <a class="btn btn-primary" asp-action="create" asp-controller="meeting">Meeting toevoegen</a>
     </div>
-    <table class="table">
-        <thead class="thead-light">
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Starttijd</th>
-                <th scope="col">Eindtijd</th>
-                <th scope="col">Thema</th>
-                <th scope="col"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (int i = 0; i < Model.Count(); i++)
-            {
-            <tr>
-                <th>@(i + 1)</th>
-                <td>@Model.ElementAt(i).StartDate</td>
-                <td>@Model.ElementAt(i).EndDate</td>
-                <td>@Model.ElementAt(i).Theme.Title</td>
-                <td>
-                    <a class="btn btn-primary" asp-action="edit" asp-controller="meeting" asp-route-id="@Model.ElementAt(i).Id">Bewerken</a>
-                    <form asp-action="Delete" asp-route-id="@Model.ElementAt(i).Id" method="post" style="display:inline-block;">
-                        @Html.AntiForgeryToken()
-                        <input type="submit" value="Verwijder" class="btn btn-danger" />
-                    </form>
-                </td>
-            </tr>
-            }
-        </tbody>
-    </table>
+    <div>
+        <h2>Aangemelde meetings</h2>
+        @if (Model.SignedUpMeetings != null && Model.SignedUpMeetings.Count() > 0)
+        {
+            { curMeetingList = Model.SignedUpMeetings; }
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Starttijd</th>
+                        <th scope="col">Eindtijd</th>
+                        <th scope="col">Thema</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < curMeetingList.Count(); i++)
+                    {
+                        <tr>
+                            <th>@(i + 1)</th>
+                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).Theme.Title</td>
+                            <td>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>U heeft geen aanstaande aangemelde meetings...</p>
+        }
+        <div class="bg-dark" style="width:100%; height:20px;"></div>
+    </div>
+    <div>
+        <h2>Aanstaande meetings</h2>
+        @if (Model.UpcomingMeetings != null && Model.UpcomingMeetings.Count() > 0)
+        {
+            { curMeetingList = Model.UpcomingMeetings; }
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Starttijd</th>
+                        <th scope="col">Eindtijd</th>
+                        <th scope="col">Thema</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < curMeetingList.Count(); i++)
+                    {
+                        <tr>
+                            <th>@(i + 1)</th>
+                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).Theme.Title</td>
+                            <td>
+                                <a class="btn btn-primary" asp-action="edit" asp-controller="meeting" asp-route-id="@curMeetingList.ElementAt(i).Id">Bewerken</a>
+                                <form asp-action="SignUp" asp-route-id="@curMeetingList.ElementAt(i).Id" method="post" style="display:inline-block;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="submit" value="Aanmelden" class="btn btn-info" />
+                                </form>
+                                <form asp-action="Delete" asp-route-id="@curMeetingList.ElementAt(i).Id" method="post" style="display:inline-block;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="submit" value="Verwijder" class="btn btn-danger" />
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Er zijn geen aanstaande meetings gepland waarvoor u zich nog niet heeft aangemeld...</p>
+        }
+    </div>
+    <div class="bg-dark" style="width:100%; height:20px;"></div>
+    <div>
+        <h2>Eerdere meetings</h2>
+        @if (Model.PastMeetings != null && Model.PastMeetings.Count() > 0)
+        {
+            { curMeetingList = Model.PastMeetings; }
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Starttijd</th>
+                        <th scope="col">Eindtijd</th>
+                        <th scope="col">Thema</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < curMeetingList.Count(); i++)
+                    {
+                        <tr>
+                            <th>@(i + 1)</th>
+                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).Theme.Title</td>
+                            <td>
+                                <form asp-action="Delete" asp-route-id="@curMeetingList.ElementAt(i).Id" method="post" style="display:inline-block;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="submit" value="Verwijder" class="btn btn-danger" />
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Er zijn geen eerdere meetings geweest...</p>
+        }
+        <div class="bg-dark" style="width:100%; height:20px;"></div>
+    </div>
 </div>

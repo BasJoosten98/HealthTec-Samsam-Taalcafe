@@ -29,7 +29,22 @@ namespace Taalcafe.Controllers
 
         public async Task<ActionResult> Index()
         {
-            IEnumerable<Meeting> model = await meetingRepository.GetAllMeetingsIncludingThemes();
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            IEnumerable<Meeting> meetings = await meetingRepository.GetAllMeetingsIncludingThemes();
+            IEnumerable<Meeting> past = meetings.Where(meeting => meeting.EndDate < DateTime.Now);
+            IEnumerable<Meeting> upcoming = meetings.Where(meeting => meeting.EndDate >= DateTime.Now);
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetByUserIdAsync(userId);
+
+            IEnumerable<Meeting> signedUp = upcoming.Where(meeting => entries.Any(entry => entry.MeetingId == meeting.Id));
+            upcoming = upcoming.Where(meeting => !entries.Any(entry => entry.MeetingId == meeting.Id));
+
+            MeetingIndexViewModel model = new MeetingIndexViewModel
+            {
+                PastMeetings = past,
+                UpcomingMeetings = upcoming,
+                SignedUpMeetings = signedUp
+            };
+
             return View(model);
         }
 
@@ -168,7 +183,7 @@ namespace Taalcafe.Controllers
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             Meeting meeting = await meetingRepository.GetByIdAsync(id);
-            if (meeting != null) //meeting exists
+            if (meeting != null && !string.IsNullOrEmpty(userId)) //meeting exists
             {
                 UserEntry newEntry = new UserEntry
                 {
@@ -177,8 +192,30 @@ namespace Taalcafe.Controllers
                 };
                 userEntryRepository.Add(newEntry);
                 await userEntryRepository.SaveAsync();
+
+                TempData["title"] = "Aangemeld!";
+                List<string> content = new List<string>();
+                content.Add("U bent aangemeld voor de meeting!");
+                content.Add($"De meeting vind plaats van {meeting.StartDate.ToString("dd-MM-yyyy HH:mm")} tot en met {meeting.EndDate.ToString("dd-MM-yyyy HH:mm")}.");
+                content.Add("");
+                content.Add("Tot dan!");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "meeting";
+
+                return RedirectToAction("message", "home");
             }
-            return RedirectToAction("index");
+            TempData["title"] = "Mislukt!";
+            List<string> content2 = new List<string>();
+            content2.Add("U bent NIET aangemeld voor de meeting!");
+            content2.Add("Iets ging fout bij ons...");
+            content2.Add("Mogelijk is de meeting net verwijderd of zal u zich opnieuw moeten inloggen.");
+            content2.Add("Sorry voor het ongemak.");
+            TempData["content"] = content2;
+            TempData["action"] = "index";
+            TempData["controller"] = "meeting";
+
+            return RedirectToAction("message", "home");
         }
 
         [HttpGet]
