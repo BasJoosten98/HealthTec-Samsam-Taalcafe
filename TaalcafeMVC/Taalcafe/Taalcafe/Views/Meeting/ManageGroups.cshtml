@@ -1,0 +1,63 @@
+﻿@model ManageGroupsViewModel
+@{
+    ViewData["Title"] = "Groepen maken";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts {
+    <script type="text/javascript" src="~/js/manage_groups.js"></script>
+    <script>
+        function getModel() {
+            return @Html.Raw(Json.Serialize(@Model));
+        }
+    </script>
+}
+
+<div class="container">
+    <h1>Groepen maken</h1>
+    <hr />
+    <div class="row">
+        <div class="col-7">
+            <div class="row">
+                <div class="col-12">
+                    <h2>Nieuwe groep</h2>
+                    <div>
+                        <ul id="nieuwe_groep_lijst" class="list-group-flush border border-3" style="min-height:50px;">
+                        </ul>
+                        <button class="btn btn-primary" style="width:100%;" onclick="addGroup()">Groep toevoegen</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-6">
+                    <h2>Cursisten</h2>
+                    <div>
+                        <ul id="cursisten_lijst" class="list-group-flush border border-3" style="min-height:50px; max-height:50vh; overflow:auto">
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <h2>Taalcoaches</h2>
+                    <div>
+                        <ul id="taalcoaches_lijst" class="list-group-flush border border-3" style="min-height:50px; max-height:50vh; overflow:auto">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-5">
+            <h2>Groepen</h2>
+            <div>
+                <ul id="groepen_lijst" class="list-group-flush border border-3" style="min-height:50px; max-height:75vh; overflow:auto">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <button id="btn_opslaan_before"  class="btn btn-success mt-3" style="width:100%" onclick="save()">Opslaan</button>
+
+    <form asp-action="ManageGroups" method="post" class="form-horizontal mt-0" hidden>
+        @Html.AntiForgeryToken()
+        <input type="text" class="form-control" asp-for="Users" hidden>
+        <button id="btn_opslaan" type="submit" class="btn btn-success mt-3" style="width:100%">Opslaan</button>
+    </form>
+</div>

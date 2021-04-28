@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,14 +18,17 @@ namespace Taalcafe.Controllers
         private readonly MeetingRepository meetingRepository;
         private readonly UserEntryRepository userEntryRepository;
         private readonly ThemeRepository themeRepository;
+        private readonly UserManager<ApplicationUser> userManager;
 
         public MeetingController(MeetingRepository meetingRepository,
             UserEntryRepository userEntryRepository,
-            ThemeRepository themeRepository)
+            ThemeRepository themeRepository,
+            UserManager<ApplicationUser> userManager)
         {
             this.meetingRepository = meetingRepository;
             this.userEntryRepository = userEntryRepository;
             this.themeRepository = themeRepository;
+            this.userManager = userManager;
         }
 
         public async Task<ActionResult> Index()
@@ -212,6 +216,63 @@ namespace Taalcafe.Controllers
             content2.Add("Mogelijk is de meeting net verwijderd of zal u zich opnieuw moeten inloggen.");
             content2.Add("Sorry voor het ongemak.");
             TempData["content"] = content2;
+            TempData["action"] = "index";
+            TempData["controller"] = "meeting";
+
+            return RedirectToAction("message", "home");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManageGroups(int id)
+        {
+            IEnumerable<UserEntry> AllUsers = await userEntryRepository.GetByMeetingIdIncludingUserAsync(id);
+            List<ManageGroupsUserModel> UserModels = new List<ManageGroupsUserModel>();
+            foreach(UserEntry entry in AllUsers)
+            {
+                ManageGroupsUserModel model = new ManageGroupsUserModel
+                {
+                    UserId = entry.UserId,
+                    UserName = entry.User.UserName,
+                    GroupName = entry.GroupNumber
+                };
+                ApplicationUser user = await userManager.FindByIdAsync(entry.UserId);
+                IEnumerable<string> roles = await userManager.GetRolesAsync(user);
+                model.Role = roles.First();
+                UserModels.Add(model);
+            }
+            return View(new ManageGroupsViewModel { Users = UserModels });
+
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ManageGroups(int id, string Users)
+        {
+            ManageGroupsUserModel[] userList = JsonConvert.DeserializeObject<ManageGroupsUserModel[]>(Users);
+            Dictionary<string, string> groupIds = new Dictionary<string, string>();
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetByMeetingIdAsync(id);
+            foreach (ManageGroupsUserModel user in userList)
+            {
+                UserEntry entry = entries.Where(entry => entry.UserId == user.UserId).FirstOrDefault();
+                if (user.GroupName != null)
+                {
+                    if (!groupIds.ContainsKey(user.GroupName))
+                    {
+                        groupIds.Add(user.GroupName, Guid.NewGuid().ToString());
+                    }
+                    entry.GroupNumber = groupIds[user.GroupName];
+                    userEntryRepository.Update(entry);
+                    continue;
+                }
+                entry.GroupNumber = null;
+                userEntryRepository.Update(entry);
+            }
+            await userEntryRepository.SaveAsync();
+
+            TempData["title"] = "Groepen opgeslagen!";
+            List<string> content = new List<string>();
+            content.Add("De door u gemaakte groepen voor deze meeting zijn opgeslagen.");
+            TempData["content"] = content;
             TempData["action"] = "index";
             TempData["controller"] = "meeting";
 

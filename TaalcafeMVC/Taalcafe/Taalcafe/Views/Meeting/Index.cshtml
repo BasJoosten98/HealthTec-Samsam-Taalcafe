@@ -72,6 +72,7 @@
                             <td>@curMeetingList.ElementAt(i).Theme.Title</td>
                             <td>
                                 <a class="btn btn-primary" asp-action="edit" asp-controller="meeting" asp-route-id="@curMeetingList.ElementAt(i).Id">Bewerken</a>
+                                <a class="btn btn-primary" asp-action="managegroups" asp-controller="meeting" asp-route-id="@curMeetingList.ElementAt(i).Id">Groepen</a>
                                 <form asp-action="SignUp" asp-route-id="@curMeetingList.ElementAt(i).Id" method="post" style="display:inline-block;">
                                     @Html.AntiForgeryToken()
                                     <input type="submit" value="Aanmelden" class="btn btn-info" />

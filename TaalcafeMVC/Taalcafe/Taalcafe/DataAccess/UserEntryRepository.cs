@@ -26,6 +26,11 @@ namespace Taalcafe.DataAccess
             return await Context.UserEntries.Where(entry => entry.MeetingId == id).ToListAsync();
         }
 
+        public async Task<IEnumerable<UserEntry>> GetByMeetingIdIncludingUserAsync(int id)
+        {
+            return await Context.UserEntries.Where(entry => entry.MeetingId == id).Include(entry => entry.User).ToListAsync();
+        }
+
         public async Task<UserEntry> GetByUserIdAndMeetingIdAsync(string userId, int meetingId)
         {
             return await Context.UserEntries.Where(entry => entry.UserId == userId && entry.MeetingId == meetingId).FirstOrDefaultAsync();
