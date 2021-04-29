@@ -30,6 +30,10 @@
                     <td>@Model.ElementAt(i).PhoneNumber</td>
                     <td>
                         <a class="btn btn-primary" asp-action="edit" asp-controller="account" asp-route-id="@Model.ElementAt(i).Id">Bewerken</a>
+                        <form asp-action="ResetPassword" asp-route-id="@Model.ElementAt(i).Id" method="post" style="display:inline-block;">
+                            @Html.AntiForgeryToken()
+                            <input type="submit" value="Nieuw wachtwoord" class="btn btn-info" />
+                        </form>
                         <form asp-action="Delete" asp-route-id="@Model.ElementAt(i).Id" method="post" style="display:inline-block;">
                             @Html.AntiForgeryToken()
                             <input type="submit" value="Verwijder" class="btn btn-danger" />

@@ -37,7 +37,8 @@ namespace Taalcafe
             });
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(TokenOptions.DefaultProvider);            
 
             //Changing default password requirements
             services.Configure<IdentityOptions>(options =>

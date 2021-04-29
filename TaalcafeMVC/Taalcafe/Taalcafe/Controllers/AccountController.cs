@@ -255,6 +255,45 @@ namespace Taalcafe.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+
+            string newPassword = null;
+            var roles = await userManager.GetRolesAsync(user);
+            if(roles[0] == "Admin") { newPassword = RandomStringGenerator.CreateString(10); }
+            else if (roles[0] == "Coordinator") { newPassword = RandomStringGenerator.CreateString(6); }
+            else { newPassword = RandomStringGenerator.CreateString(4); }
+
+            var result = await userManager.ResetPasswordAsync(user, token, newPassword);
+            if (result.Succeeded)
+            {
+                TempData["title"] = "Nieuw wachtwoord!";
+                List<string> content = new List<string>();
+                content.Add("Het account is bijgewerkt met een nieuw wachtwoord.");
+                content.Add("");
+                content.Add("Email: " + user.Email);
+                content.Add("Wachtwoord: " + newPassword);
+                content.Add("");
+                content.Add("U kunt nu gebruik maken van het account met het nieuwe wachtwoord.");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "account";
+                return RedirectToAction("message", "home");
+            }
+            TempData["title"] = "Mislukt!";
+            List<string> content2 = new List<string>();
+            content2.Add("Het account is NIET bijgewerkt met een nieuw wachtwoord.");
+            content2.Add("Probeer het later nog eens.");
+            TempData["content"] = content2;
+            TempData["action"] = "index";
+            TempData["controller"] = "account";
+            return RedirectToAction("message", "home");
+        }
+
         //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         //public IActionResult Error()
         //{
