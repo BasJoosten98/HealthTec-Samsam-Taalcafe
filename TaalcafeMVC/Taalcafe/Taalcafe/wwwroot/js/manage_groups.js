@@ -166,7 +166,7 @@ function renderCursisten() {
     let lijst = document.getElementById("cursisten_lijst");
     lijst.innerHTML = "";
     cursisten.forEach(user => {
-        let holder = '<li class="list-group-item"><div class="row justify-content-center align-items-center"><div class="col-8"><p class="m-0">' + user.userName + '<br /><small><i>' + user.role + '</i></small></p></div><div class="col-4"><button class="btn btn-primary m-auto" onclick="addCursist(' + "'" + user.userId + "'" + ')">+</button></div></div ></li >';
+        let holder = '<li class="list-group-item p-1"><div class="row justify-content-center align-items-center"><div class="col-8"><p class="m-0">' + user.userName + '<br /><small><i>' + user.role + '</i></small></p></div><div class="col-4"><button class="btn btn-primary m-auto" onclick="addCursist(' + "'" + user.userId + "'" + ')">+</button></div></div ></li >';
         lijst.innerHTML += holder;
     });
 }
@@ -191,7 +191,7 @@ function renderTaalcoaches() {
     let lijst = document.getElementById("taalcoaches_lijst");
     lijst.innerHTML = "";
     taalcoaches.forEach(user => {
-        let holder = '<li class="list-group-item"><div class="row justify-content-center align-items-center"><div class="col-8"><p class="m-0">' + user.userName + '<br /><small><i>' + user.role + '</i></small></p></div><div class="col-4"><button class="btn btn-primary m-auto" onclick="addTaalcoach(' + "'" + user.userId + "'" + ')">+</button></div></div ></li >';
+        let holder = '<li class="list-group-item p-1"><div class="row justify-content-center align-items-center"><div class="col-8"><p class="m-0">' + user.userName + '<br /><small><i>' + user.role + '</i></small></p></div><div class="col-4"><button class="btn btn-primary m-auto" onclick="addTaalcoach(' + "'" + user.userId + "'" + ')">+</button></div></div ></li >';
         lijst.innerHTML += holder;
     });
 }
@@ -214,7 +214,7 @@ function renderNieuwGroep() {
     let lijst = document.getElementById("nieuwe_groep_lijst");
     lijst.innerHTML = "";
     tempGroup.forEach(user => {
-        let holder = '<li class="list-group-item"><div class="row justify-content-center align-items-center"><div class="col-8"><p class="m-0">' + user.userName + '<br /><small><i>' + user.role + '</i></small></p></div><div class="col-4"><button class="btn btn-danger m-auto" onclick="removeUserFromTempGroup(' + "'" + user.userId + "'" +  ')">-</button></div></div ></li >';
+        let holder = '<li class="list-group-item p-1"><div class="row justify-content-center align-items-center"><div class="col-8"><p class="m-0">' + user.userName + '<br /><small><i>' + user.role + '</i></small></p></div><div class="col-4"><button class="btn btn-danger m-auto" onclick="removeUserFromTempGroup(' + "'" + user.userId + "'" +  ')">-</button></div></div ></li >';
         lijst.innerHTML += holder;
     });
 }
@@ -243,7 +243,7 @@ function renderGroepen() {
     groups.forEach(group => {
         let holder = '<li class="list-group-item"><div class="row justify-content-center align-items-center" ><div class="col-8"><ul class="list-group border border-5">';
         group.members.forEach(user => {
-            holder += '<li class="list-group-item"><p class="m-0" >' + user.userName + '<br><small><i>' + user.role +'</i></small></p ></li >';
+            holder += '<li class="list-group-item p-1"><p class="m-0" >' + user.userName + '<br><small><i>' + user.role +'</i></small></p ></li >';
         })
         holder += '</ul></div ><div class="col-4"><button class="btn btn-danger m-auto" onclick="removeGroup(' + "'" + group.name + "'" + ')">-</button></div></div ></li >';
         lijst.innerHTML += holder;
