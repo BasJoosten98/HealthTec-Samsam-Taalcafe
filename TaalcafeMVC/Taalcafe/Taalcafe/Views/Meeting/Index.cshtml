@@ -14,6 +14,8 @@
             <a class="btn btn-primary" asp-action="create" asp-controller="meeting">Meeting toevoegen</a>
         </div>
     }
+    @if (User.IsInRole("Taalcoach") || User.IsInRole("Cursist"))
+    {
     <div>
         <h2>Aangemelde meetings</h2>
         @if (Model.SignedUpMeetings != null && Model.SignedUpMeetings.Count() > 0)
@@ -50,6 +52,7 @@
         }
         <div class="bg-dark" style="width:100%; height:20px;"></div>
     </div>
+    }
     <div>
         <h2>Aanstaande meetings</h2>
         @if (Model.UpcomingMeetings != null && Model.UpcomingMeetings.Count() > 0)

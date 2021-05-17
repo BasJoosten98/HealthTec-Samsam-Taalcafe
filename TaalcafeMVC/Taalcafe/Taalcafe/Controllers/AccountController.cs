@@ -172,7 +172,7 @@ namespace Taalcafe.Controllers
 
                 if (string.IsNullOrEmpty(userName))
                 {
-                    ModelState.AddModelError("", "Er bestaat geen account met dit emailadres");
+                    ModelState.AddModelError("", "Verkeerd wachtwoord of emailadres"); //geen account met deze email
                 }
                 else
                 {
