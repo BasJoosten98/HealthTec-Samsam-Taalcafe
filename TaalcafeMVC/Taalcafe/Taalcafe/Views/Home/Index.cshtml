@@ -1,5 +1,4 @@
-﻿@*@model AccountViewModel*@
-@{
+﻿@{
     ViewData["Title"] = "Home";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -15,41 +14,79 @@
 <div class="container">
     <h1 class="pt-2" style="text-align:center;">Welkom @User.Identity.Name!</h1>
     <p style="text-align:center;">
-        Op dit moment zijn er geen taalcafe meetings bezig. Je kunt je hieronder inschrijven voor een meeting! (BOILER)
+        @TempData["message"]
     </p>
     <hr />
     <h2 style="text-align:center;">Wat wil je doen?</h2>
 
     <div class="row bg-taalcafe p-3">
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="account">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Gebruikers beheren</h2>
+                    </div>
+                </a>
+            </div>
+        }
+        else if (User.IsInRole("Coordinator"))
+        {
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="account">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Gebruikers beheren</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="theme">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Themas beheren</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="meeting">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Meetings beheren</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="activemeetings" asp-controller="meeting">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Actieve meetings</h2>
+                    </div>
+                </a>
+            </div>
+        }
+        else if (User.IsInRole("Taalcoach") || User.IsInRole("Cursist"))
+        {
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="meeting">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Meetings beheren</h2>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 p-0">
+                <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="join" asp-controller="meeting">
+                    <div class="col">
+                        <h2 style="text-align:center; color:white;">Videobellen</h2>
+                    </div>
+                </a>
+            </div>
+        }
+        @*UITLOGGEN*@
         <div class="col-md-4 p-0">
-            <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="account">
-                <div class="col">
-                    <h2 style="text-align:center; color:white;">Gebruikers beheren</h2>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 p-0">
-            <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="theme">
-                <div class="col">
-                    <h2 style="text-align:center; color:white;">Themas beheren</h2>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 p-0"> 
-            <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" href="#" onclick="fakeClickLogout()" >
+            <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" href="#" onclick="fakeClickLogout()">
                 <div class="col">
                     <form asp-action="Logout" asp-controller="Account" method="post" style="display:inline-block;" hidden>
                         @Html.AntiForgeryToken()
                         <input id="logout-btn" type="submit" />
                     </form>
                     <h2 style="text-align:center; color:white;">Uitloggen</h2>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 p-0">
-            <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="meeting">
-                <div class="col">
-                    <h2 style="text-align:center; color:white;">Meetings beheren</h2>
                 </div>
             </a>
         </div>

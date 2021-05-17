@@ -1,0 +1,23 @@
+﻿
+@{
+    ViewData["Title"] = "Message";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <form  class="form-horizontal" style="margin-top:5%">
+        <div class="row  justify-content-center align-items-center">
+            <div class="col-md-6">
+                <h1>Deelnemen</h1>
+                <p class="mt-3 mb-3">
+                    Als u er klaar voor bent, druk dan op de knop deelnemen hieronder.
+                    <br />
+                    Veel plezier!
+                </p>
+                <div class="row justify-content-center pr-3 pl-3">
+                    <a href="@TempData["joinUrl"]" class="btn btn-success" style="width: 100%;">Deelnemen!</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

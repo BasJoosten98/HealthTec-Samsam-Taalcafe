@@ -1,0 +1,38 @@
+﻿@model ActiveMeetingsViewModel
+@{
+    ViewData["Title"] = "Actieve meetings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h1 class="mt-2"> Actieve meetings</h1>
+    <hr />
+    <div>
+        @if (Model.Stats != null && Model.Stats.Count() > 0)
+        {
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Deelnemers</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Stats.Count(); i++)
+                    {
+                        <tr>
+                            <th>@(i + 1)</th>
+                            <td>@Model.Stats.ElementAt(i).Participants</td>
+                            <td><a href="@Model.Stats.ElementAt(i).JoinUrl" target="_blank" class="btn btn-success">Deelnemen</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Er zijn geen actieve meetings op dit moment...</p>
+        }
+    </div>   
+</div>

@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Toegang geweigerd";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h1 class="text-danger mt-2">Toegang geweigerd!</h1>
+    <hr />
+    <p>
+        U heeft niet de juiste machtigingen om deze pagina te bezoeken. <br />
+        Ga terug naar home of login met een ander account die wel de juiste machtigingen heeft.
+    </p>
+    <hr />
+    <a asp-action="index" asp-controller="home" class="btn btn-primary">Home</a>
+    <form asp-action="Logout" asp-controller="Account" method="post" style="display:inline-block;">
+        @Html.AntiForgeryToken()
+        <input type="submit" value="Uitloggen" class="btn btn-info" />
+    </form>
+</div>

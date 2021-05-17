@@ -26,9 +26,29 @@ namespace Taalcafe.DataAccess
             return await Context.UserEntries.Where(entry => entry.MeetingId == id).ToListAsync();
         }
 
+        public async Task<IEnumerable<UserEntry>> GetByGroupNumberAsync(string groupNumber)
+        {
+            return await Context.UserEntries.Where(entry => entry.GroupNumber == groupNumber).ToListAsync();
+        }
+
+        public async Task<UserEntry> GetCurrentEntryByUserId(string id)
+        {
+            return await Context.UserEntries.Include(entry => entry.Meeting).Where(entry => entry.UserId == id && entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now).AsNoTracking().FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<UserEntry>> GetCurrentEntries()
+        {
+            return await Context.UserEntries.Include(entry => entry.Meeting).Include(entry => entry.User).Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now).AsNoTracking().ToListAsync();
+        }
+
         public async Task<IEnumerable<UserEntry>> GetByMeetingIdIncludingUserAsync(int id)
         {
             return await Context.UserEntries.Where(entry => entry.MeetingId == id).Include(entry => entry.User).ToListAsync();
+        }
+
+        public async Task<IEnumerable<UserEntry>> GetByUserIdIncludingMeetingAsync(string id)
+        {
+            return await Context.UserEntries.Where(entry => entry.UserId == id).Include(entry => entry.Meeting).ToListAsync();
         }
 
         public async Task<UserEntry> GetByUserIdAndMeetingIdAsync(string userId, int meetingId)

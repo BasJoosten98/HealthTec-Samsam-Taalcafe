@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,19 +25,14 @@ namespace Taalcafe.Controllers
             this.signInManager = signInManager;
         }
 
+        [Authorize(Roles = "Admin, Coordinator")]
         public async Task<ActionResult> Index()
         {
             IEnumerable<ApplicationUser> model = await userManager.Users.ToListAsync();
             return View(model);
         }
 
-        public async Task<ActionResult> Details(string id)
-        {
-            throw new NotImplementedException();
-            ApplicationUser model = await userManager.FindByIdAsync(id);
-            return View(model);
-        }
-
+        [Authorize(Roles = "Admin")]
         public ActionResult Create()
         {
             UserRegisterViewModel model = new UserRegisterViewModel();
@@ -45,6 +41,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create(UserRegisterViewModel model)
         {
             if (ModelState.IsValid)
@@ -86,6 +83,7 @@ namespace Taalcafe.Controllers
             return View(model);
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Edit(string id)
         {
             ApplicationUser user = await userManager.FindByIdAsync(id);
@@ -103,6 +101,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Edit(string id, UserRegisterViewModel model)
         {
             if (ModelState.IsValid)
@@ -138,6 +137,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(string id)
         {
             ApplicationUser user = await userManager.FindByIdAsync(id);
@@ -257,6 +257,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ResetPassword(string id)
         {
             var user = await userManager.FindByIdAsync(id);
@@ -292,6 +293,12 @@ namespace Taalcafe.Controllers
             TempData["action"] = "index";
             TempData["controller"] = "account";
             return RedirectToAction("message", "home");
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
 
         //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -7,9 +7,12 @@
 <div class="container">
     <h1 class="mt-2"> Gebruikers</h1>
     <hr />
+    @if (User.IsInRole("Admin"))
+    {
     <div class="mb-2">
         <a class="btn btn-primary" asp-action="create" asp-controller="account">Gebruiker toevoegen</a>
     </div>
+    }
     <table class="table">
         <thead class="thead-light">
             <tr>
@@ -29,6 +32,8 @@
                     <td>@Model.ElementAt(i).Email</td>
                     <td>@Model.ElementAt(i).PhoneNumber</td>
                     <td>
+                        @if (User.IsInRole("Admin"))
+                        {
                         <a class="btn btn-primary" asp-action="edit" asp-controller="account" asp-route-id="@Model.ElementAt(i).Id">Bewerken</a>
                         <form asp-action="ResetPassword" asp-route-id="@Model.ElementAt(i).Id" method="post" style="display:inline-block;">
                             @Html.AntiForgeryToken()
@@ -38,6 +43,7 @@
                             @Html.AntiForgeryToken()
                             <input type="submit" value="Verwijder" class="btn btn-danger" />
                         </form>
+                        }
                     </td>
                 </tr>
             }

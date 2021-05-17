@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Graph;
+using Microsoft.Graph.Auth;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Taalcafe.DataAccess;
@@ -13,6 +18,7 @@ using Taalcafe.Models.ViewModels;
 
 namespace Taalcafe.Controllers
 {
+    [Authorize(Roles = "Coordinator, Cursist, Taalcoach")]
     public class MeetingController : Controller
     {
         private readonly MeetingRepository meetingRepository;
@@ -52,12 +58,7 @@ namespace Taalcafe.Controllers
             return View(model);
         }
 
-        public async Task<ActionResult> Details(int id)
-        {
-            Meeting model = await meetingRepository.GetByIdAsync(id);
-            return View(model);
-        }
-
+        [Authorize(Roles = "Coordinator")]
         public async Task<ActionResult> Create()
         {
             IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
@@ -72,6 +73,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Coordinator")]
         public async Task<ActionResult> Create(Meeting model)
         {
             if (ModelState.IsValid)
@@ -94,6 +96,7 @@ namespace Taalcafe.Controllers
             }
         }
 
+        [Authorize(Roles = "Coordinator")]
         public async Task<ActionResult> Edit(int id)
         {
             IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
@@ -110,6 +113,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Coordinator")]
         public async Task<ActionResult> Edit(int id, Meeting model)
         {
             if (ModelState.IsValid)
@@ -135,6 +139,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Coordinator")]
         public async Task<ActionResult> Delete(int id)
         {
             Meeting meeting = await meetingRepository.GetByIdAsync(id);
@@ -183,6 +188,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Cursist, Taalcoach")]
         public async Task<IActionResult> SignUp(int id) //Aanmelden voor een meeting
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -223,6 +229,7 @@ namespace Taalcafe.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Coordinator")]
         public async Task<IActionResult> ManageGroups(int id)
         {
             IEnumerable<UserEntry> AllUsers = await userEntryRepository.GetByMeetingIdIncludingUserAsync(id);
@@ -246,6 +253,7 @@ namespace Taalcafe.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Coordinator")]
         public async Task<IActionResult> ManageGroups(int id, string Users)
         {
             ManageGroupsUserModel[] userList = JsonConvert.DeserializeObject<ManageGroupsUserModel[]>(Users);
@@ -280,10 +288,122 @@ namespace Taalcafe.Controllers
         }
 
         [HttpGet]
-        public IActionResult Join(int id) //De meeting joinen (videobellen)
+        [Authorize(Roles = "Coordinator")]
+        public async Task<IActionResult> ActiveMeetings()
         {
-            //TODO: Check de role en verwijs gebruiker door naar juiste pagina
-            return null;
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetCurrentEntries();
+            List<ActiveMeetingStats> stats = new List<ActiveMeetingStats>();
+            Dictionary<string, string> joinAndParticipants = new Dictionary<string, string>();
+
+            foreach(UserEntry entry in entries)
+            {
+                if (entry.GroupNumber.ToLower().Contains("teams.microsoft.com"))
+                {
+                    if (joinAndParticipants.ContainsKey(entry.GroupNumber))
+                    {
+                        joinAndParticipants[entry.GroupNumber] += ", " + entry.User.UserName;
+                    }
+                    else
+                    {
+                        joinAndParticipants[entry.GroupNumber] = entry.User.UserName;
+                    }
+                }
+            }
+            foreach(var item in joinAndParticipants)
+            {
+                ActiveMeetingStats temp = new ActiveMeetingStats
+                {
+                    Participants = item.Value,
+                    JoinUrl = item.Key
+                };
+                stats.Add(temp);
+            }
+            ActiveMeetingsViewModel model = new ActiveMeetingsViewModel { Stats = stats };
+            return View(model);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Cursist, Taalcoach")]
+        public async Task<IActionResult> Join() //De meeting joinen (videobellen)
+        {
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            UserEntry entry = await userEntryRepository.GetCurrentEntryByUserId(userId);
+
+            if (entry != null)
+            {
+                if(string.IsNullOrEmpty(entry.GroupNumber))
+                {
+                    TempData["title"] = "Geen groep";
+                    List<string> content2 = new List<string>();
+                    content2.Add("Op dit moment is er meeting bezig waarvoor u zich heeft aangemeld.");
+                    content2.Add("Echter bent u niet ingedeeld in een groep door een van de coordinatoren.");
+                    content2.Add("Neem contact op met een van de coordinatoren om dit probleem op te lossen.");
+                    TempData["content"] = content2;
+
+                    return RedirectToAction("message", "home");
+                }
+                if (entry.GroupNumber.ToLower().Contains("teams.microsoft.com")) //join url has been added already
+                {
+                    TempData["joinUrl"] = entry.GroupNumber;
+                    return View();
+                }
+
+                Meeting meeting = await meetingRepository.GetByIdAsync(entry.MeetingId);
+                OnlineMeeting result = await createTeamsMeetingAsync(meeting.StartDate, meeting.EndDate);
+
+                //updating group number to join URL
+                IEnumerable<UserEntry> group = await userEntryRepository.GetByGroupNumberAsync(entry.GroupNumber);
+                foreach(UserEntry eu in group)
+                {
+                    eu.GroupNumber = result.JoinWebUrl;
+                    userEntryRepository.Update(eu);
+                }
+
+                await userEntryRepository.SaveAsync();
+
+                TempData["joinUrl"] = result.JoinWebUrl;
+                return View();
+            }
+            TempData["title"] = "Geen meeting nu";
+            List<string> content = new List<string>();
+            content.Add("Op dit moment is er geen meeting bezig waarvoor u zich heeft aangemeld.");
+            content.Add("Probeer het later opnieuw.");
+            TempData["content"] = content;
+
+            return RedirectToAction("message", "home");
+        }
+
+        [NonAction]
+        public async Task<OnlineMeeting> createTeamsMeetingAsync(DateTime start, DateTime end)
+        {
+            var confidentialClient = ConfidentialClientApplicationBuilder
+                               .Create("bd803e51-21c8-45a1-8028-2d730d5021ee")
+                               .WithTenantId("057805ee-dbb1-4bbf-a227-edfc087e6e9b")
+                               .WithClientSecret("T.i_Wl_7rg45hji0NpJTNoU64~Fn~t99cI")
+                               .Build();
+
+            var authProvider = new ClientCredentialProvider(confidentialClient);
+
+            var graphClient = new GraphServiceClient(authProvider);
+
+            LobbyBypassSettings lobbySettings = new LobbyBypassSettings();
+            lobbySettings.Scope = LobbyBypassScope.Everyone;
+            lobbySettings.IsDialInBypassEnabled = true;
+            var onlineMeeting = new OnlineMeeting
+            {
+                StartDateTime = start.ToUniversalTime(),
+                EndDateTime = end.ToUniversalTime(),
+                Subject = "Samsam Taalcafe Meeting",
+                LobbyBypassSettings = lobbySettings
+            };
+
+            var result = await graphClient.Users["c2deb7cb-109b-467a-8f5d-106f93a53381"].OnlineMeetings
+                .Request()
+                .AddAsync(onlineMeeting);
+
+            return result;
         }
     }
+
+    
 }
