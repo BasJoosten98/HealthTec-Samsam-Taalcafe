@@ -20,9 +20,9 @@ namespace Taalcafe.Models.DatabaseModels
 
         public string GroupNumber { get; set; }
 
-        public Mark Mark { get; set; }
+        //public Mark Mark { get; set; }
 
-        public string MarkReason { get; set; }
+        //public string MarkReason { get; set; }
 
 
 

@@ -22,5 +22,10 @@ namespace Taalcafe.Models.ViewModels
         [Display(Name = "Herhaal email")]
         [Compare("Email", ErrorMessage = "De email adressen zijn niet hetzelfde")]
         public string ConfirmEmail { get; set; }
+
+        [Required]
+        [Display(Name = "Telefoon nummer")]
+        [Phone]
+        public string PhoneNumber { get; set; }
     }
 }

@@ -33,7 +33,7 @@ namespace Taalcafe
 
             services.AddDbContextPool<ApplicationDbContext>(options =>
             {
-                options.UseSqlServer(Configuration.GetConnectionString("TaalcafeLocalDev"));
+                options.UseSqlServer(Configuration.GetConnectionString("TaalcafeDB"));
             });
 
             services.AddIdentity<ApplicationUser, IdentityRole>()

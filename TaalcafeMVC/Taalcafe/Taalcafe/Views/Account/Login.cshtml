@@ -5,27 +5,52 @@
 }
 
 <div class="container">
-    <form asp-action="Login" method="post" class="form-horizontal" style="margin-top:5%">
-        @Html.AntiForgeryToken()
-        <div class="row  justify-content-center align-items-center">
-            <div class="col-md-5">
-                <div asp-validation-summary="ModelOnly" class="text-danger val-summary"></div>
-                <div class="form-group">
-                    <label asp-for="Email"></label>
-                    <input type="email" class="form-control" asp-for="Email">
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Password"></label>
-                    <input type="password" class="form-control" asp-for="Password">
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="form-group row justify-content-center pr-3 pl-3">
-                    <input type="submit" value="Login" class="btn btn-success" style="width: 100%;" />
-                </div>
-            </div>
+    <div class="row align-items-center">
+        <div class="col-md-7">
+            <p>
+                <h3>Welkom bij het online SamSam taalcafé!</h3>
+                Samsam is een programma dat ouderen en nieuwe Nederlanders bij elkaar brengt om de taal te oefenen op een informele manier door middel van videobellen.<br>
+                De focus ligt hierbij op het oefenen van conversatie vaardigheden. Samsam is geen school.<br>
+                De thematiek die gebruikt wordt zal dan ook geen spelling of grammatica aanbieden.<br>
+                Samsam heeft leuke thema's waardoor er altijd een relevant gesprek gevoerd zal worden.<br>
+                Dit kan op elk niveau van beheersing van de Nederlandse taal.<br>
+                Het allerbelangrijkst is eigenlijk de ontmoeting en de nieuwe vriendschappen die gemaakt worden.<br>
+                Probeer er dus voor te zorgen dat iedereen zich altijd op zijn gemak voelt en de sfeer relaxed is.<br>
+
+            </p>
+            <p>
+                <h3>Nog niet aangemeld?</h3>
+                Neem contact op met IEMAND! ;)
+
+            </p>
         </div>
-    </form>
+        <div class="col-md-5 bg-taalcafe">
+            <form asp-action="Login" method="post" class="form-horizontal" style="margin-top:5%">
+                @Html.AntiForgeryToken()
+                <div class="row  align-items-center">
+                    <div class="col-md-12">
+                        <div asp-validation-summary="ModelOnly" class="text-danger val-summary"></div>
+                        <div class="form-group">
+                            <label asp-for="Email"></label>
+                            <input type="email" class="form-control" asp-for="Email">
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Password"></label>
+                            <input type="password" class="form-control" asp-for="Password">
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <p>Wachtwoord vergeten? Neem contact op met één van de coördinatoren.</p>
+                        </div>
+                        <div class="form-group row justify-content-center pr-3 pl-3">
+                            <input type="submit" value="Login" class="btn btn-success" style="width: 100%;" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>   
 </div>
 
 

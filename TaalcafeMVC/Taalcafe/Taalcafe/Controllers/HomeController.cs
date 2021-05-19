@@ -36,7 +36,7 @@ namespace Taalcafe.Controllers
                     if (roles[0].ToLower() == "cursist" || roles[0].ToLower() == "taalcoach")
                     {
                         IEnumerable<UserEntry> entries = await userEntryRepository.GetByUserIdIncludingMeetingAsync(userId);
-                        TempData["message"] = "U heeft zich nog iet aangemeld voor een komende meeting. Ga naar meetings beheren om je aan te melden!";
+                        TempData["message"] = "U heeft zich nog niet aangemeld voor een komende meeting. Ga naar meetings beheren om je aan te melden!";
                         UserEntry closest = null;
                         foreach (UserEntry e in entries)
                         {

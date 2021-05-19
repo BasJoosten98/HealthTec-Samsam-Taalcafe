@@ -226,7 +226,8 @@ namespace Taalcafe.Controllers
                 ApplicationUser user = new ApplicationUser
                 {
                     UserName = model.FullName,
-                    Email = model.Email
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber
                 };
                 string password = RandomStringGenerator.CreateString(10);
 

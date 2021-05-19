@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.Graph.Auth;
 using Microsoft.Identity.Client;
@@ -25,16 +26,19 @@ namespace Taalcafe.Controllers
         private readonly UserEntryRepository userEntryRepository;
         private readonly ThemeRepository themeRepository;
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly IConfiguration config;
 
         public MeetingController(MeetingRepository meetingRepository,
             UserEntryRepository userEntryRepository,
             ThemeRepository themeRepository,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration)
         {
             this.meetingRepository = meetingRepository;
             this.userEntryRepository = userEntryRepository;
             this.themeRepository = themeRepository;
             this.userManager = userManager;
+            this.config = configuration;
         }
 
         public async Task<ActionResult> Index()
@@ -62,6 +66,20 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Create()
         {
             IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
+            if(themes.Count() <= 0) //no themes exist
+            {
+                TempData["title"] = "Geen thema's";
+                List<string> content = new List<string>();
+                content.Add("Een meeting heeft een thema nodig om gemaakt te worden.");
+                content.Add("Er bestaan echter nog geen thema's.");
+                content.Add("Deze zullen dus als eerst gemaakt moeten worden.");
+                TempData["content"] = content;
+                TempData["action"] = "index";
+                TempData["controller"] = "theme";
+
+                return RedirectToAction("message", "home");
+            }
+
             CreateMeetingViewModel model = new CreateMeetingViewModel
             {
                 StartDate = DateTime.Now + TimeSpan.FromMinutes(5),
@@ -90,10 +108,7 @@ namespace Taalcafe.Controllers
 
                 return RedirectToAction("message", "home");
             }
-            else
-            {
-                return View();
-            }
+            return View();
         }
 
         [Authorize(Roles = "Coordinator")]
@@ -157,34 +172,34 @@ namespace Taalcafe.Controllers
             return RedirectToAction("message", "home");
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Feedback(int id)
-        {
-            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            UserEntry entry = await userEntryRepository.GetByUserIdAndMeetingIdAsync(userId, id);
-            if(entry != null)
-            {
-                return View();
-            }
-            return RedirectToAction("index", "home");
-        }
+        //[HttpGet]
+        //public async Task<IActionResult> Feedback(int id)
+        //{
+        //    string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //    UserEntry entry = await userEntryRepository.GetByUserIdAndMeetingIdAsync(userId, id);
+        //    if(entry != null)
+        //    {
+        //        return View();
+        //    }
+        //    return RedirectToAction("index", "home");
+        //}
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Feedback(int id, FeedbackViewModel model)
-        {
-            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            UserEntry entry = await userEntryRepository.GetByUserIdAndMeetingIdAsync(userId, id);
-            if (entry != null)
-            {
-                entry.Mark = model.Mark;
-                entry.MarkReason = model.MarkReason;
-                await userEntryRepository.SaveAsync();
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Feedback(int id, FeedbackViewModel model)
+        //{
+        //    string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //    UserEntry entry = await userEntryRepository.GetByUserIdAndMeetingIdAsync(userId, id);
+        //    if (entry != null)
+        //    {
+        //        entry.Mark = model.Mark;
+        //        entry.MarkReason = model.MarkReason;
+        //        await userEntryRepository.SaveAsync();
 
-                return View();
-            }
-            return RedirectToAction("index", "home");
-        }
+        //        return View();
+        //    }
+        //    return RedirectToAction("index", "home");
+        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -210,8 +225,8 @@ namespace Taalcafe.Controllers
                 content.Add("");
                 content.Add("Tot dan!");
                 TempData["content"] = content;
-                TempData["action"] = "index";
-                TempData["controller"] = "meeting";
+                //TempData["action"] = "index";
+                //TempData["controller"] = "meeting";
 
                 return RedirectToAction("message", "home");
             }
@@ -291,7 +306,8 @@ namespace Taalcafe.Controllers
         [Authorize(Roles = "Coordinator")]
         public async Task<IActionResult> ActiveMeetings()
         {
-            IEnumerable<UserEntry> entries = await userEntryRepository.GetCurrentEntries();
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetAllIncludingMeetingAndUser();
+            entries = entries.Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now);
             List<ActiveMeetingStats> stats = new List<ActiveMeetingStats>();
             Dictionary<string, string> joinAndParticipants = new Dictionary<string, string>();
 
@@ -327,7 +343,8 @@ namespace Taalcafe.Controllers
         public async Task<IActionResult> Join() //De meeting joinen (videobellen)
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            UserEntry entry = await userEntryRepository.GetCurrentEntryByUserId(userId);
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetByUserIdIncludingMeetingAsync(userId);
+            UserEntry entry = entries.Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now).FirstOrDefault();
 
             if (entry != null)
             {
@@ -348,8 +365,8 @@ namespace Taalcafe.Controllers
                     return View();
                 }
 
-                Meeting meeting = await meetingRepository.GetByIdAsync(entry.MeetingId);
-                OnlineMeeting result = await createTeamsMeetingAsync(meeting.StartDate, meeting.EndDate);
+                //Meeting meeting = await meetingRepository.GetByIdAsync(entry.MeetingId);
+                OnlineMeeting result = await createTeamsMeetingAsync(entry.Meeting.StartDate, entry.Meeting.EndDate);
 
                 //updating group number to join URL
                 IEnumerable<UserEntry> group = await userEntryRepository.GetByGroupNumberAsync(entry.GroupNumber);
@@ -377,9 +394,9 @@ namespace Taalcafe.Controllers
         public async Task<OnlineMeeting> createTeamsMeetingAsync(DateTime start, DateTime end)
         {
             var confidentialClient = ConfidentialClientApplicationBuilder
-                               .Create("bd803e51-21c8-45a1-8028-2d730d5021ee")
-                               .WithTenantId("057805ee-dbb1-4bbf-a227-edfc087e6e9b")
-                               .WithClientSecret("T.i_Wl_7rg45hji0NpJTNoU64~Fn~t99cI")
+                               .Create(config["MeetingConfig:App-Id"])
+                               .WithTenantId(config["MeetingConfig:Tenant-Id"])
+                               .WithClientSecret(config["MeetingConfig:Client-Secret"])
                                .Build();
 
             var authProvider = new ClientCredentialProvider(confidentialClient);
@@ -397,7 +414,7 @@ namespace Taalcafe.Controllers
                 LobbyBypassSettings = lobbySettings
             };
 
-            var result = await graphClient.Users["c2deb7cb-109b-467a-8f5d-106f93a53381"].OnlineMeetings
+            var result = await graphClient.Users[config["MeetingConfig:User-Id"]].OnlineMeetings
                 .Request()
                 .AddAsync(onlineMeeting);
 
