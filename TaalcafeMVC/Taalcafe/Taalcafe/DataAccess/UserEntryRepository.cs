@@ -40,9 +40,17 @@ namespace Taalcafe.DataAccess
             return await Context.UserEntries.Where(entry => entry.MeetingId == id).Include(entry => entry.User).ToListAsync();
         }
 
-        public async Task<IEnumerable<UserEntry>> GetByUserIdIncludingMeetingAsync(string id)
+        public async Task<IEnumerable<UserEntry>> GetFromTodayByUserIdIncludingMeetingAsync(string id)
         {
-            return await Context.UserEntries.Where(entry => entry.UserId == id).Include(entry => entry.Meeting).ToListAsync();
+            DateTime yesterday = DateTime.Now.AddDays(-1);
+            return await Context.UserEntries.Include(entry => entry.Meeting).Where(entry => entry.UserId == id && entry.Meeting.StartDate > yesterday).OrderBy(entry => entry.Meeting.StartDate).ToListAsync();
+        }
+
+        public async Task<IEnumerable<UserEntry>> GetThisDayByUserIdIncludingMeetingAsync(string id)
+        {
+            DateTime yesterday = DateTime.Now.AddDays(-1);
+            DateTime tomorrow = DateTime.Now.AddDays(1);
+            return await Context.UserEntries.Include(entry => entry.Meeting).Where(entry => entry.UserId == id && entry.Meeting.StartDate > yesterday && entry.Meeting.EndDate < tomorrow).ToListAsync();
         }
 
         public async Task<UserEntry> GetByUserIdAndMeetingIdAsync(string userId, int meetingId)

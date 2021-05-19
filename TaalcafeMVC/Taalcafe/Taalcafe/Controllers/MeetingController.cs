@@ -302,6 +302,12 @@ namespace Taalcafe.Controllers
             return RedirectToAction("message", "home");
         }
 
+        private class activeMeetingInfo
+        {
+            public string Participants { get; set; }
+            public string Theme { get; set; }
+        }
+
         [HttpGet]
         [Authorize(Roles = "Coordinator")]
         public async Task<IActionResult> ActiveMeetings()
@@ -309,7 +315,7 @@ namespace Taalcafe.Controllers
             IEnumerable<UserEntry> entries = await userEntryRepository.GetAllIncludingMeetingAndUser();
             entries = entries.Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now);
             List<ActiveMeetingStats> stats = new List<ActiveMeetingStats>();
-            Dictionary<string, string> joinAndParticipants = new Dictionary<string, string>();
+            Dictionary<string, activeMeetingInfo> joinAndParticipants = new Dictionary<string, activeMeetingInfo>();
 
             foreach(UserEntry entry in entries)
             {
@@ -317,20 +323,23 @@ namespace Taalcafe.Controllers
                 {
                     if (joinAndParticipants.ContainsKey(entry.GroupNumber))
                     {
-                        joinAndParticipants[entry.GroupNumber] += ", " + entry.User.UserName;
+                        joinAndParticipants[entry.GroupNumber].Participants += ", " + entry.User.UserName;
                     }
                     else
                     {
-                        joinAndParticipants[entry.GroupNumber] = entry.User.UserName;
+                        Meeting meeting = await meetingRepository.GetByIdIncludingThemes(entry.MeetingId);
+                        joinAndParticipants[entry.GroupNumber] = new activeMeetingInfo { Participants = entry.User.UserName, Theme = meeting.Theme.Title };
                     }
                 }
             }
+
             foreach(var item in joinAndParticipants)
             {
                 ActiveMeetingStats temp = new ActiveMeetingStats
                 {
-                    Participants = item.Value,
-                    JoinUrl = item.Key
+                    Participants = item.Value.Participants,
+                    JoinUrl = item.Key,
+                    Theme = item.Value.Theme
                 };
                 stats.Add(temp);
             }
@@ -343,7 +352,7 @@ namespace Taalcafe.Controllers
         public async Task<IActionResult> Join() //De meeting joinen (videobellen)
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            IEnumerable<UserEntry> entries = await userEntryRepository.GetByUserIdIncludingMeetingAsync(userId);
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetThisDayByUserIdIncludingMeetingAsync(userId);
             UserEntry entry = entries.Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now).FirstOrDefault();
 
             if (entry != null)

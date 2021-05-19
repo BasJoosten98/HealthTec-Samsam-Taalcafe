@@ -21,15 +21,9 @@ namespace Taalcafe.DataAccess
             return await Context.Meetings.Include(meeting => meeting.Theme).OrderBy(meeting => meeting.StartDate).ToListAsync();
         }
 
-        public async Task<IEnumerable<Meeting>> GetAllUpcomingMeetingsIncludingThemes()
+        public async Task<Meeting> GetByIdIncludingThemes(int id)
         {
-            return await Context.Meetings.Where(meeting => meeting.StartDate >= DateTime.Now).Include(meeting => meeting.Theme).OrderBy(meeting => meeting.StartDate).ToListAsync();
+            return await Context.Meetings.Include(meeting => meeting.Theme).Where(meeting => meeting.Id == id).OrderBy(meeting => meeting.StartDate).FirstOrDefaultAsync();
         }
-
-        public async Task<IEnumerable<Meeting>> GetAllPastMeetingsIncludingThemes()
-        {
-            return await Context.Meetings.Where(meeting => meeting.StartDate < DateTime.Now).Include(meeting => meeting.Theme).OrderBy(meeting => meeting.StartDate).ToListAsync();
-        }
-
     }
 }

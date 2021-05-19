@@ -15,5 +15,7 @@ namespace Taalcafe.Models.ViewModels
     {
         public string Participants { get; set; }
         public string JoinUrl { get; set; }
+        public string Theme { get; set; }
+
     }
 }
