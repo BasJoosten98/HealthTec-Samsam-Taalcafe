@@ -125,6 +125,10 @@ function addGroup() {
         newGroup.members.push(user);
     });
     tempGroup = [];
+    if (newGroup.members.length <= 0) {
+        alert("Deze groep is leeg en kan niet worden toegevoegd.");
+        return;
+    }
     groups.push(newGroup);
     renderNieuwGroep();
     renderGroepen();
