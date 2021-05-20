@@ -36,8 +36,8 @@
                     {
                         <tr>
                             <th>@(i + 1)</th>
-                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("dd-MM-yyyy HH:mm")</td>
-                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("ddd d MMMM yyyy, H:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("ddd d MMMM yyyy, H:mm")</td>
                             <td>@curMeetingList.ElementAt(i).Theme.Title</td>
                             <td>
                             </td>
@@ -73,8 +73,8 @@
                     {
                         <tr>
                             <th>@(i + 1)</th>
-                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("dd-MM-yyyy HH:mm")</td>
-                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).StartDate.ToString("ddd d MMMM yyyy, H:mm")</td>
+                            <td>@curMeetingList.ElementAt(i).EndDate.ToString("ddd d MMMM yyyy, H:mm")</td>
                             <td>@curMeetingList.ElementAt(i).Theme.Title</td>
                             <td>
                                 @if (User.IsInRole("Coordinator"))
@@ -127,8 +127,8 @@
                         {
                             <tr>
                                 <th>@(i + 1)</th>
-                                <td>@curMeetingList.ElementAt(i).StartDate.ToString("dd-MM-yyyy HH:mm")</td>
-                                <td>@curMeetingList.ElementAt(i).EndDate.ToString("dd-MM-yyyy HH:mm")</td>
+                                <td>@curMeetingList.ElementAt(i).StartDate.ToString("ddd d MMMM yyyy, H:mm")</td>
+                                <td>@curMeetingList.ElementAt(i).EndDate.ToString("ddd d MMMM yyyy, H:mm")</td>
                                 <td>@curMeetingList.ElementAt(i).Theme.Title</td>
                                 <td>
                                     <form asp-action="Delete" asp-route-id="@curMeetingList.ElementAt(i).Id" method="post" style="display:inline-block;">

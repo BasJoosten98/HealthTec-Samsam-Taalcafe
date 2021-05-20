@@ -13,9 +13,12 @@
 
 <div class="container">
     <h1 class="pt-2" style="text-align:center;">Welkom @User.Identity.Name!</h1>
-    <p style="text-align:center;">
-        @TempData["message"]
-    </p>
+    @if (User.IsInRole("Taalcoach") || User.IsInRole("Cursist"))
+    {
+    <div class="bg-taalcafe w-100">
+        <h6 class="p-3" style="text-align:center;">@TempData["message"]</h6>
+    </div>
+    }
     <hr />
     <h2 style="text-align:center;">Wat wil je doen?</h2>
 
@@ -66,7 +69,7 @@
             <div class="col-md-4 p-0">
                 <a class="row align-items-center bg-dark m-1" style="height:200px; text-decoration:none;" asp-action="index" asp-controller="meeting">
                     <div class="col">
-                        <h2 style="text-align:center; color:white;">Meetings beheren</h2>
+                        <h2 style="text-align:center; color:white;">Aanmelden voor meetings</h2>
                     </div>
                 </a>
             </div>
