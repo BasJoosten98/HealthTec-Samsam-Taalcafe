@@ -26,11 +26,11 @@ namespace Taalcafe.Controllers
             return View(model);
         }
 
-        public async Task<ActionResult> Details(int id)
-        {
-            Theme model = await themeRepository.GetByIdAsync(id);
-            return View(model);
-        }
+        //public async Task<ActionResult> Details(int id)
+        //{
+        //    Theme model = await themeRepository.GetByIdAsync(id);
+        //    return View(model);
+        //}
 
         public ActionResult Create()
         {

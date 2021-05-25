@@ -42,7 +42,7 @@ namespace Taalcafe.Controllers
                             if (e.Meeting.EndDate < DateTime.Now) { continue; }
                             else if (e.Meeting.StartDate <= DateTime.Now && e.Meeting.EndDate > DateTime.Now)
                             {
-                                TempData["message"] = "Een taalcafe meeting is begonnen! Klik op \"videobellen\" om deel te nemen!";
+                                TempData["message"] = "Een taalcafé meeting is begonnen! Klik op \"videobellen\" om deel te nemen!";
                                 break;
                             }
                             else

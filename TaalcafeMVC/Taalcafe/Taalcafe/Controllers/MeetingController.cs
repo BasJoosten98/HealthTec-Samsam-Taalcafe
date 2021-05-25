@@ -92,11 +92,22 @@ namespace Taalcafe.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Coordinator")]
-        public async Task<ActionResult> Create(Meeting model)
+        public async Task<ActionResult> Create(CreateMeetingViewModel model)
         {
-            if (ModelState.IsValid)
+            if(model.StartDate >= model.EndDate)
             {
-                meetingRepository.Add(model);
+                ModelState.AddModelError("EndDate", "Eindtijd moet later zijn dan starttijd");
+            }
+            else if (ModelState.IsValid)
+            {
+                              
+                Meeting meeting = new Meeting
+                {
+                    StartDate = model.StartDate,
+                    EndDate = model.EndDate,
+                    ThemeId = model.ThemeId
+                };
+                meetingRepository.Add(meeting);
                 await meetingRepository.SaveAsync();
 
                 TempData["title"] = "Meeting toegevoegd!";
@@ -106,9 +117,11 @@ namespace Taalcafe.Controllers
                 TempData["action"] = "index";
                 TempData["controller"] = "meeting";
 
-                return RedirectToAction("message", "home");
+                return RedirectToAction("message", "home");           
             }
-            return View();
+            IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
+            model.ThemeSelectList = themes.Select(theme => new SelectListItem(theme.Title, theme.Id.ToString()));
+            return View(model);
         }
 
         [Authorize(Roles = "Coordinator")]
@@ -129,12 +142,23 @@ namespace Taalcafe.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Coordinator")]
-        public async Task<ActionResult> Edit(int id, Meeting model)
+        public async Task<ActionResult> Edit(int id, CreateMeetingViewModel model)
         {
-            if (ModelState.IsValid)
+            if (model.StartDate >= model.EndDate)
             {
-                model.Id = id;
-                meetingRepository.Update(model);
+                ModelState.AddModelError("EndDate", "Eindtijd moet later zijn dan starttijd");
+            }
+            else if (ModelState.IsValid)
+            {
+                //model.Id = id;
+                Meeting meeting = new Meeting
+                {
+                    Id = id,
+                    StartDate = model.StartDate,
+                    EndDate = model.EndDate,
+                    ThemeId = model.ThemeId
+                };
+                meetingRepository.Update(meeting);
                 await meetingRepository.SaveAsync();
 
                 TempData["title"] = "Meeting bijgewerkt!";
@@ -146,10 +170,9 @@ namespace Taalcafe.Controllers
 
                 return RedirectToAction("message", "home");
             }
-            else
-            {
-                return View();
-            }
+            IEnumerable<Theme> themes = await themeRepository.GetAllAsync();
+            model.ThemeSelectList = themes.Select(theme => new SelectListItem(theme.Title, theme.Id.ToString()));
+            return View(model);
         }
 
         [HttpPost]
@@ -233,6 +256,38 @@ namespace Taalcafe.Controllers
             TempData["title"] = "Mislukt!";
             List<string> content2 = new List<string>();
             content2.Add("U bent NIET aangemeld voor de meeting!");
+            content2.Add("Iets ging fout bij ons...");
+            content2.Add("Mogelijk is de meeting net verwijderd of zal u zich opnieuw moeten inloggen.");
+            content2.Add("Sorry voor het ongemak.");
+            TempData["content"] = content2;
+            TempData["action"] = "index";
+            TempData["controller"] = "meeting";
+
+            return RedirectToAction("message", "home");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Cursist, Taalcoach")]
+        public async Task<IActionResult> SignOut(int id) //Afmelden voor een meeting
+        {
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            UserEntry entry = await userEntryRepository.GetByUserIdAndMeetingIdAsync(userId, id);
+            if (entry != null && !string.IsNullOrEmpty(userId)) //meeting exists
+            {
+                userEntryRepository.Remove(entry);
+                await userEntryRepository.SaveAsync();
+
+                TempData["title"] = "Afgemeld!";
+                List<string> content = new List<string>();
+                content.Add("U bent afgemeld voor de meeting!");
+                TempData["content"] = content;
+
+                return RedirectToAction("message", "home");
+            }
+            TempData["title"] = "Mislukt!";
+            List<string> content2 = new List<string>();
+            content2.Add("U bent NIET afgemeld voor de meeting!");
             content2.Add("Iets ging fout bij ons...");
             content2.Add("Mogelijk is de meeting net verwijderd of zal u zich opnieuw moeten inloggen.");
             content2.Add("Sorry voor het ongemak.");
@@ -327,8 +382,8 @@ namespace Taalcafe.Controllers
                     }
                     else
                     {
-                        Meeting meeting = await meetingRepository.GetByIdIncludingThemes(entry.MeetingId);
-                        joinAndParticipants[entry.GroupNumber] = new activeMeetingInfo { Participants = entry.User.UserName, Theme = meeting.Theme.Title };
+                        //Meeting meeting = await meetingRepository.GetByIdIncludingThemes(entry.MeetingId);
+                        joinAndParticipants[entry.GroupNumber] = new activeMeetingInfo { Participants = entry.User.UserName, Theme = entry.Meeting.Theme.Title };
                     }
                 }
             }

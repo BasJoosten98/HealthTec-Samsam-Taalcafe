@@ -22,7 +22,6 @@ namespace Taalcafe.Models.ViewModels
         [Display(Name = "Eindtijd")]
         public DateTime EndDate { get; set; }
 
-        [Required]
         public IEnumerable<SelectListItem> ThemeSelectList { get; set; }
     }
 }

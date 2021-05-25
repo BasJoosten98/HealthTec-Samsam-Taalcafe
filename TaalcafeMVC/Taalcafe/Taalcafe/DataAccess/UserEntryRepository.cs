@@ -18,7 +18,7 @@ namespace Taalcafe.DataAccess
 
         public async Task<IEnumerable<UserEntry>> GetAllIncludingMeetingAndUser()
         {
-            return await Context.UserEntries.Include(entry => entry.Meeting).Include(entry => entry.User).ToListAsync();
+            return await Context.UserEntries.Include(entry => entry.Meeting.Theme).Include(entry => entry.User).ToListAsync();
         }
         public async Task<IEnumerable<UserEntry>> GetByUserIdAsync(string id)
         {

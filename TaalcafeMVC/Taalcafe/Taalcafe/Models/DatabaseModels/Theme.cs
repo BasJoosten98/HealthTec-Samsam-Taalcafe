@@ -15,12 +15,12 @@ namespace Taalcafe.Models.DatabaseModels
         [Display(Name = "Titel")]
         public string Title { get; set; }
 
-        [Required]
-        [Display(Name = "Omschrijving")]
-        public string Description { get; set; }
+        //[Required]
+        //[Display(Name = "Omschrijving")]
+        //public string Description { get; set; }
 
-        [Required]
-        [Display(Name = "Vragen")]
-        public string Questions { get; set; }
+        //[Required]
+        //[Display(Name = "Vragen")]
+        //public string Questions { get; set; }
     }
 }

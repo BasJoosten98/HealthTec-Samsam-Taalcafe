@@ -40,6 +40,13 @@
                             <td>@curMeetingList.ElementAt(i).EndDate.ToString("ddd d MMMM yyyy, H:mm")</td>
                             <td>@curMeetingList.ElementAt(i).Theme.Title</td>
                             <td>
+                                @if (User.IsInRole("Taalcoach") || User.IsInRole("Cursist"))
+                                {
+                                <form asp-action="SignOut" asp-route-id="@curMeetingList.ElementAt(i).Id" method="post" style="display:inline-block;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="submit" value="Afmelden" class="btn btn-danger" />
+                                </form>
+                                }
                             </td>
                         </tr>
                     }
