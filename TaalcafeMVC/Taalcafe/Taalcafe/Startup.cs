@@ -49,8 +49,7 @@ namespace Taalcafe
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
 
-                options.User.AllowedUserNameCharacters = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
+                options.User.AllowedUserNameCharacters = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúçàèìòùßäöü";
                 options.User.RequireUniqueEmail = true;
             });
 
