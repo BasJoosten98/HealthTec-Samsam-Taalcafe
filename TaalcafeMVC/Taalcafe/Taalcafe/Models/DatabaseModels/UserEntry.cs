@@ -20,6 +20,9 @@ namespace Taalcafe.Models.DatabaseModels
 
         public string GroupNumber { get; set; }
 
+        [Required]
+        public bool HasParticipated { get; set; }
+
         //public Mark Mark { get; set; }
 
         //public string MarkReason { get; set; }

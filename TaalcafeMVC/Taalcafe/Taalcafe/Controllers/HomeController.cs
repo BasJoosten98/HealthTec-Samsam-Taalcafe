@@ -47,7 +47,7 @@ namespace Taalcafe.Controllers
                             }
                             else
                             {
-                                TempData["message"] = "Uw eerst volgende taalcafe meeting vindt plaats op " + e.Meeting.StartDate.ToString("ddd d MMMM yyyy, H:mm") + ". Tot dan!";
+                                TempData["message"] = "Uw eerstvolgende taalcafe meeting vindt plaats op " + e.Meeting.StartDate.ToString("ddd d MMMM yyyy, H:mm") + ". Tot dan!";
                                 break;
                             }
                         }

@@ -14,6 +14,7 @@ namespace Taalcafe.Models.ViewModels
     public class ActiveMeetingStats
     {
         public string Participants { get; set; }
+        public string HasParticipated { get; set; }
         public string JoinUrl { get; set; }
         public string Theme { get; set; }
 

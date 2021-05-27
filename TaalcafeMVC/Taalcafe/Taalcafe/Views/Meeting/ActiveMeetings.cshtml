@@ -15,6 +15,7 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">Deelnemers</th>
+                        <th scope="col">Deelgenomen</th>
                         <th scope="col">Thema</th>
                         <th scope="col"></th>
                     </tr>
@@ -25,6 +26,7 @@
                     <tr>
                         <th>@(i + 1)</th>
                         <td>@Model.Stats.ElementAt(i).Participants</td>
+                        <td>@Model.Stats.ElementAt(i).HasParticipated</td>
                         <td>@Model.Stats.ElementAt(i).Theme</td>
                         <td><a href="@Model.Stats.ElementAt(i).JoinUrl" target="_blank" class="btn btn-success">Deelnemen</a></td>
                     </tr>

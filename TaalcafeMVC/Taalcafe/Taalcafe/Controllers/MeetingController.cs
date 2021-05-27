@@ -321,35 +321,176 @@ namespace Taalcafe.Controllers
 
         }
 
+        private class GroupCounter
+        {
+            public string GroupName { get; set; }
+            public List<string> Usernames { get; set; }
+            public bool HasParticipation { get; set; }
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Coordinator")]
         public async Task<IActionResult> ManageGroups(int id, string Users)
         {
-            ManageGroupsUserModel[] userList = JsonConvert.DeserializeObject<ManageGroupsUserModel[]>(Users);
+            List<ManageGroupsUserModel> userList = JsonConvert.DeserializeObject<List<ManageGroupsUserModel>>(Users); //new groups
             Dictionary<string, string> groupIds = new Dictionary<string, string>();
-            IEnumerable<UserEntry> entries = await userEntryRepository.GetByMeetingIdAsync(id);
-            foreach (ManageGroupsUserModel user in userList)
+            IEnumerable<UserEntry> entries = await userEntryRepository.GetByMeetingIdAsync(id); //old groups from database
+            List<string> usersWhoNeedToRecall = new List<string>(); //users that need to rejoin the video call
+
+            while(userList.Count > 0)
             {
-                UserEntry entry = entries.Where(entry => entry.UserId == user.UserId).FirstOrDefault();
-                if (user.GroupName != null)
+                ManageGroupsUserModel user = userList[0];
+                UserEntry userEntry = entries.Where(e => e.UserId == user.UserId).FirstOrDefault();
+                if(userEntry != null)
                 {
-                    if (!groupIds.ContainsKey(user.GroupName))
+                    if(string.IsNullOrEmpty(user.GroupName))
                     {
-                        groupIds.Add(user.GroupName, Guid.NewGuid().ToString());
+                        userEntry.GroupNumber = null;
+                        userEntry.HasParticipated = false;
+                        userEntryRepository.Update(userEntry);
+                        userList.RemoveAt(0);
+                        continue;
                     }
-                    entry.GroupNumber = groupIds[user.GroupName];
-                    userEntryRepository.Update(entry);
-                    continue;
+                    else
+                    {
+                        List<ManageGroupsUserModel> group = userList.Where(e => e.GroupName == user.GroupName).ToList();
+                        List<GroupCounter> groupCounters = new List<GroupCounter>();
+                        List<UserEntry> groupEntries = new List<UserEntry>();
+
+                        //Create GroupCounters for gathering all groupdata
+                        foreach(ManageGroupsUserModel groupUser in group)
+                        {
+                            UserEntry groupUserEntry = entries.Where(e => e.UserId == groupUser.UserId).FirstOrDefault();
+                            if(groupUserEntry != null)
+                            {
+                                groupEntries.Add(groupUserEntry);
+                                if (!string.IsNullOrEmpty(groupUserEntry.GroupNumber))
+                                {
+                                    GroupCounter counter = groupCounters.Where(g => g.GroupName == groupUserEntry.GroupNumber).FirstOrDefault();
+                                    if (counter == null)
+                                    {
+                                        counter = new GroupCounter
+                                        {
+                                            GroupName = groupUserEntry.GroupNumber,
+                                            Usernames = new List<string>() { groupUser.UserName },
+                                            HasParticipation = groupUserEntry.HasParticipated
+                                        };
+                                        groupCounters.Add(counter);
+                                    }
+                                    else
+                                    {
+                                        counter.Usernames.Add(groupUser.UserName);
+                                        if (groupUserEntry.HasParticipated) { counter.HasParticipation = true; }
+                                    }
+                                }
+                            }
+                        }
+
+                        //Create group
+                        if(groupCounters.Count == 0) //none of the users were in a group before, create new group
+                        {
+                            string newGroupGuid = Guid.NewGuid().ToString();
+                            foreach(UserEntry groupMember in groupEntries)
+                            {
+                                groupMember.GroupNumber = newGroupGuid;
+                                userEntryRepository.Update(groupMember);
+                            }
+                        }
+                        else //there already exists some groups, re-use them
+                        {
+                            //get best groupcounter
+                            GroupCounter bestCounter = null;
+                            List<GroupCounter> bestCounters = groupCounters.Where(g => g.HasParticipation).OrderBy(g => g.Usernames).ToList();
+                            if(bestCounters.Count >= 1) //some groups have participation, warn users who are already in call
+                            {
+                                if(bestCounters.Count == 1)
+                                {
+                                    bestCounter = bestCounters[0];   
+                                }
+                                else
+                                {
+                                    foreach(GroupCounter gc in bestCounters)
+                                    {
+                                        if(bestCounter == null) { bestCounter = gc; }
+                                        else if(gc.Usernames.Count > bestCounter.Usernames.Count) 
+                                        { 
+                                            foreach(string name in bestCounter.Usernames) { usersWhoNeedToRecall.Add(name); }
+                                            bestCounter = gc; 
+                                        }
+                                    }
+                                }
+                            }
+                            else //no group has participation
+                            {
+                                foreach (GroupCounter gc in groupCounters)
+                                {
+                                    if (bestCounter == null) { bestCounter = gc; }
+                                    else if (gc.Usernames.Count > bestCounter.Usernames.Count)
+                                    {
+                                        bestCounter = gc;
+                                    }
+                                }
+                            }
+
+                            //Assign best groupname to userentries
+                            int totalHasParticipated = groupEntries.Where(e => e.GroupNumber == bestCounter.GroupName && e.HasParticipated).ToList().Count;
+                            int totalOthersHasParticipated = entries.Where(e => e.GroupNumber == bestCounter.GroupName && e.HasParticipated).ToList().Count - totalHasParticipated;
+                            string newGroupName = (totalHasParticipated > totalOthersHasParticipated) ? bestCounter.GroupName : Guid.NewGuid().ToString();
+                            foreach (UserEntry groupMember in groupEntries)
+                            {
+                                if(groupMember.HasParticipated && groupMember.GroupNumber != newGroupName)
+                                {
+                                    ManageGroupsUserModel u = group.Where(u => u.UserId == groupMember.UserId).FirstOrDefault();
+                                    usersWhoNeedToRecall.Add(u.UserName);
+                                }
+                                if (groupMember.GroupNumber != newGroupName) { groupMember.HasParticipated = false; }
+
+                                groupMember.GroupNumber = newGroupName;
+                                userEntryRepository.Update(groupMember);
+                            }
+
+                        }
+                        //remove users from userlist that are part of the current group evaluation
+                        foreach(ManageGroupsUserModel u in group)
+                        {
+                            userList.Remove(u);
+                        }
+                    }
                 }
-                entry.GroupNumber = null;
-                userEntryRepository.Update(entry);
+
+                //UserEntry entry = entries.Where(entry => entry.UserId == user.UserId).FirstOrDefault();
+                //if (user.GroupName != null)
+                //{
+                //    if (!groupIds.ContainsKey(user.GroupName))
+                //    {
+                //        groupIds.Add(user.GroupName, Guid.NewGuid().ToString());
+                //    }
+                //    entry.GroupNumber = groupIds[user.GroupName];
+                //    userEntryRepository.Update(entry);
+                //    continue;
+                //}
+                //entry.GroupNumber = null;
+                //userEntryRepository.Update(entry);
             }
-            await userEntryRepository.SaveAsync();
+            if (userEntryRepository.HasChanges())
+            {
+                await userEntryRepository.SaveAsync();
+            }
 
             TempData["title"] = "Groepen opgeslagen!";
             List<string> content = new List<string>();
             content.Add("De door u gemaakte groepen voor deze meeting zijn opgeslagen.");
+            if(usersWhoNeedToRecall.Count > 0)
+            {
+                content.Add("");
+                content.Add("Echter zijn sommige gebruikers al aan het videobellen!");
+                content.Add("De volgende gebruikers moet gevraagd worden om opnieuw te gaan videobellen:");
+                foreach(string name in usersWhoNeedToRecall)
+                {
+                    content.Add("- " + name);
+                }
+                content.Add("");
+            }
             TempData["content"] = content;
             TempData["action"] = "index";
             TempData["controller"] = "meeting";
@@ -360,6 +501,7 @@ namespace Taalcafe.Controllers
         private class activeMeetingInfo
         {
             public string Participants { get; set; }
+            public string HasParticipated { get; set; }
             public string Theme { get; set; }
         }
 
@@ -374,16 +516,30 @@ namespace Taalcafe.Controllers
 
             foreach(UserEntry entry in entries)
             {
-                if (entry.GroupNumber.ToLower().Contains("teams.microsoft.com"))
+                if (!string.IsNullOrEmpty(entry.GroupNumber))
                 {
-                    if (joinAndParticipants.ContainsKey(entry.GroupNumber))
+                    if (entry.GroupNumber.ToLower().Contains("teams.microsoft.com"))
                     {
-                        joinAndParticipants[entry.GroupNumber].Participants += ", " + entry.User.UserName;
-                    }
-                    else
-                    {
-                        //Meeting meeting = await meetingRepository.GetByIdIncludingThemes(entry.MeetingId);
-                        joinAndParticipants[entry.GroupNumber] = new activeMeetingInfo { Participants = entry.User.UserName, Theme = entry.Meeting.Theme.Title };
+                        if (joinAndParticipants.ContainsKey(entry.GroupNumber))
+                        {
+                            joinAndParticipants[entry.GroupNumber].Participants += ", " + entry.User.UserName;
+                        }
+                        else
+                        {
+                            joinAndParticipants[entry.GroupNumber] = new activeMeetingInfo { Participants = entry.User.UserName, Theme = entry.Meeting.Theme.Title };
+                        }
+
+                        if (entry.HasParticipated)
+                        {
+                            if (string.IsNullOrEmpty(joinAndParticipants[entry.GroupNumber].HasParticipated))
+                            {
+                                joinAndParticipants[entry.GroupNumber].HasParticipated = entry.User.UserName;
+                            }
+                            else
+                            {
+                                joinAndParticipants[entry.GroupNumber].HasParticipated += ", " + entry.User.UserName;
+                            }
+                        }
                     }
                 }
             }
@@ -393,6 +549,7 @@ namespace Taalcafe.Controllers
                 ActiveMeetingStats temp = new ActiveMeetingStats
                 {
                     Participants = item.Value.Participants,
+                    HasParticipated = item.Value.HasParticipated,
                     JoinUrl = item.Key,
                     Theme = item.Value.Theme
                 };
@@ -425,6 +582,9 @@ namespace Taalcafe.Controllers
                 }
                 if (entry.GroupNumber.ToLower().Contains("teams.microsoft.com")) //join url has been added already
                 {
+                    entry.HasParticipated = true;
+                    userEntryRepository.Update(entry);
+                    await userEntryRepository.SaveAsync();
                     TempData["joinUrl"] = entry.GroupNumber;
                     return View();
                 }
@@ -440,6 +600,8 @@ namespace Taalcafe.Controllers
                     userEntryRepository.Update(eu);
                 }
 
+                entry.HasParticipated = true;
+                userEntryRepository.Update(entry);
                 await userEntryRepository.SaveAsync();
 
                 TempData["joinUrl"] = result.JoinWebUrl;

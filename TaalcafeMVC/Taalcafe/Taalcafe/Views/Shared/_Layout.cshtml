@@ -13,7 +13,14 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-taalcafe border-bottom box-shadow">
             <div class="container justify-content-center">
-                <a  asp-controller="Home" asp-action="Index"><img style="width:23%" class="center" src="~/pics/SamSam.PNG" /></a>
+                @if (!User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Home" asp-action="Index"><img style="width:23%" class="center" src="~/pics/SamSam.PNG" /></a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="Index"><img style="width:23%" class="center" src="~/pics/SamSamMenu.jpeg"/></a>
+                }
             </div>
         </nav>
     </header>
