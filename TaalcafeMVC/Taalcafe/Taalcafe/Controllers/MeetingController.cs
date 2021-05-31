@@ -346,7 +346,7 @@ namespace Taalcafe.Controllers
                     if(string.IsNullOrEmpty(user.GroupName))
                     {
                         userEntry.GroupNumber = null;
-                        userEntry.HasParticipated = false;
+                        userEntry.Joined_at = null;
                         userEntryRepository.Update(userEntry);
                         userList.RemoveAt(0);
                         continue;
@@ -373,14 +373,14 @@ namespace Taalcafe.Controllers
                                         {
                                             GroupName = groupUserEntry.GroupNumber,
                                             Usernames = new List<string>() { groupUser.UserName },
-                                            HasParticipation = groupUserEntry.HasParticipated
+                                            HasParticipation = (groupUserEntry.Joined_at != null)
                                         };
                                         groupCounters.Add(counter);
                                     }
                                     else
                                     {
                                         counter.Usernames.Add(groupUser.UserName);
-                                        if (groupUserEntry.HasParticipated) { counter.HasParticipation = true; }
+                                        if (groupUserEntry.Joined_at != null) { counter.HasParticipation = true; }
                                     }
                                 }
                             }
@@ -433,17 +433,17 @@ namespace Taalcafe.Controllers
                             }
 
                             //Assign best groupname to userentries
-                            int totalHasParticipated = groupEntries.Where(e => e.GroupNumber == bestCounter.GroupName && e.HasParticipated).ToList().Count;
-                            int totalOthersHasParticipated = entries.Where(e => e.GroupNumber == bestCounter.GroupName && e.HasParticipated).ToList().Count - totalHasParticipated;
+                            int totalHasParticipated = groupEntries.Where(e => e.GroupNumber == bestCounter.GroupName && e.Joined_at != null).ToList().Count;
+                            int totalOthersHasParticipated = entries.Where(e => e.GroupNumber == bestCounter.GroupName && e.Joined_at != null).ToList().Count - totalHasParticipated;
                             string newGroupName = (totalHasParticipated > totalOthersHasParticipated) ? bestCounter.GroupName : Guid.NewGuid().ToString();
                             foreach (UserEntry groupMember in groupEntries)
                             {
-                                if(groupMember.HasParticipated && groupMember.GroupNumber != newGroupName)
+                                if(groupMember.Joined_at != null && groupMember.GroupNumber != newGroupName)
                                 {
                                     ManageGroupsUserModel u = group.Where(u => u.UserId == groupMember.UserId).FirstOrDefault();
                                     usersWhoNeedToRecall.Add(u.UserName);
                                 }
-                                if (groupMember.GroupNumber != newGroupName) { groupMember.HasParticipated = false; }
+                                if (groupMember.GroupNumber != newGroupName) { groupMember.Joined_at = null; }
 
                                 groupMember.GroupNumber = newGroupName;
                                 userEntryRepository.Update(groupMember);
@@ -510,7 +510,7 @@ namespace Taalcafe.Controllers
         public async Task<IActionResult> ActiveMeetings()
         {
             IEnumerable<UserEntry> entries = await userEntryRepository.GetAllIncludingMeetingAndUser();
-            entries = entries.Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now);
+            entries = entries.Where(entry => entry.Meeting.StartDate <= DateTime.Now && entry.Meeting.EndDate > DateTime.Now).OrderBy(e => e.Joined_at);
             List<ActiveMeetingStats> stats = new List<ActiveMeetingStats>();
             Dictionary<string, activeMeetingInfo> joinAndParticipants = new Dictionary<string, activeMeetingInfo>();
 
@@ -529,7 +529,7 @@ namespace Taalcafe.Controllers
                             joinAndParticipants[entry.GroupNumber] = new activeMeetingInfo { Participants = entry.User.UserName, Theme = entry.Meeting.Theme.Title };
                         }
 
-                        if (entry.HasParticipated)
+                        if (entry.Joined_at != null)
                         {
                             if (string.IsNullOrEmpty(joinAndParticipants[entry.GroupNumber].HasParticipated))
                             {
@@ -582,7 +582,7 @@ namespace Taalcafe.Controllers
                 }
                 if (entry.GroupNumber.ToLower().Contains("teams.microsoft.com")) //join url has been added already
                 {
-                    entry.HasParticipated = true;
+                    entry.Joined_at = DateTime.Now;
                     userEntryRepository.Update(entry);
                     await userEntryRepository.SaveAsync();
                     TempData["joinUrl"] = entry.GroupNumber;
@@ -600,7 +600,7 @@ namespace Taalcafe.Controllers
                     userEntryRepository.Update(eu);
                 }
 
-                entry.HasParticipated = true;
+                entry.Joined_at = DateTime.Now;
                 userEntryRepository.Update(entry);
                 await userEntryRepository.SaveAsync();
 

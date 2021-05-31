@@ -29,6 +29,7 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Index()
         {
             IEnumerable<ApplicationUser> model = await userManager.Users.ToListAsync();
+            model = model.OrderBy(user => user.UserName.ToLower());
             return View(model);
         }
 

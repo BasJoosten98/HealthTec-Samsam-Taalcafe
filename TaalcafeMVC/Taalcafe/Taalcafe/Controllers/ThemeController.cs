@@ -23,6 +23,7 @@ namespace Taalcafe.Controllers
         public async Task<ActionResult> Index()
         {
             IEnumerable<Theme> model = await themeRepository.GetAllAsync();
+            model = model.OrderBy(theme => theme.Title.ToLower());
             return View(model);
         }
 
