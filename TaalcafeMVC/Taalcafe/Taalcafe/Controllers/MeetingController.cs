@@ -321,11 +321,16 @@ namespace Taalcafe.Controllers
 
         }
 
+        private class GroupCountersHolder
+        {
+            public List<GroupCounter> Counters { get; set; }
+            public List<UserEntry> Entries { get; set; }
+        }
         private class GroupCounter
         {
             public string GroupName { get; set; }
-            public List<string> Usernames { get; set; }
-            public bool HasParticipation { get; set; }
+            public List<ManageGroupsUserModel> Users { get; set; }
+            public List<ManageGroupsUserModel> ParticipatedUsers { get; set; }
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -333,9 +338,10 @@ namespace Taalcafe.Controllers
         public async Task<IActionResult> ManageGroups(int id, string Users)
         {
             List<ManageGroupsUserModel> userList = JsonConvert.DeserializeObject<List<ManageGroupsUserModel>>(Users); //new groups
-            Dictionary<string, string> groupIds = new Dictionary<string, string>();
+            //Dictionary<string, string> groupIds = new Dictionary<string, string>();
             IEnumerable<UserEntry> entries = await userEntryRepository.GetByMeetingIdAsync(id); //old groups from database
             List<string> usersWhoNeedToRecall = new List<string>(); //users that need to rejoin the video call
+            List<GroupCountersHolder> counterHolder = new List<GroupCountersHolder>();
 
             while(userList.Count > 0)
             {
@@ -353,12 +359,13 @@ namespace Taalcafe.Controllers
                     }
                     else
                     {
-                        List<ManageGroupsUserModel> group = userList.Where(e => e.GroupName == user.GroupName).ToList();
+                        List<ManageGroupsUserModel> groupUsers = userList.Where(e => e.GroupName == user.GroupName).ToList();
                         List<GroupCounter> groupCounters = new List<GroupCounter>();
                         List<UserEntry> groupEntries = new List<UserEntry>();
+                        GroupCountersHolder holder = new GroupCountersHolder();
 
                         //Create GroupCounters for gathering all groupdata
-                        foreach(ManageGroupsUserModel groupUser in group)
+                        foreach(ManageGroupsUserModel groupUser in groupUsers)
                         {
                             UserEntry groupUserEntry = entries.Where(e => e.UserId == groupUser.UserId).FirstOrDefault();
                             if(groupUserEntry != null)
@@ -372,106 +379,85 @@ namespace Taalcafe.Controllers
                                         counter = new GroupCounter
                                         {
                                             GroupName = groupUserEntry.GroupNumber,
-                                            Usernames = new List<string>() { groupUser.UserName },
-                                            HasParticipation = (groupUserEntry.Joined_at != null)
+                                            Users = new List<ManageGroupsUserModel>() { groupUser },
+                                            ParticipatedUsers = (groupUserEntry.Joined_at != null) ? new List<ManageGroupsUserModel>() { groupUser } : new List<ManageGroupsUserModel>()
                                         };
                                         groupCounters.Add(counter);
                                     }
                                     else
                                     {
-                                        counter.Usernames.Add(groupUser.UserName);
-                                        if (groupUserEntry.Joined_at != null) { counter.HasParticipation = true; }
+                                        counter.Users.Add(groupUser);
+                                        if (groupUserEntry.Joined_at != null) { counter.ParticipatedUsers.Add(groupUser); }
                                     }
                                 }
                             }
+                            userList.Remove(groupUser);
                         }
+                        holder.Counters = groupCounters;
+                        holder.Entries = groupEntries;
+                        counterHolder.Add(holder);                      
+                    }
+                }
+            }
 
-                        //Create group
-                        if(groupCounters.Count == 0) //none of the users were in a group before, create new group
-                        {
-                            string newGroupGuid = Guid.NewGuid().ToString();
-                            foreach(UserEntry groupMember in groupEntries)
-                            {
-                                groupMember.GroupNumber = newGroupGuid;
-                                userEntryRepository.Update(groupMember);
-                            }
-                        }
-                        else //there already exists some groups, re-use them
-                        {
-                            //get best groupcounter
-                            GroupCounter bestCounter = null;
-                            List<GroupCounter> bestCounters = groupCounters.Where(g => g.HasParticipation).OrderBy(g => g.Usernames).ToList();
-                            if(bestCounters.Count >= 1) //some groups have participation, warn users who are already in call
-                            {
-                                if(bestCounters.Count == 1)
-                                {
-                                    bestCounter = bestCounters[0];   
-                                }
-                                else
-                                {
-                                    foreach(GroupCounter gc in bestCounters)
-                                    {
-                                        if(bestCounter == null) { bestCounter = gc; }
-                                        else if(gc.Usernames.Count > bestCounter.Usernames.Count) 
-                                        { 
-                                            foreach(string name in bestCounter.Usernames) { usersWhoNeedToRecall.Add(name); }
-                                            bestCounter = gc; 
-                                        }
-                                    }
-                                }
-                            }
-                            else //no group has participation
-                            {
-                                foreach (GroupCounter gc in groupCounters)
-                                {
-                                    if (bestCounter == null) { bestCounter = gc; }
-                                    else if (gc.Usernames.Count > bestCounter.Usernames.Count)
-                                    {
-                                        bestCounter = gc;
-                                    }
-                                }
-                            }
+            //Order counters in every holder such that most participated is first
+            counterHolder.ForEach(h => h.Counters = h.Counters.OrderByDescending(c => c.ParticipatedUsers.Count).ToList());
 
-                            //Assign best groupname to userentries
-                            int totalHasParticipated = groupEntries.Where(e => e.GroupNumber == bestCounter.GroupName && e.Joined_at != null).ToList().Count;
-                            int totalOthersHasParticipated = entries.Where(e => e.GroupNumber == bestCounter.GroupName && e.Joined_at != null).ToList().Count - totalHasParticipated;
-                            string newGroupName = (totalHasParticipated > totalOthersHasParticipated) ? bestCounter.GroupName : Guid.NewGuid().ToString();
-                            foreach (UserEntry groupMember in groupEntries)
-                            {
-                                if(groupMember.Joined_at != null && groupMember.GroupNumber != newGroupName)
-                                {
-                                    ManageGroupsUserModel u = group.Where(u => u.UserId == groupMember.UserId).FirstOrDefault();
-                                    usersWhoNeedToRecall.Add(u.UserName);
-                                }
-                                if (groupMember.GroupNumber != newGroupName) { groupMember.Joined_at = null; }
-
-                                groupMember.GroupNumber = newGroupName;
-                                userEntryRepository.Update(groupMember);
-                            }
-
-                        }
-                        //remove users from userlist that are part of the current group evaluation
-                        foreach(ManageGroupsUserModel u in group)
-                        {
-                            userList.Remove(u);
-                        }
+            while (counterHolder.Count > 0)
+            {
+                //Give groups with no counter a random GUID as groupname
+                foreach (GroupCountersHolder holder in counterHolder)
+                {
+                    if (holder.Counters.Count == 0)
+                    {
+                        string newGroupName = Guid.NewGuid().ToString();
+                        holder.Entries.ForEach(e => {
+                            e.GroupNumber = newGroupName;
+                            e.Joined_at = null;
+                            userEntryRepository.Update(e);
+                        });
                     }
                 }
 
-                //UserEntry entry = entries.Where(entry => entry.UserId == user.UserId).FirstOrDefault();
-                //if (user.GroupName != null)
-                //{
-                //    if (!groupIds.ContainsKey(user.GroupName))
-                //    {
-                //        groupIds.Add(user.GroupName, Guid.NewGuid().ToString());
-                //    }
-                //    entry.GroupNumber = groupIds[user.GroupName];
-                //    userEntryRepository.Update(entry);
-                //    continue;
-                //}
-                //entry.GroupNumber = null;
-                //userEntryRepository.Update(entry);
+                //Filter out the groups with no counter and order them
+                counterHolder = counterHolder.Where(h => h.Counters.Count > 0).OrderByDescending(h => h.Counters[0].ParticipatedUsers.Count).ToList();
+
+                if(counterHolder.Count > 0)
+                {
+                    //Give the curHolder the best counter groupname it has
+                    GroupCountersHolder curHolder = counterHolder[0];
+                    string bestGroupName = curHolder.Counters[0].GroupName;
+                    foreach (UserEntry entry in curHolder.Entries)
+                    {
+                        if(entry.GroupNumber != bestGroupName) { entry.Joined_at = null; }
+                        entry.GroupNumber = bestGroupName;
+                        userEntryRepository.Update(entry);
+                    }
+
+                    //Add recall participants && remove counters with the same groupname
+                    for (int i = 1; i < curHolder.Counters.Count; i++) //curholder
+                    {
+                        curHolder.Counters[i].ParticipatedUsers.ForEach(user => usersWhoNeedToRecall.Add(user.UserName));
+                    }
+                    for (int i = 1; i < counterHolder.Count; i++) //other holders
+                    {
+                        GroupCountersHolder holder = counterHolder[i];
+                        foreach(GroupCounter counter in holder.Counters)
+                        {
+                            if(counter.GroupName == bestGroupName)
+                            {
+                                counter.ParticipatedUsers.ForEach(user => usersWhoNeedToRecall.Add(user.UserName));
+                                holder.Counters.Remove(counter);
+                                break;
+                            }
+                        }
+                    }
+
+                    //remove curholder
+                    counterHolder.RemoveAt(0);
+                }
             }
+
             if (userEntryRepository.HasChanges())
             {
                 await userEntryRepository.SaveAsync();
