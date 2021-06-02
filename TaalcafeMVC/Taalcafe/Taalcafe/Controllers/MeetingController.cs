@@ -403,6 +403,7 @@ namespace Taalcafe.Controllers
             //Order counters in every holder such that most participated is first
             counterHolder.ForEach(h => h.Counters = h.Counters.OrderByDescending(c => c.ParticipatedUsers.Count).ToList());
 
+            bool reorderCounters = true;
             while (counterHolder.Count > 0)
             {
                 //Give groups with no counter a random GUID as groupname
@@ -420,7 +421,11 @@ namespace Taalcafe.Controllers
                 }
 
                 //Filter out the groups with no counter and order them
-                counterHolder = counterHolder.Where(h => h.Counters.Count > 0).OrderByDescending(h => h.Counters[0].ParticipatedUsers.Count).ToList();
+                if (reorderCounters)
+                {
+                    reorderCounters = false;
+                    counterHolder = counterHolder.Where(h => h.Counters.Count > 0).OrderByDescending(h => h.Counters[0].ParticipatedUsers.Count).ToList();
+                }
 
                 if(counterHolder.Count > 0)
                 {
@@ -442,12 +447,14 @@ namespace Taalcafe.Controllers
                     for (int i = 1; i < counterHolder.Count; i++) //other holders
                     {
                         GroupCountersHolder holder = counterHolder[i];
-                        foreach(GroupCounter counter in holder.Counters)
+                        for (int j = 0; j < holder.Counters.Count; j++)
                         {
-                            if(counter.GroupName == bestGroupName)
+                            GroupCounter counter = holder.Counters[j];
+                            if (counter.GroupName == bestGroupName)
                             {
+                                if(j == 0 && holder.Counters.Count >= 2) { reorderCounters = true; } //CounterHolders need to be reordered, because the best counter of will be the second (first gets removed)
                                 counter.ParticipatedUsers.ForEach(user => usersWhoNeedToRecall.Add(user.UserName));
-                                holder.Counters.Remove(counter);
+                                holder.Counters.RemoveAt(j);
                                 break;
                             }
                         }
