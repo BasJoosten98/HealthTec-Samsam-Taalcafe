@@ -404,29 +404,39 @@ namespace Taalcafe.Controllers
             counterHolder.ForEach(h => h.Counters = h.Counters.OrderByDescending(c => c.ParticipatedUsers.Count).ToList());
 
             bool reorderCounters = true;
+            bool handleEmptyCounterHolders = true;
             while (counterHolder.Count > 0)
             {
-                //Give groups with no counter a random GUID as groupname
-                foreach (GroupCountersHolder holder in counterHolder)
+                //Give groups with no counter a random GUID as groupname and remove them from the list
+                if (handleEmptyCounterHolders)
                 {
-                    if (holder.Counters.Count == 0)
+                    handleEmptyCounterHolders = false;
+                    for (int i = 0; i < counterHolder.Count; i++)
                     {
-                        string newGroupName = Guid.NewGuid().ToString();
-                        holder.Entries.ForEach(e => {
-                            e.GroupNumber = newGroupName;
-                            e.Joined_at = null;
-                            userEntryRepository.Update(e);
-                        });
+                        GroupCountersHolder holder = counterHolder[i];
+                        if (holder.Counters.Count == 0)
+                        {
+                            string newGroupName = Guid.NewGuid().ToString();
+                            holder.Entries.ForEach(e =>
+                            {
+                                e.GroupNumber = newGroupName;
+                                e.Joined_at = null;
+                                userEntryRepository.Update(e);
+                            });
+                            counterHolder.RemoveAt(i);
+                            i--;
+                        }
                     }
                 }
 
-                //Filter out the groups with no counter and order them
+                //Order the groups with counters descending
                 if (reorderCounters)
                 {
                     reorderCounters = false;
-                    counterHolder = counterHolder.Where(h => h.Counters.Count > 0).OrderByDescending(h => h.Counters[0].ParticipatedUsers.Count).ToList();
+                    counterHolder = counterHolder.OrderByDescending(h => h.Counters[0].ParticipatedUsers.Count).ToList();
                 }
 
+                //Handle the best groupCounter (first of list)
                 if(counterHolder.Count > 0)
                 {
                     //Give the curHolder the best counter groupname it has
@@ -453,6 +463,7 @@ namespace Taalcafe.Controllers
                             if (counter.GroupName == bestGroupName)
                             {
                                 if(j == 0 && holder.Counters.Count >= 2) { reorderCounters = true; } //CounterHolders need to be reordered, because the best counter of will be the second (first gets removed)
+                                else if(holder.Counters.Count == 1) { handleEmptyCounterHolders = true; } //After removal of this counter, the holder has no counters anymore, thus should be handled
                                 counter.ParticipatedUsers.ForEach(user => usersWhoNeedToRecall.Add(user.UserName));
                                 holder.Counters.RemoveAt(j);
                                 break;
