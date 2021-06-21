@@ -48,6 +48,7 @@ namespace Taalcafe
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
+                options.Password.RequireDigit = false;
 
                 options.User.AllowedUserNameCharacters = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúçàèìòùßäöü";
                 options.User.RequireUniqueEmail = true;

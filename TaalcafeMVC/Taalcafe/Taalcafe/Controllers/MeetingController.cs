@@ -244,7 +244,7 @@ namespace Taalcafe.Controllers
                 TempData["title"] = "Aangemeld!";
                 List<string> content = new List<string>();
                 content.Add("U bent aangemeld voor de meeting!");
-                content.Add($"De meeting vind plaats van {meeting.StartDate.ToString("ddd d MMMM yyyy, H:mm")} tot en met {meeting.EndDate.ToString("ddd d MMMM yyyy, H:mm")}.");
+                content.Add($"De meeting vindt plaats van {meeting.StartDate.ToString("ddd d MMMM yyyy, H:mm")} tot en met {meeting.EndDate.ToString("ddd d MMMM yyyy, H:mm")}.");
                 content.Add("");
                 content.Add("Tot dan!");
                 TempData["content"] = content;

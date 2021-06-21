@@ -56,6 +56,8 @@ namespace Taalcafe.Controllers
                     PhoneNumber = model.PhoneNumber
                 };
                 string password = RandomStringGenerator.CreateString(4);
+                if(model.Role == Role.Admin) { password = RandomStringGenerator.CreateString(10); }
+                else if(model.Role == Role.Coordinator) { password = RandomStringGenerator.CreateString(6); }
 
                 var result = await userManager.CreateAsync(user, password);
                 if (result.Succeeded)
